@@ -549,13 +549,13 @@ new Chart(document.getElementById('chartRanking'), {
 const statsEl = document.getElementById('statsGrid');
 const statItems = [];
 statItems.push({ l: '持仓数量', v: stats.holdings_count + ' 只' });
+if (stats.max_drawdown != null) statItems.push({ l: '最大回撤', v: stats.max_drawdown.toFixed(2) + '%', cls: 'down' });
+if (stats.max_daily_return != null) statItems.push({ l: '最大日收益', v: fmtPct(stats.max_daily_return), cls: colorClass(stats.max_daily_return) });
+if (stats.min_daily_return != null) statItems.push({ l: '最大日亏损', v: fmtPct(stats.min_daily_return), cls: colorClass(stats.min_daily_return) });
 if (stats.max_roi != null) statItems.push({ l: '最大收益率', v: stats.max_roi_name + ' ' + fmtPct(stats.max_roi), cls: colorClass(stats.max_roi) });
 if (stats.min_roi != null) statItems.push({ l: '最小收益率', v: stats.min_roi_name + ' ' + fmtPct(stats.min_roi), cls: colorClass(stats.min_roi) });
 if (stats.max_pnl != null) statItems.push({ l: '最大收益额', v: stats.max_pnl_name + ' ' + fmtWan(stats.max_pnl), cls: colorClass(stats.max_pnl) });
 if (stats.min_pnl != null) statItems.push({ l: '最大亏损额', v: stats.min_pnl_name + ' ' + fmtWan(stats.min_pnl), cls: colorClass(stats.min_pnl) });
-if (stats.max_drawdown != null) statItems.push({ l: '最大回撤', v: stats.max_drawdown.toFixed(2) + '%', cls: 'down' });
-if (stats.max_daily_return != null) statItems.push({ l: '最大日收益', v: fmtPct(stats.max_daily_return), cls: colorClass(stats.max_daily_return) });
-if (stats.min_daily_return != null) statItems.push({ l: '最大日亏损', v: fmtPct(stats.min_daily_return), cls: colorClass(stats.min_daily_return) });
 statItems.push({ l: '持仓收益率', v: fmtPct(summary.holdings_roi), cls: colorClass(summary.holdings_roi) });
 statItems.push({ l: '持仓收益', v: fmtWan(summary.holdings_pnl), cls: colorClass(summary.holdings_pnl) });
 
