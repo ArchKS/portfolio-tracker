@@ -1,0 +1,10 @@
+import subprocess
+r = subprocess.run([r"C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\python.exe", r"C:\Users\Administrator\WorkBuddy\2026-07-27-11-53-42\generate_report.py"], capture_output=True, text=True)
+print(r.stdout)
+h = open(r"C:\Users\Administrator\WorkBuddy\2026-07-27-11-53-42\report.html", encoding='utf-8').read()
+print("no 最长连盈:", '最长连盈' not in h)
+print("no 最长连亏:", '最长连亏' not in h)
+print("no 总股息:", '>总股息<' not in h or '总股息' not in h)
+print("no 国内收益:", '国内收益' not in h)
+print("no 境外收益:", '境外收益' not in h)
+print("name left-align:", 'td.name{font-weight:500;text-align:left;}' in h or 'nth-child(2)' in h)
