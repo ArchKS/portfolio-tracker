@@ -1,0 +1,111 @@
+{
+  "date": "2026-01-01",
+  "snapshot_time": "2026-01-01 15:00:00 +08:00",
+  "source": "历史截图整理",
+  "doc_date": "2026/1/1",
+  "exchange_rates": {
+    "US": 6.7807,
+    "HK": 0.8642
+  },
+  "summary": {
+    "holdings_pos_cost_pct": null,
+    "holdings_pos_curr_pct": 100,
+    "holdings_roi": 79.94,
+    "holdings_invested": 1396000.0,
+    "holdings_current": 2512000.0,
+    "holdings_pnl": 1116000.0,
+    "holdings_dividends": 0,
+    "year_start": 865000.0,
+    "salary_surplus": 116000.0,
+    "base": 924000.0,
+    "total_pnl": 0,
+    "total_roi": 0,
+    "regions": {
+      "整体": {
+        "invested": 1396000.0,
+        "current": 2505000.0,
+        "pnl": 1109000.0
+      },
+      "国内": {
+        "invested": 790000.0,
+        "current": 2005396.1,
+        "pnl": 1215396.1
+      },
+      "境外": {
+        "invested": 606000.0,
+        "current": 499603.9,
+        "pnl": -106396.1
+      }
+    }
+  },
+  "holdings": [
+    {
+      "market": "CN",
+      "currency": "CNY",
+      "name": "中矿",
+      "cost_price_raw": "¥30.90",
+      "current_price_raw": "¥78.55",
+      "cost_price": 30.9,
+      "current_price": 78.55,
+      "pos_cost_pct": 56.59,
+      "pos_curr_pct": 80.06,
+      "roi": 154.5,
+      "quantity": 25600,
+      "invested": 790000.0,
+      "current": 2011000.0,
+      "dividends": null,
+      "pnl": 1221000.0
+    },
+    {
+      "market": "US",
+      "currency": "USD",
+      "name": "传奇生物",
+      "cost_price_raw": "$26.10",
+      "current_price_raw": "$21.53",
+      "cost_price": 26.1,
+      "current_price": 21.53,
+      "pos_cost_pct": 35.6,
+      "pos_curr_pct": 16.32,
+      "roi": -17.6,
+      "quantity": 2724,
+      "invested": 497000.0,
+      "current": 410000.0,
+      "dividends": null,
+      "pnl": -87000.0
+    },
+    {
+      "market": "HK",
+      "currency": "HKD",
+      "name": "再鼎医药",
+      "cost_price_raw": "HK$14.3",
+      "current_price_raw": "HK$13.7",
+      "cost_price": 14.3,
+      "current_price": 13.7,
+      "pos_cost_pct": 3.65,
+      "pos_curr_pct": 1.95,
+      "roi": -4.5,
+      "quantity": 4000,
+      "invested": 51000.0,
+      "current": 49000.0,
+      "dividends": null,
+      "pnl": -2000.0
+    },
+    {
+      "market": "US",
+      "currency": "USD",
+      "name": "QQQ 270115 300P",
+      "cost_price_raw": "$3.30",
+      "current_price_raw": "$2.40",
+      "cost_price": 3.3,
+      "current_price": 2.4,
+      "pos_cost_pct": 4.15,
+      "pos_curr_pct": 1.67,
+      "roi": -27.2,
+      "quantity": 2500,
+      "invested": 58000.0,
+      "current": 42000.0,
+      "dividends": null,
+      "pnl": -16000.0
+    }
+  ]
+}
