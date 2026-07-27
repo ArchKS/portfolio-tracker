@@ -1,6 +1,4 @@
 .workbuddy/
 __pycache__/
-deploy/
-screenshot/
 .*.py
 *.pyc
