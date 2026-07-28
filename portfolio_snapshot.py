@@ -83,6 +83,30 @@ MARKET_CURRENCY = {
 
 # ── 核心解析逻辑 ──────────────────────────────────────────
 
+def _build_col_map(header_row):
+    """从表头行构建 列名→索引 映射，支持动态列偏移"""
+    col_map = {}
+    for idx, cell in enumerate(header_row):
+        c = cell.strip()
+        if c in ("市场", "公司名称", "代码", "成本价", "当前价",
+                 "pos/cost", "pos/curr", "盈亏%", "持有数量",
+                 "投入", "当前", "收到股息"):
+            col_map[c] = idx
+    # 区域标签列：表头中无显式名称，取"当前"列右侧第2列（空表头）
+    # 但更稳妥的方式是按"投入"列右侧偏移来找
+    return col_map
+
+
+def _gc(row, col_map, key, length_padder=None):
+    """安全取列值，自动补齐"""
+    idx = col_map.get(key)
+    if idx is None:
+        return ""
+    if idx >= len(row):
+        return ""
+    return row[idx]
+
+
 def parse_holdings(csv_text):
     """解析 CSV 文本，返回 (holdings, summary, meta)"""
     reader = csv.reader(csv_text.splitlines())
@@ -96,6 +120,9 @@ def parse_holdings(csv_text):
             break
     if header_idx is None:
         raise ValueError("CSV 中未找到表头行（缺少'公司名称'）")
+
+    # 构建列名→索引映射（动态适配列偏移）
+    col_map = _build_col_map(rows[header_idx])
 
     # 提取日期（表头上方通常有一行带日期）
     snapshot_date = None
@@ -136,45 +163,55 @@ def parse_holdings(csv_text):
 
     past_total = False  # 是否已过"总计"行
 
+    # 计算区域标签列索引：在"投入"列右侧偏移
+    # 旧结构: 投入=col9, 区域标签=col8（投入左边一位）
+    # 新结构: 投入=col10, 区域标签=col9（投入左边一位）
+    # 规律：区域标签 = 投入列索引 - 1
+    invest_idx = col_map.get("投入", 9)
+    region_label_idx = invest_idx - 1  # 区域标签在投入列左边一位
+    current_idx = col_map.get("当前", invest_idx + 1)
+    pnl_idx = current_idx + 1  # 收益在当前列右边一位
+
     for i in range(header_idx + 1, len(rows)):
         row = rows[i]
         # 补齐列数
-        while len(row) < 13:
+        max_idx = max(col_map.values(), default=12) + 2
+        while len(row) < max_idx:
             row.append("")
 
-        market = row[1].strip()
-        name = row[2].strip()
-        col8 = row[8].strip()  # 区域标签列（整体/国内/境外）
+        market = _gc(row, col_map, "市场").strip() if "市场" in col_map else (row[1].strip() if len(row) > 1 else "")
+        # 名称列：无"代码"列时是col[2]，有时是col[2]
+        name = _gc(row, col_map, "公司名称").strip()
+        region_label = row[region_label_idx].strip() if region_label_idx < len(row) else ""
 
         # ── 总计行：持仓表自身的汇总 ──
         if not past_total and ("总计" in name or "总计" in market):
-            summary["holdings_pos_cost_pct"] = parse_percent(row[5])
-            summary["holdings_pos_curr_pct"] = parse_percent(row[6])
-            summary["holdings_roi"] = parse_percent(row[7])
-            summary["holdings_invested"] = parse_amount(row[9])
-            summary["holdings_current"] = parse_amount(row[10])
+            summary["holdings_pos_cost_pct"] = parse_percent(_gc(row, col_map, "pos/cost"))
+            summary["holdings_pos_curr_pct"] = parse_percent(_gc(row, col_map, "pos/curr"))
+            summary["holdings_roi"] = parse_percent(_gc(row, col_map, "盈亏%"))
+            summary["holdings_invested"] = parse_amount(_gc(row, col_map, "投入"))
+            summary["holdings_current"] = parse_amount(_gc(row, col_map, "当前"))
             if summary["holdings_invested"] is not None and summary["holdings_current"] is not None:
                 summary["holdings_pnl"] = round(summary["holdings_current"] - summary["holdings_invested"], 2)
-            summary["holdings_dividends"] = parse_amount(row[12])
+            summary["holdings_dividends"] = parse_amount(_gc(row, col_map, "收到股息"))
             past_total = True
             continue
 
         # ── 总计行之后的汇总区域 ──
         if past_total:
-            # 右侧：区域标签在 col[8]，投入/当前/收益在 col[9-11]
-            # （优先检查，因为某些行同时含左侧标签和右侧区域数据）
-            if col8 in ("整体", "国内", "境外"):
-                regions[col8] = {
-                    "invested": parse_amount(row[9]),
-                    "current": parse_amount(row[10]),
-                    "pnl": parse_amount(row[11]),
+            # 右侧：区域标签在 region_label_idx，投入/当前/收益在后续列
+            if region_label in ("整体", "国内", "境外"):
+                regions[region_label] = {
+                    "invested": parse_amount(row[invest_idx]) if invest_idx < len(row) else None,
+                    "current": parse_amount(row[current_idx]) if current_idx < len(row) else None,
+                    "pnl": parse_amount(row[pnl_idx]) if pnl_idx < len(row) else None,
                 }
 
-            # 左侧：标签在 col[1]，值在 col[2]（年初/工资结余/基数/收益/收益率）
+            # 左侧：标签在市场列，值在名称列（年初/工资结余/基数/收益/收益率）
             if market in SUMMARY_LABELS:
-                val = parse_amount(row[2])
+                val = parse_amount(name)
                 if val is None:
-                    val = parse_percent(row[2])
+                    val = parse_percent(name)
                 summary[SUMMARY_LABELS[market]] = val
                 continue
 
@@ -194,21 +231,26 @@ def parse_holdings(csv_text):
         if name.startswith("ps：") or name.startswith("信用卡"):
             continue
 
+        cost_raw = _gc(row, col_map, "成本价").strip()
+        curr_raw = _gc(row, col_map, "当前价").strip()
+        code = _gc(row, col_map, "代码").strip()
+
         holding = {
             "market": market or None,
-            "currency": MARKET_CURRENCY.get(market, extract_currency(row[3].strip())),
+            "currency": MARKET_CURRENCY.get(market, extract_currency(cost_raw)),
             "name": name,
-            "cost_price_raw": row[3].strip() or None,
-            "current_price_raw": row[4].strip() or None,
-            "cost_price": parse_amount(row[3]),
-            "current_price": parse_amount(row[4]),
-            "pos_cost_pct": parse_percent(row[5]),   # 占成本比
-            "pos_curr_pct": parse_percent(row[6]),   # 占当前比
-            "roi": parse_percent(row[7]),             # 盈亏%
-            "quantity": parse_quantity(row[8]),
-            "invested": parse_amount(row[9]),          # 投入（已换算为 RMB）
-            "current": parse_amount(row[10]),          # 当前（已换算为 RMB）
-            "dividends": parse_amount(row[12]),        # 收到股息
+            "code": code or None,
+            "cost_price_raw": cost_raw or None,
+            "current_price_raw": curr_raw or None,
+            "cost_price": parse_amount(cost_raw),
+            "current_price": parse_amount(curr_raw),
+            "pos_cost_pct": parse_percent(_gc(row, col_map, "pos/cost")),
+            "pos_curr_pct": parse_percent(_gc(row, col_map, "pos/curr")),
+            "roi": parse_percent(_gc(row, col_map, "盈亏%")),
+            "quantity": parse_quantity(_gc(row, col_map, "持有数量")),
+            "invested": parse_amount(_gc(row, col_map, "投入")),
+            "current": parse_amount(_gc(row, col_map, "当前")),
+            "dividends": parse_amount(_gc(row, col_map, "收到股息")),
         }
 
         # 计算收益金额
