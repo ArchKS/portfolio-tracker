@@ -148,7 +148,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>持仓收益分析 — PORTFOLIO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -179,6 +179,7 @@ body{
   padding:var(--pad);
   max-width:1180px;
   margin:0 auto;
+  touch-action:manipulation;
 }
 .up{color:var(--profit);}
 .down{color:var(--loss);}
@@ -478,6 +479,22 @@ td.name{font-weight:500;text-align:left;}
     <span class="cal-swatch" style="background:#f5c6cf;width:14px;height:14px;"></span>
     <span class="cal-swatch" style="background:#e4002b;width:14px;height:14px;"></span>
     <span class="cal-legend-label">盈利</span>
+  </div>
+</div>
+
+<!-- 10 清仓盈亏 -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">10</span>
+    <h2>清仓盈亏 / CLOSED POSITIONS</h2>
+    <span class="note">已卖出标的的盈亏</span>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">清仓标的收益（万）</div>
+    <div class="chart-desc">红涨绿跌，按最近一次快照的盈亏估算</div>
+    <div class="chart-canvas-wrap" style="min-height:360px;">
+      <canvas id="chartClosed"></canvas>
+    </div>
   </div>
 </div>
 </div>
@@ -835,6 +852,7 @@ tbody.innerHTML = sortedHoldings.map(h => {
   const calTitle = document.getElementById('calTitle');
   let view = 'day';
   let cursor = new Date();
+  const fmtCal = v => v == null ? '—' : (v/10000).toFixed(1);  // always 万, 1 decimal
 
   // compute daily P&L from snapshots
   const pnlMap = {};
@@ -898,7 +916,7 @@ tbody.innerHTML = sortedHoldings.map(h => {
       const tc = darkText ? 'color:#fff;' : '';
       html += `<div class="cal-cell${cls}" style="background:${bg};${border}${tc}">
         <span class="day-num">${d}</span>
-        ${e ? `<span class="day-amt ${textCls}" style="${tc}">${e.amt>0?'+':''}${fmtWan(e.amt).replace('万','')}</span><span class="day-pct ${textCls}" style="${tc}">${e.pct>0?'+':''}${e.pct}%</span>` : ''}
+        ${e ? `<span class="day-amt ${textCls}" style="${tc}">${e.amt>0?'+':''}${fmtCal(e.amt)}</span><span class="day-pct ${textCls}" style="${tc}">${e.pct>0?'+':''}${e.pct}%</span>` : ''}
       </div>`;
     }
     calGrid.innerHTML = html;
@@ -926,7 +944,7 @@ tbody.innerHTML = sortedHoldings.map(h => {
       const bg = sum===0&&!days.length?'#f5f5f5':(sum>=0?`rgba(228,0,43,${0.12+intensity*0.88})`:`rgba(0,122,51,${0.12+intensity*0.88})`);
       html += `<div class="cal-cell" style="background:${bg};${tc}">
         <span class="day-num">${m+1}月</span>
-        ${days.length ? `<span class="day-amt ${sum>0?'up':'down'}" style="${tc}">${fmtWan(sum)}</span><span class="day-pct ${sum>0?'up':'down'}" style="${tc}">${roi?roi.toFixed(1):'—'}%</span>` : '<span class="day-amt">—</span>'}
+        ${days.length ? `<span class="day-amt ${sum>0?'up':'down'}" style="${tc}">${fmtCal(sum)}</span><span class="day-pct ${sum>0?'up':'down'}" style="${tc}">${roi?roi.toFixed(1):'—'}%</span>` : '<span class="day-amt">—</span>'}
       </div>`;
     }
     calGrid.innerHTML = html;
@@ -947,7 +965,7 @@ tbody.innerHTML = sortedHoldings.map(h => {
       const bg = totalPnl>=0?`rgba(228,0,43,${0.12+intensity*0.88})`:`rgba(0,122,51,${0.12+intensity*0.88})`;
       html += `<div class="cal-cell" style="background:${bg};${tc}">
         <span class="day-num">${y}</span>
-        <span class="day-amt ${totalPnl>0?'up':'down'}" style="${tc}">${fmtWan(totalPnl)}</span>
+        <span class="day-amt ${totalPnl>0?'up':'down'}" style="${tc}">${fmtCal(totalPnl)}</span>
         <span class="day-pct ${totalPnl>0?'up':'down'}" style="${tc}">${totalRoi!=null?totalRoi.toFixed(1):'—'}%</span>
       </div>`;
     });
@@ -986,6 +1004,55 @@ if (!multiDay) {
   n.textContent = '当前仅 1 天数据：综合图已展示各曲线当前取值，点击图例可单独查看；走势与回撤趋势需多日数据方能显现。每日 15:00 自动快照后逐步积累。';
   document.querySelector('.masthead').after(n);
 }
+// ── 10 Closed positions ──
+(function(){
+  const currNames = new Set(holdings.map(h => h.name));
+  const closedMap = {};
+  snapshots.forEach(snap => {
+    snap.holdings.forEach(h => {
+      if (currNames.has(h.name)) return;
+      if (!closedMap[h.name]) {
+        closedMap[h.name] = { name: h.name, pnl: h.pnl || 0, roi: h.roi || 0, first: snap.date, last: snap.date };
+      } else {
+        closedMap[h.name].last = snap.date;
+        if (h.pnl != null) closedMap[h.name].pnl = h.pnl;
+        if (h.roi != null) closedMap[h.name].roi = h.roi;
+      }
+    });
+  });
+  const closed = Object.values(closedMap).sort((a,b) => a.pnl - b.pnl);
+  if (closed.length === 0) {
+    document.getElementById('chartClosed').parentElement.parentElement.parentElement.style.display = 'none';
+    return;
+  }
+  new Chart(document.getElementById('chartClosed'), {
+    type: 'bar',
+    data: {
+      labels: closed.map(c => c.name),
+      datasets: [{
+        data: closed.map(c => c.pnl / 10000),
+        backgroundColor: closed.map(c => c.pnl > 0 ? PROFIT : c.pnl < 0 ? LOSS : '#9a9a9a'),
+        borderRadius: 0,
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => {
+          const c = closed[ctx.dataIndex];
+          return fmtWan(c.pnl) + ' (' + fmtPct(c.roi) + ')';
+        }}}
+      },
+      scales: {
+        x: { grid: { color: RULE }, ticks: { color: INK2, font: { size: 11, family: FONT } } },
+        y: { grid: { display: false }, ticks: { color: INK, font: { size: 11, family: FONT } } }
+      }
+    }
+  });
+})();
+
 </script>
 <script>
 async function saveAsImage(){

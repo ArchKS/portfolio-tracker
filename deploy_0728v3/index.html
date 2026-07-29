@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>持仓收益分析 — PORTFOLIO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root{
+  --paper:#ffffff;
+  --ink:#111111;
+  --ink-2:#5b5b5b;
+  --ink-3:#9a9a9a;
+  --rule:#e4e4e4;
+  --rule-strong:#111111;
+  --accent:#e4002b;      /* Swiss red */
+  --profit:#e4002b;      /* 涨 = 红 */
+  --loss:#007a33;        /* 跌 = 绿 */
+  --pad:28px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--paper);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+body{
+  font-family:'Inter','Noto Sans SC',-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;
+  color:var(--ink);
+  line-height:1.5;
+  font-feature-settings:"tnum" 1;
+  -webkit-font-smoothing:antialiased;
+  padding:var(--pad);
+  max-width:1180px;
+  margin:0 auto;
+  touch-action:manipulation;
+}
+.up{color:var(--profit);}
+.down{color:var(--loss);}
+
+/* ── Masthead ── */
+.masthead{border-bottom:3px solid var(--rule-strong);padding-bottom:18px;margin-bottom:36px;}
+.masthead .kicker{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:700;}
+.masthead h1{font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1.04;margin-top:8px;}
+.masthead .meta{margin-top:12px;font-size:13px;color:var(--ink-2);display:flex;gap:24px;flex-wrap:wrap;letter-spacing:.02em;}
+.masthead .meta b{color:var(--ink);font-weight:600;}
+.save-btn{position:absolute;right:var(--pad);top:var(--pad);background:var(--ink);color:var(--paper);border:none;padding:10px 20px;font-size:12px;font-weight:600;font-family:inherit;letter-spacing:.04em;cursor:pointer;}
+.save-btn:hover{background:#333;}
+@media (max-width:600px){.save-btn{position:static;display:block;margin-top:12px;width:100%;}}
+
+/* ── Section ── */
+.section{margin-bottom:44px;}
+.section-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:20px;}
+.section-head .idx{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
+.section-head h2{font-size:21px;font-weight:700;letter-spacing:-.01em;}
+.section-head .note{margin-left:auto;font-size:12px;color:var(--ink-3);letter-spacing:.02em;}
+
+/* ── Data strip (overview) ── */
+.strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);}
+.cell{padding:22px 24px;border-right:1px solid var(--rule);}
+.cell:last-child{border-right:none;}
+.cell .num{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+.cell .val{font-size:34px;font-weight:800;letter-spacing:-.02em;margin-top:12px;font-variant-numeric:tabular-nums;line-height:1;}
+.cell .sub{font-size:12px;color:var(--ink-2);margin-top:8px;letter-spacing:.02em;}
+
+/* ── Chart card ── */
+.chart-card{border:1px solid var(--rule);padding:24px;}
+.chart-card .chart-title{font-size:16px;font-weight:700;letter-spacing:-.01em;}
+.chart-card .chart-desc{font-size:12px;color:var(--ink-3);margin:6px 0 14px;letter-spacing:.02em;}
+.chart-canvas-wrap{position:relative;height:440px;}
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+
+/* ── Stats grid ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);border-bottom:none;}
+.stat{padding:16px 18px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);}
+.stat:nth-child(4n){border-right:none;}
+.stat .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
+.stat .v{font-size:20px;font-weight:700;margin-top:8px;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+
+/* ── Table ── */
+.table-box{border:1px solid var(--rule);padding:0;}
+.table-box .tb-title{font-size:16px;font-weight:700;padding:18px 20px 14px;border-bottom:1px solid var(--rule);letter-spacing:-.01em;}
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{text-align:right;padding:12px 16px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);border-bottom:2px solid var(--rule-strong);font-weight:600;white-space:nowrap;}
+thead th:first-child,tbody td:first-child{text-align:left;}
+thead th:nth-child(2),tbody td.name{text-align:left;}
+tbody td{padding:11px 16px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+tbody tr:hover{background:#fafafa;}
+td.name{font-weight:500;text-align:left;}
+
+/* ── Notice ── */
+.notice{border-left:3px solid var(--accent);background:#fafafa;padding:12px 16px;font-size:13px;color:var(--ink-2);letter-spacing:.02em;margin-bottom:36px;}
+
+/* ── P&L Calendar ── */
+.cal-toggles{display:flex;gap:0;margin-left:auto;}
+.cal-btn{background:transparent;border:1px solid var(--rule);padding:4px 14px;font-size:12px;font-family:inherit;cursor:pointer;color:var(--ink-2);}
+.cal-btn:first-child{border-right:none;}
+.cal-btn:last-child{border-left:none;}
+.cal-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.cal-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px;}
+.cal-nav-btn{background:transparent;border:1px solid var(--rule);padding:6px 14px;font-size:14px;cursor:pointer;color:var(--ink);}
+.cal-nav-btn:hover{background:var(--rule);}
+.cal-title{font-size:15px;font-weight:600;min-width:160px;text-align:center;}
+.cal-grid{display:grid;gap:3px;}
+.cal-grid.day{grid-template-columns:repeat(7,1fr);}
+.cal-grid.month{grid-template-columns:repeat(4,1fr);}
+.cal-grid.year{grid-template-columns:repeat(4,1fr);}
+.cal-cell{aspect-ratio:1;font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:0;cursor:pointer;position:relative;font-variant-numeric:tabular-nums;}
+.cal-cell .day-num{font-weight:600;line-height:1;margin-bottom:16px;}
+.cal-cell .day-amt{font-size:12px;line-height:1;margin-top:1px;}
+.cal-cell .day-pct{font-size:12px;line-height:1;margin-top:6px;}
+.cal-cell.no-data{background:#f5f5f5;color:#ccc;cursor:default;}
+.cal-cell.weekday{background:transparent;color:var(--ink-3);font-size:10px;font-weight:600;aspect-ratio:auto;height:auto;padding:4px 0;cursor:default;border:none;text-align:center;display:block;}
+.cal-legend{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:12px;font-size:10px;color:var(--ink-2);}
+.cal-legend-label{margin:0 6px;}
+@media (max-width:600px){
+  .cal-toggles{width:100%;margin-left:0;margin-top:8px;}
+  .cal-grid.day{grid-template-columns:repeat(7,1fr);font-size:9px;}
+  .cal-cell .day-amt{font-size:7px;}
+  .cal-cell .day-pct{font-size:6px;}
+}
+
+@media (max-width:880px){
+  .strip{grid-template-columns:repeat(2,1fr);}
+  .strip .cell:nth-child(2){border-right:none;}
+  .strip .cell:nth-child(1),.strip .cell:nth-child(2){border-bottom:1px solid var(--rule);}
+  .chart-grid-2{grid-template-columns:1fr;}
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .stat:nth-child(2n){border-right:none;}
+  .chart-canvas-wrap{height:360px;}
+  .masthead h1{font-size:32px;}
+}
+@media (max-width:600px){
+  :root{--pad:16px;}
+  body{padding:14px;}
+  .masthead{border-bottom-width:2px;padding-bottom:12px;margin-bottom:24px;}
+  .masthead .kicker{font-size:10px;letter-spacing:.14em;}
+  .masthead h1{font-size:24px;}
+  .masthead .meta{font-size:11px;gap:12px;}
+  .section{margin-bottom:28px;}
+  .section-head{gap:8px;padding-bottom:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .section-head h2{font-size:16px;}
+  .section-head .note{font-size:10px;margin-left:0;width:100%;}
+  .strip{grid-template-columns:repeat(2,1fr);}
+  .cell{padding:14px 12px;}
+  .cell .val{font-size:22px;margin-top:8px;}
+  .cell .sub{font-size:10px;}
+  .chart-card{padding:14px;}
+  .chart-card .chart-title{font-size:14px;}
+  .chart-canvas-wrap{height:260px;}
+  .chart-canvas-wrap[style*="380px"],.chart-canvas-wrap[style*="340px"]{height:220px;}
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .stat:nth-child(2n){border-right:none;}
+  .stat{padding:12px 10px;}
+  .stat .v{font-size:15px;}
+  .stat .l{font-size:10px;}
+  table{font-size:11px;}
+  thead th{padding:8px 10px;font-size:9px;}
+  tbody td{padding:8px 10px;}
+  .notice{font-size:11px;padding:10px 12px;}
+}
+</style>
+</head>
+<body>
+
+<div id="page">
+<div class="masthead">
+  <div class="kicker">Portfolio Performance Report</div>
+  <h1>持仓收益分析</h1>
+  <div class="meta" id="meta"></div>
+  <button class="save-btn" onclick="saveAsImage()">SAVE AS PNG</button>
+</div>
+
+<!-- 01 Overview -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">01</span>
+    <h2>概览 / OVERVIEW</h2>
+    <span class="note">数值取自文档汇总</span>
+  </div>
+  <div class="strip" id="strip"></div>
+</div>
+
+<!-- 02 综合走势 -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">02</span>
+    <h2>资产 · 收益 · 收益率</h2>
+    <span class="note">点击图例可显隐对应曲线</span>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">综合走势（双轴）</div>
+    <div class="chart-desc">左轴：金额（万） ｜ 右轴：收益率（%）</div>
+    <div class="chart-canvas-wrap">
+      <canvas id="chartMaster"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- 03 回撤分析 -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">03</span>
+    <h2>回撤分析 / DRAWDOWN</h2>
+    <span class="note">资产总值峰值回撤</span>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">回撤走势（峰值至当前）</div>
+    <div class="chart-desc">红色填充为从峰值的回落幅度</div>
+    <div class="chart-canvas-wrap" style="height:340px;">
+      <canvas id="chartDrawdown"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- 04 仓位率 -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">04</span>
+    <h2>仓位率 / POSITION RATE</h2>
+    <span class="note">持仓占当前总市值的百分比（文档 holdings_pos_curr_pct）</span>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">仓位率走势</div>
+    <div class="chart-desc">灰色虚线为满仓 100% 参考线</div>
+    <div class="chart-canvas-wrap" style="height:340px;">
+      <canvas id="chartPosition"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- 05 结构分布 -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">05</span>
+    <h2>结构分布 / ALLOCATION</h2>
+  </div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">仓位分布</div>
+      <div class="chart-desc">按当前市值占比</div>
+      <div class="chart-canvas-wrap" style="aspect-ratio:1.2;height:auto;">
+        <canvas id="chartAllocation"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">市场分布</div>
+      <div class="chart-desc">A股 / 港股 / 美股</div>
+      <div class="chart-canvas-wrap" style="aspect-ratio:1.2;height:auto;">
+        <canvas id="chartMarket"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 Ranking -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">06</span>
+    <h2>持仓收益排行 / RANKING</h2>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">各标的收益（万）</div>
+    <div class="chart-desc">红涨绿跌</div>
+    <div class="chart-canvas-wrap" style="height:420px;">
+      <canvas id="chartRanking"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- 07 Statistics -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">07</span>
+    <h2>统计摘要 / STATISTICS</h2>
+  </div>
+  <div class="stat-grid" id="statsGrid"></div>
+</div>
+
+<!-- 08 Holdings detail -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">08</span>
+    <h2>持仓明细 / HOLDINGS</h2>
+  </div>
+  <div class="table-box">
+    <div class="tb-title">完整持仓（按当前市值降序）</div>
+    <div class="table-scroll">
+      <table id="holdingsTable">
+        <thead>
+          <tr>
+            <th>市场</th>
+            <th>公司名称</th>
+            <th>成本价</th>
+            <th>当前价</th>
+            <th>数量</th>
+            <th>投入</th>
+            <th>当前</th>
+            <th>收益</th>
+            <th>收益率</th>
+            <th>股息</th>
+            <th>仓位</th>
+          </tr>
+        </thead>
+        <tbody id="holdingsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- 09 P&L Calendar -->
+<div class="section">
+  <div class="section-head">
+    <span class="idx">09</span>
+    <h2>盈亏日历 / P&L CALENDAR</h2>
+    <div class="cal-toggles">
+      <button class="cal-btn active" data-view="day">日</button>
+      <button class="cal-btn" data-view="month">月</button>
+      <button class="cal-btn" data-view="year">年</button>
+    </div>
+  </div>
+  <div class="cal-nav">
+    <button class="cal-nav-btn" id="calPrev">←</button>
+    <span class="cal-title" id="calTitle"></span>
+    <button class="cal-nav-btn" id="calNext">→</button>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div class="cal-legend">
+    <span class="cal-legend-label">亏损</span>
+    <span class="cal-swatch" style="background:#007a33;width:14px;height:14px;"></span>
+    <span class="cal-swatch" style="background:#c5e8d0;width:14px;height:14px;"></span>
+    <span class="cal-swatch" style="background:#e4e4e4;width:14px;height:14px;"></span>
+    <span class="cal-swatch" style="background:#f5c6cf;width:14px;height:14px;"></span>
+    <span class="cal-swatch" style="background:#e4002b;width:14px;height:14px;"></span>
+    <span class="cal-legend-label">盈利</span>
+  </div>
+</div>
+</div>
+<script>
+const rawData = {"snapshots": [{"date": "2026-01-01", "snapshot_time": "2026-01-01 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/1/1", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 100, "holdings_roi": 79.94, "holdings_invested": 1396000.0, "holdings_current": 2512000.0, "holdings_pnl": 1116000.0, "holdings_dividends": 0, "year_start": 865000.0, "salary_surplus": 116000.0, "base": 924000.0, "total_pnl": 0, "total_roi": 0, "regions": {"整体": {"invested": 1396000.0, "current": 2505000.0, "pnl": 1109000.0}, "国内": {"invested": 790000.0, "current": 2005396.1, "pnl": 1215396.1}, "境外": {"invested": 606000.0, "current": 499603.9, "pnl": -106396.1}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "中矿", "cost_price_raw": "¥30.90", "current_price_raw": "¥78.55", "cost_price": 30.9, "current_price": 78.55, "pos_cost_pct": 56.59, "pos_curr_pct": 80.06, "roi": 154.5, "quantity": 25600, "invested": 790000.0, "current": 2011000.0, "dividends": null, "pnl": 1221000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$26.10", "current_price_raw": "$21.53", "cost_price": 26.1, "current_price": 21.53, "pos_cost_pct": 35.6, "pos_curr_pct": 16.32, "roi": -17.6, "quantity": 2724, "invested": 497000.0, "current": 410000.0, "dividends": null, "pnl": -87000.0}, {"market": "HK", "currency": "HKD", "name": "再鼎医药", "cost_price_raw": "HK$14.3", "current_price_raw": "HK$13.7", "cost_price": 14.3, "current_price": 13.7, "pos_cost_pct": 3.65, "pos_curr_pct": 1.95, "roi": -4.5, "quantity": 4000, "invested": 51000.0, "current": 49000.0, "dividends": null, "pnl": -2000.0}, {"market": "US", "currency": "USD", "name": "QQQ 270115 300P", "cost_price_raw": "$3.30", "current_price_raw": "$2.40", "cost_price": 3.3, "current_price": 2.4, "pos_cost_pct": 4.15, "pos_curr_pct": 1.67, "roi": -27.2, "quantity": 2500, "invested": 58000.0, "current": 42000.0, "dividends": null, "pnl": -16000.0}]}, {"date": "2026-03-10", "snapshot_time": "2026-03-10 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/3/10", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 100, "holdings_roi": 79.75, "holdings_invested": 1432000.0, "holdings_current": 2574000.0, "holdings_pnl": 1142000.0, "holdings_dividends": 0, "year_start": 2505000.0, "salary_surplus": 125000.0, "base": 2568000.0, "total_pnl": -55000.0, "total_roi": -2.14, "regions": {"整体": {"invested": 1432000.0, "current": 2575000.0, "pnl": 1143000.0}, "国内": {"invested": 824000.0, "current": 2081808.47, "pnl": 1257808.47}, "境外": {"invested": 608000.0, "current": 493191.53, "pnl": -114808.47}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "中矿", "cost_price_raw": "¥29.6", "current_price_raw": "¥80.13", "cost_price": 29.6, "current_price": 80.13, "pos_cost_pct": 51.54, "pos_curr_pct": 77.51, "roi": 170.3, "quantity": 24900, "invested": 738000.0, "current": 1995000.0, "dividends": null, "pnl": 1257000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$25.3", "current_price_raw": "$19.14", "cost_price": 25.3, "current_price": 19.14, "pos_cost_pct": 34.78, "pos_curr_pct": 14.65, "roi": -24.3, "quantity": 2868, "invested": 498000.0, "current": 377000.0, "dividends": null, "pnl": -121000.0}, {"market": "HK", "currency": "HKD", "name": "再鼎医药", "cost_price_raw": "HK$14.3", "current_price_raw": "HK$15.1", "cost_price": 14.3, "current_price": 15.1, "pos_cost_pct": 7.68, "pos_curr_pct": 4.51, "roi": 5.3, "quantity": 8800, "invested": 110000.0, "current": 116000.0, "dividends": null, "pnl": 6000.0}, {"market": "CN", "currency": "CNY", "name": "2605 C14000", "cost_price_raw": "¥10800.00", "current_price_raw": "¥10800.00", "cost_price": 10800.0, "current_price": 10800.0, "pos_cost_pct": 6.01, "pos_curr_pct": 3.34, "roi": 0.0, "quantity": 8, "invested": 86000.0, "current": 86000.0, "dividends": null, "pnl": 0.0}]}, {"date": "2026-03-26", "snapshot_time": "2026-03-26 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/3/26", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 100, "holdings_roi": 26.62, "holdings_invested": 1826000.0, "holdings_current": 2312000.0, "holdings_pnl": 486000.0, "holdings_dividends": 0, "year_start": 2505000.0, "salary_surplus": 125000.0, "base": 2568000.0, "total_pnl": -332000.0, "total_roi": -12.92, "regions": {"整体": {"invested": 1826000.0, "current": 2299000.0, "pnl": 473000.0}, "国内": {"invested": 1001000.0, "current": 1611885.38, "pnl": 610885.38}, "境外": {"invested": 825000.0, "current": 687114.62, "pnl": -137885.38}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "中矿", "cost_price_raw": "¥31.0", "current_price_raw": "¥68.22", "cost_price": 31.0, "current_price": 68.22, "pos_cost_pct": 28.2, "pos_curr_pct": 48.96, "roi": 120.1, "quantity": 16600, "invested": 515000.0, "current": 1132000.0, "dividends": null, "pnl": 617000.0}, {"market": "CN", "currency": "CNY", "name": "碳酸锂2701", "cost_price_raw": "¥16.0", "current_price_raw": "¥15.7", "cost_price": 16.0, "current_price": 15.7, "pos_cost_pct": 21.91, "pos_curr_pct": 17.0, "roi": -1.9, "quantity": 25000, "invested": 400000.0, "current": 393000.0, "dividends": null, "pnl": -7000.0}, {"market": "CN", "currency": "CNY", "name": "2605 C14000", "cost_price_raw": "¥1.08", "current_price_raw": "¥1.20", "cost_price": 1.08, "current_price": 1.2, "pos_cost_pct": 4.71, "pos_curr_pct": 4.15, "roi": 11.1, "quantity": 80000, "invested": 86000.0, "current": 96000.0, "dividends": null, "pnl": 10000.0}, {"market": "HK", "currency": "HKD", "name": "天齐锂业", "cost_price_raw": "HK$43.5", "current_price_raw": "HK$45.0", "cost_price": 43.5, "current_price": 45.0, "pos_cost_pct": 17.25, "pos_curr_pct": 14.1, "roi": 3.4, "quantity": 8200, "invested": 315000.0, "current": 326000.0, "dividends": null, "pnl": 11000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$24.6", "current_price_raw": "$17.60", "cost_price": 24.6, "current_price": 17.6, "pos_cost_pct": 27.93, "pos_curr_pct": 15.79, "roi": -28.5, "quantity": 3000, "invested": 510000.0, "current": 365000.0, "dividends": null, "pnl": -145000.0}]}, {"date": "2026-03-30", "snapshot_time": "2026-03-30 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/3/30", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 88.5, "holdings_roi": 28.24, "holdings_invested": 1742000.0, "holdings_current": 2234000.0, "holdings_pnl": 492000.0, "holdings_dividends": 0, "year_start": 2505000.0, "salary_surplus": 150000.0, "base": 2580000.0, "total_pnl": -131000.0, "total_roi": -5.08, "regions": {"整体": {"invested": 1742000.0, "current": 2524000.0, "pnl": 782000.0}, "国内": {"invested": 947000.0, "current": 1728612.35, "pnl": 781612.35}, "境外": {"invested": 795000.0, "current": 795387.65, "pnl": 387.65}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "中矿资源", "cost_price_raw": "¥31.0", "current_price_raw": "¥73.47", "cost_price": 31.0, "current_price": 73.47, "pos_cost_pct": 24.91, "pos_curr_pct": 46.06, "roi": 137.0, "quantity": 14000, "invested": 434000.0, "current": 1029000.0, "dividends": null, "pnl": 595000.0}, {"market": "CN", "currency": "CNY", "name": "LC2701", "cost_price_raw": "16.0万", "current_price_raw": "1.7万", "cost_price": 160000.0, "current_price": 17000.0, "pos_cost_pct": 20.09, "pos_curr_pct": 15.67, "roi": null, "quantity": 5, "invested": 350000.0, "current": 350000.0, "dividends": null, "pnl": 0.0}, {"market": "HK", "currency": "HKD", "name": "天齐锂业", "cost_price_raw": "HK$43.5", "current_price_raw": "HK$47.8", "cost_price": 43.5, "current_price": 47.8, "pos_cost_pct": 18.08, "pos_curr_pct": 15.49, "roi": null, "quantity": 8200, "invested": 315000.0, "current": 346000.0, "dividends": null, "pnl": 31000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$24.6", "current_price_raw": "$17.05", "cost_price": 24.6, "current_price": 17.05, "pos_cost_pct": 24.4, "pos_curr_pct": 13.21, "roi": null, "quantity": 2500, "invested": 425000.0, "current": 295000.0, "dividends": null, "pnl": -130000.0}, {"market": "CN", "currency": "CNY", "name": "LC2607 C180000", "cost_price_raw": "1.9万", "current_price_raw": "1.7万", "cost_price": 19000.0, "current_price": 17000.0, "pos_cost_pct": 8.61, "pos_curr_pct": 6.22, "roi": null, "quantity": 8, "invested": 150000.0, "current": 139000.0, "dividends": null, "pnl": -11000.0}, {"market": "US", "currency": "USD", "name": "SQQQ PUT", "cost_price_raw": "$10.0", "current_price_raw": "11.32", "cost_price": 10.0, "current_price": 11.32, "pos_cost_pct": 3.16, "pos_curr_pct": 2.82, "roi": null, "quantity": 800, "invested": 55000.0, "current": 63000.0, "dividends": null, "pnl": 8000.0}, {"market": "CN", "currency": "CNY", "name": "生猪2609", "cost_price_raw": "1.3万", "current_price_raw": "1.2万", "cost_price": 13000.0, "current_price": 12000.0, "pos_cost_pct": 0.75, "pos_curr_pct": 0.54, "roi": null, "quantity": 1, "invested": 13000.0, "current": 12000.0, "dividends": null, "pnl": -1000.0}]}, {"date": "2026-05-08", "snapshot_time": "2026-05-08 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/5/8", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 100, "holdings_roi": 5.57, "holdings_invested": 2620000.0, "holdings_current": 2766000.0, "holdings_pnl": 146000.0, "holdings_dividends": 0, "year_start": 2505000.0, "salary_surplus": 150000.0, "base": 2580000.0, "total_pnl": 91000.0, "total_roi": 3.51, "regions": {"整体": {"invested": 2620000.0, "current": 2746000.0, "pnl": 126000.0}, "国内": {"invested": 587000.0, "current": 564885.76, "pnl": -22114.24}, "境外": {"invested": 2033000.0, "current": 2181114.24, "pnl": 148114.24}}}, "holdings": [{"market": "HK", "currency": "HKD", "name": "天齐锂业", "cost_price_raw": "HK$47.1", "current_price_raw": "HK$63.9", "cost_price": 47.1, "current_price": 63.9, "pos_cost_pct": 38.44, "pos_curr_pct": 49.39, "roi": null, "quantity": 24600, "invested": 1007000.0, "current": 1366000.0, "dividends": null, "pnl": 359000.0}, {"market": "FU", "currency": "CNY", "name": "LC2701", "cost_price_raw": "16.0万", "current_price_raw": "14.0万", "cost_price": 160000.0, "current_price": 140000.0, "pos_cost_pct": 12.21, "pos_curr_pct": 12.29, "roi": null, "quantity": 4, "invested": 320000.0, "current": 340000.0, "dividends": null, "pnl": 20000.0}, {"market": "OP", "currency": "CNY", "name": "LC2607_C18000", "cost_price_raw": "1.2万", "current_price_raw": "2.3万", "cost_price": 12000.0, "current_price": 23000.0, "pos_cost_pct": 8.85, "pos_curr_pct": 0.0, "roi": null, "quantity": 20, "invested": 232000.0, "current": 0.0, "dividends": null, "pnl": -232000.0}, {"market": "CN", "currency": "CNY", "name": "海螺水泥", "cost_price_raw": "¥21.7", "current_price_raw": "¥21.06", "cost_price": 21.7, "current_price": 21.06, "pos_cost_pct": 22.06, "pos_curr_pct": 20.25, "roi": null, "quantity": 26600, "invested": 578000.0, "current": 560000.0, "dividends": null, "pnl": -18000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$27.3", "current_price_raw": "$28.57", "cost_price": 27.3, "current_price": 28.57, "pos_cost_pct": 14.89, "pos_curr_pct": 14.75, "roi": null, "quantity": 2100, "invested": 390000.0, "current": 408000.0, "dividends": null, "pnl": 18000.0}, {"market": "HK", "currency": "HKD", "name": "同仁堂国药", "cost_price_raw": "HK$7.7", "current_price_raw": "HK$7.4", "cost_price": 7.7, "current_price": 7.4, "pos_cost_pct": 1.79, "pos_curr_pct": 1.63, "roi": null, "quantity": 7000, "invested": 47000.0, "current": 45000.0, "dividends": null, "pnl": -2000.0}, {"market": "HK", "currency": "HKD", "name": "中海物业", "cost_price_raw": "HK$4.0", "current_price_raw": "HK$4.1", "cost_price": 4.0, "current_price": 4.1, "pos_cost_pct": 0.65, "pos_curr_pct": 0.65, "roi": null, "quantity": 5000, "invested": 17000.0, "current": 18000.0, "dividends": null, "pnl": 1000.0}, {"market": "HK", "currency": "HKD", "name": "保利物业", "cost_price_raw": "HK$31.2", "current_price_raw": "HK$31.9", "cost_price": 31.2, "current_price": 31.9, "pos_cost_pct": 0.42, "pos_curr_pct": 0.4, "roi": null, "quantity": 400, "invested": 11000.0, "current": 11000.0, "dividends": null, "pnl": 0.0}, {"market": "HK", "currency": "HKD", "name": "中国民航", "cost_price_raw": "HK$9.9", "current_price_raw": "HK$10.0", "cost_price": 9.9, "current_price": 10.0, "pos_cost_pct": 0.34, "pos_curr_pct": 0.33, "roi": null, "quantity": 1000, "invested": 9000.0, "current": 9000.0, "dividends": null, "pnl": 0.0}, {"market": "CN", "currency": "CNY", "name": "青松建化", "cost_price_raw": "¥4.1", "current_price_raw": "¥4.08", "cost_price": 4.1, "current_price": 4.08, "pos_cost_pct": 0.34, "pos_curr_pct": 0.33, "roi": null, "quantity": 2200, "invested": 9000.0, "current": 9000.0, "dividends": null, "pnl": 0.0}, {"market": "HK", "currency": "HKD", "name": "泡泡玛特", "cost_price_raw": "HK$172.0", "current_price_raw": "HK$171.4", "cost_price": 172.0, "current_price": 171.4, "pos_cost_pct": 0.0, "pos_curr_pct": 0.0, "roi": null, "quantity": 0, "invested": 0.0, "current": 0.0, "dividends": null, "pnl": 0.0}, {"market": "HK", "currency": "HKD", "name": "腾讯控股", "cost_price_raw": "HK$470.0", "current_price_raw": "HK$470.4", "cost_price": 470.0, "current_price": 470.4, "pos_cost_pct": 0.0, "pos_curr_pct": 0.0, "roi": null, "quantity": 0, "invested": 0.0, "current": 0.0, "dividends": null, "pnl": 0.0}, {"market": "CN", "currency": "CNY", "name": "中矿资源", "cost_price_raw": "¥31.0", "current_price_raw": "¥89.82", "cost_price": 31.0, "current_price": 89.82, "pos_cost_pct": 0.0, "pos_curr_pct": 0.0, "roi": null, "quantity": 0, "invested": 0.0, "current": 0.0, "dividends": null, "pnl": 0.0}]}, {"date": "2026-05-20", "snapshot_time": "2026-05-20 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/5/20", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 65.2, "holdings_roi": -2.51, "holdings_invested": 2352000.0, "holdings_current": 2293000.0, "holdings_pnl": -59000.0, "holdings_dividends": 36000.0, "year_start": 2505000.0, "salary_surplus": 150000.0, "base": 2580000.0, "total_pnl": -341000.0, "total_roi": -13.21, "regions": {"整体": {"invested": 2352000.0, "current": 2314000.0, "pnl": -38000.0}, "国内": {"invested": 775000.0, "current": 726593.98, "pnl": -48406.02}, "境外": {"invested": 1577000.0, "current": 1587406.02, "pnl": 10406.02}}}, "holdings": [{"market": "FU", "currency": "CNY", "name": "LC2701", "cost_price_raw": "16.0万", "current_price_raw": "15.0万", "cost_price": 160000.0, "current_price": 150000.0, "pos_cost_pct": 15.48, "pos_curr_pct": 16.09, "roi": 1.3, "quantity": 1, "invested": 364000.0, "current": 369000.0, "dividends": null, "pnl": 5000.0}, {"market": "OP", "currency": "CNY", "name": "LC26009_C200000", "cost_price_raw": "1.3万", "current_price_raw": "0.0万", "cost_price": 13000.0, "current_price": 0.0, "pos_cost_pct": 15.48, "pos_curr_pct": 15.87, "roi": 0.0, "quantity": 27, "invested": 364000.0, "current": 364000.0, "dividends": null, "pnl": 0.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$27.3", "current_price_raw": "$27.66", "cost_price": 27.3, "current_price": 27.66, "pos_cost_pct": 16.58, "pos_curr_pct": 17.23, "roi": 1.3, "quantity": 2100, "invested": 390000.0, "current": 395000.0, "dividends": null, "pnl": 5000.0}, {"market": "CN", "currency": "CNY", "name": "海螺水泥", "cost_price_raw": "¥21.6", "current_price_raw": "¥20.01", "cost_price": 21.6, "current_price": 20.01, "pos_cost_pct": 28.66, "pos_curr_pct": 27.21, "roi": -7.3, "quantity": 31200, "invested": 674000.0, "current": 624000.0, "dividends": null, "pnl": -50000.0}, {"market": "CN", "currency": "CNY", "name": "青松建化", "cost_price_raw": "¥4.1", "current_price_raw": "¥3.92", "cost_price": 4.1, "current_price": 3.92, "pos_cost_pct": 4.29, "pos_curr_pct": 4.19, "roi": -4.6, "quantity": 24600, "invested": 101000.0, "current": 96000.0, "dividends": null, "pnl": -5000.0}, {"market": "HK", "currency": "HKD", "name": "保利物业", "cost_price_raw": "HK$31.9", "current_price_raw": "HK$30.6", "cost_price": 31.9, "current_price": 30.6, "pos_cost_pct": 4.46, "pos_curr_pct": 4.4, "roi": -4.1, "quantity": 3800, "invested": 105000.0, "current": 101000.0, "dividends": null, "pnl": -4000.0}, {"market": "HK", "currency": "HKD", "name": "中海物业", "cost_price_raw": "HK$4.1", "current_price_raw": "HK$3.8", "cost_price": 4.1, "current_price": 3.8, "pos_cost_pct": 4.29, "pos_curr_pct": 4.32, "roi": -6.6, "quantity": 30000, "invested": 101000.0, "current": 99000.0, "dividends": null, "pnl": -2000.0}, {"market": "HK", "currency": "HKD", "name": "中国民航", "cost_price_raw": "HK$9.7", "current_price_raw": "HK$9.5", "cost_price": 9.7, "current_price": 9.5, "pos_cost_pct": 4.29, "pos_curr_pct": 4.32, "roi": -2.5, "quantity": 12000, "invested": 101000.0, "current": 99000.0, "dividends": null, "pnl": -2000.0}, {"market": "HK", "currency": "HKD", "name": "同仁堂国药", "cost_price_raw": "HK$7.5", "current_price_raw": "HK$7.2", "cost_price": 7.5, "current_price": 7.2, "pos_cost_pct": 4.17, "pos_curr_pct": 4.1, "roi": -4.3, "quantity": 15000, "invested": 98000.0, "current": 94000.0, "dividends": null, "pnl": -4000.0}, {"market": "HK", "currency": "HKD", "name": "腾讯控股", "cost_price_raw": "HK$455.2", "current_price_raw": "HK$445.2", "cost_price": 455.2, "current_price": 445.2, "pos_cost_pct": 1.15, "pos_curr_pct": 1.13, "roi": -2.2, "quantity": 0, "invested": 27000.0, "current": 26000.0, "dividends": null, "pnl": -1000.0}, {"market": "HK", "currency": "HKD", "name": "泡泡玛特", "cost_price_raw": "HK$156.0", "current_price_raw": "HK$151.9", "cost_price": 156.0, "current_price": 151.9, "pos_cost_pct": 1.15, "pos_curr_pct": 1.13, "roi": -2.6, "quantity": 200, "invested": 27000.0, "current": 26000.0, "dividends": null, "pnl": -1000.0}]}, {"date": "2026-06-02", "snapshot_time": "2026-06-02 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/6/2", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 70.8, "holdings_roi": -7.54, "holdings_invested": 1871000.0, "holdings_current": 1730000.0, "holdings_pnl": -141000.0, "holdings_dividends": 35000.0, "year_start": 2505000.0, "salary_surplus": 150000.0, "base": 2580000.0, "total_pnl": -306000.0, "total_roi": -11.85, "regions": {"整体": {"invested": 1871000.0, "current": 2349000.0, "pnl": 478000.0}, "国内": {"invested": 611000.0, "current": 764443.35, "pnl": 153443.35}, "境外": {"invested": 1260000.0, "current": 1584556.65, "pnl": 324556.65}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "海螺水泥", "cost_price_raw": "¥21.8", "current_price_raw": "¥20.11", "cost_price": 21.8, "current_price": 20.11, "pos_cost_pct": 32.66, "pos_curr_pct": 32.54, "roi": -7.3, "quantity": 28000, "invested": 611000.0, "current": 563000.0, "dividends": null, "pnl": -48000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$27.2", "current_price_raw": "$25.51", "cost_price": 27.2, "current_price": 25.51, "pos_cost_pct": 19.62, "pos_curr_pct": 19.94, "roi": -6.2, "quantity": 2000, "invested": 367000.0, "current": 345000.0, "dividends": null, "pnl": -22000.0}, {"market": "HK", "currency": "HKD", "name": "保利物业", "cost_price_raw": "HK$32.0", "current_price_raw": "HK$28.7", "cost_price": 32.0, "current_price": 28.7, "pos_cost_pct": 6.47, "pos_curr_pct": 6.3, "roi": -10.3, "quantity": 4400, "invested": 121000.0, "current": 109000.0, "dividends": null, "pnl": -12000.0}, {"market": "HK", "currency": "HKD", "name": "中海物业", "cost_price_raw": "HK$4.1", "current_price_raw": "HK$3.9", "cost_price": 4.1, "current_price": 3.9, "pos_cost_pct": 5.61, "pos_curr_pct": 5.78, "roi": -5.5, "quantity": 30000, "invested": 105000.0, "current": 100000.0, "dividends": null, "pnl": -5000.0}, {"market": "HK", "currency": "HKD", "name": "中国民航", "cost_price_raw": "HK$9.7", "current_price_raw": "HK$9.3", "cost_price": 9.7, "current_price": 9.3, "pos_cost_pct": 6.68, "pos_curr_pct": 6.99, "roi": -4.0, "quantity": 15000, "invested": 125000.0, "current": 121000.0, "dividends": null, "pnl": -4000.0}, {"market": "HK", "currency": "HKD", "name": "同仁堂国药", "cost_price_raw": "HK$7.4", "current_price_raw": "HK$7.0", "cost_price": 7.4, "current_price": 7.0, "pos_cost_pct": 7.11, "pos_curr_pct": 7.34, "roi": -4.5, "quantity": 21000, "invested": 133000.0, "current": 127000.0, "dividends": null, "pnl": -6000.0}, {"market": "HK", "currency": "HKD", "name": "西锐", "cost_price_raw": "HK$37.3", "current_price_raw": "HK$37.8", "cost_price": 37.3, "current_price": 37.8, "pos_cost_pct": 5.18, "pos_curr_pct": 5.66, "roi": 1.2, "quantity": 3000, "invested": 97000.0, "current": 98000.0, "dividends": null, "pnl": 1000.0}, {"market": "HK", "currency": "HKD", "name": "康方生物", "cost_price_raw": "HK$118.5", "current_price_raw": "HK$93.6", "cost_price": 118.5, "current_price": 93.6, "pos_cost_pct": 11.12, "pos_curr_pct": 9.36, "roi": -21.0, "quantity": 2000, "invested": 208000.0, "current": 162000.0, "dividends": null, "pnl": -46000.0}, {"market": "HK", "currency": "HKD", "name": "再鼎医药", "cost_price_raw": "HK$13.4", "current_price_raw": "HK$13.5", "cost_price": 13.4, "current_price": 13.5, "pos_cost_pct": 5.56, "pos_curr_pct": 6.07, "roi": 0.6, "quantity": 9000, "invested": 104000.0, "current": 105000.0, "dividends": null, "pnl": 1000.0}]}, {"date": "2026-06-05", "snapshot_time": "2026-06-05 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/6/5", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 75, "holdings_roi": -3.55, "holdings_invested": 1831000.0, "holdings_current": 1766000.0, "holdings_pnl": -65000.0, "holdings_dividends": 35000.0, "year_start": 2505000.0, "salary_surplus": 150000.0, "base": 2580000.0, "total_pnl": -232000.0, "total_roi": -9.01, "regions": {"整体": {"invested": 2418000.0, "current": 2348000.0, "pnl": -71000.0}, "国内": {"invested": 2072000.0, "current": 1910000.0, "pnl": -162000.0}, "境外": {"invested": 346000.0, "current": 438000.0, "pnl": 92000.0}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "海螺水泥", "cost_price_raw": "¥21.8", "current_price_raw": "¥19.35", "cost_price": 21.8, "current_price": 19.35, "pos_cost_pct": 33.37, "pos_curr_pct": 30.69, "roi": -11.3, "quantity": 28000, "invested": 611000.0, "current": 542000.0, "dividends": null, "pnl": -69000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$26.9", "current_price_raw": "$33.97", "cost_price": 26.9, "current_price": 33.97, "pos_cost_pct": 18.9, "pos_curr_pct": 24.8, "roi": 26.4, "quantity": 1900, "invested": 346000.0, "current": 438000.0, "dividends": null, "pnl": 92000.0}, {"market": "HK", "currency": "HKD", "name": "康方生物", "cost_price_raw": "HK$120.4", "current_price_raw": "HK$93.6", "cost_price": 120.4, "current_price": 93.6, "pos_cost_pct": 11.36, "pos_curr_pct": 9.17, "roi": -22.3, "quantity": 2000, "invested": 208000.0, "current": 162000.0, "dividends": null, "pnl": -46000.0}, {"market": "HK", "currency": "HKD", "name": "再鼎医药", "cost_price_raw": "HK$13.2", "current_price_raw": "HK$12.6", "cost_price": 13.2, "current_price": 12.6, "pos_cost_pct": 9.99, "pos_curr_pct": 9.91, "roi": -4.6, "quantity": 16000, "invested": 183000.0, "current": 175000.0, "dividends": null, "pnl": -8000.0}, {"market": "HK", "currency": "HKD", "name": "同仁堂国药", "cost_price_raw": "HK$7.4", "current_price_raw": "HK$7.0", "cost_price": 7.4, "current_price": 7.0, "pos_cost_pct": 7.32, "pos_curr_pct": 7.19, "roi": -5.2, "quantity": 21000, "invested": 134000.0, "current": 127000.0, "dividends": null, "pnl": -7000.0}, {"market": "HK", "currency": "HKD", "name": "中国民航", "cost_price_raw": "HK$9.7", "current_price_raw": "HK$9.0", "cost_price": 9.7, "current_price": 9.0, "pos_cost_pct": 6.66, "pos_curr_pct": 6.63, "roi": -6.9, "quantity": 15000, "invested": 122000.0, "current": 117000.0, "dividends": null, "pnl": -5000.0}, {"market": "HK", "currency": "HKD", "name": "保利物业", "cost_price_raw": "HK$32.1", "current_price_raw": "HK$28.5", "cost_price": 32.1, "current_price": 28.5, "pos_cost_pct": 6.66, "pos_curr_pct": 6.17, "roi": -11.3, "quantity": 4400, "invested": 122000.0, "current": 109000.0, "dividends": null, "pnl": -13000.0}, {"market": "HK", "currency": "HKD", "name": "中海物业", "cost_price_raw": "HK$4.1", "current_price_raw": "HK$3.7", "cost_price": 4.1, "current_price": 3.7, "pos_cost_pct": 5.73, "pos_curr_pct": 5.44, "roi": -8.4, "quantity": 30000, "invested": 105000.0, "current": 96000.0, "dividends": null, "pnl": -9000.0}]}, {"date": "2026-07-01", "snapshot_time": "2026-07-01 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/7/1", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 99, "holdings_roi": -9.71, "holdings_invested": 2378000.0, "holdings_current": 2147000.0, "holdings_pnl": -231000.0, "holdings_dividends": 42000.0, "year_start": 2505000.0, "salary_surplus": 150000.0, "base": 2580000.0, "total_pnl": -415000.0, "total_roi": -16.08, "regions": {"整体": {"invested": 2397000.0, "current": 2165000.0, "pnl": -232000.0}, "国内": {"invested": 2092000.0, "current": 1820000.0, "pnl": -272000.0}, "境外": {"invested": 305000.0, "current": 345000.0, "pnl": 40000.0}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "海螺水泥", "cost_price_raw": "¥20.4", "current_price_raw": "¥17.25", "cost_price": 20.4, "current_price": 17.25, "pos_cost_pct": 39.02, "pos_curr_pct": 36.56, "roi": -15.4, "quantity": 45500, "invested": 928000.0, "current": 785000.0, "dividends": null, "pnl": -143000.0}, {"market": "HK", "currency": "HKD", "name": "康方生物", "cost_price_raw": "HK$97.2", "current_price_raw": "HK$88.1", "cost_price": 97.2, "current_price": 88.1, "pos_cost_pct": 21.19, "pos_curr_pct": 21.29, "roi": -9.4, "quantity": 6000, "invested": 504000.0, "current": 457000.0, "dividends": null, "pnl": -47000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$22.9", "current_price_raw": "$29.45", "cost_price": 22.9, "current_price": 29.45, "pos_cost_pct": 5.89, "pos_curr_pct": 8.38, "roi": 28.7, "quantity": 900, "invested": 140000.0, "current": 180000.0, "dividends": null, "pnl": 40000.0}, {"market": "HK", "currency": "HKD", "name": "再鼎医药", "cost_price_raw": "HK$13.5", "current_price_raw": "HK$14.5", "cost_price": 13.5, "current_price": 14.5, "pos_cost_pct": 2.31, "pos_curr_pct": 2.75, "roi": 6.8, "quantity": 4700, "invested": 55000.0, "current": 59000.0, "dividends": null, "pnl": 4000.0}, {"market": "HK", "currency": "HKD", "name": "亚盛医药", "cost_price_raw": "HK$34.0", "current_price_raw": "HK$33.2", "cost_price": 34.0, "current_price": 33.2, "pos_cost_pct": 2.99, "pos_curr_pct": 3.21, "roi": -2.4, "quantity": 2400, "invested": 71000.0, "current": 69000.0, "dividends": null, "pnl": -2000.0}, {"market": "HK", "currency": "HKD", "name": "药明合联", "cost_price_raw": "HK$47.9", "current_price_raw": "HK$57.1", "cost_price": 47.9, "current_price": 57.1, "pos_cost_pct": 0.88, "pos_curr_pct": 1.16, "roi": 19.0, "quantity": 500, "invested": 21000.0, "current": 25000.0, "dividends": null, "pnl": 4000.0}, {"market": "HK", "currency": "HKD", "name": "中国民航", "cost_price_raw": "HK$10.0", "current_price_raw": "HK$8.1", "cost_price": 10.0, "current_price": 8.1, "pos_cost_pct": 5.09, "pos_curr_pct": 4.56, "roi": -19.2, "quantity": 14000, "invested": 121000.0, "current": 98000.0, "dividends": null, "pnl": -23000.0}, {"market": "US", "currency": "USD", "name": "PDD", "cost_price_raw": "$81.5", "current_price_raw": "$81.20", "cost_price": 81.5, "current_price": 81.2, "pos_cost_pct": 6.98, "pos_curr_pct": 7.69, "roi": -0.3, "quantity": 300, "invested": 166000.0, "current": 165000.0, "dividends": null, "pnl": -1000.0}, {"market": "HK", "currency": "HKD", "name": "同仁堂国药", "cost_price_raw": "HK$7.3", "current_price_raw": "HK$6.5", "cost_price": 7.3, "current_price": 6.5, "pos_cost_pct": 6.9, "pos_curr_pct": 6.8, "roi": -11.0, "quantity": 26000, "invested": 164000.0, "current": 146000.0, "dividends": null, "pnl": -18000.0}, {"market": "HK", "currency": "HKD", "name": "保利物业", "cost_price_raw": "HK$40.7", "current_price_raw": "HK$25.8", "cost_price": 40.7, "current_price": 25.8, "pos_cost_pct": 2.35, "pos_curr_pct": 1.68, "roi": -36.7, "quantity": 1600, "invested": 56000.0, "current": 36000.0, "dividends": null, "pnl": -20000.0}, {"market": "HK", "currency": "HKD", "name": "中海物业", "cost_price_raw": "HK$4.5", "current_price_raw": "HK$3.2", "cost_price": 4.5, "current_price": 3.2, "pos_cost_pct": 3.32, "pos_curr_pct": 2.61, "roi": -28.9, "quantity": 20000, "invested": 79000.0, "current": 56000.0, "dividends": null, "pnl": -23000.0}, {"market": "US", "currency": "USD", "name": "SMMT", "cost_price_raw": "$14.6", "current_price_raw": "$14.59", "cost_price": 14.6, "current_price": 14.59, "pos_cost_pct": 1.26, "pos_curr_pct": 1.4, "roi": -0.1, "quantity": 300, "invested": 30000.0, "current": 30000.0, "dividends": null, "pnl": 0.0}, {"market": "HK", "currency": "HKD", "name": "汇贤产业信托", "cost_price_raw": "HK$0.416", "current_price_raw": "HK$0.390", "cost_price": 0.42, "current_price": 0.39, "pos_cost_pct": 1.81, "pos_curr_pct": 1.91, "roi": -6.2, "quantity": 120000, "invested": 43000.0, "current": 41000.0, "dividends": null, "pnl": -2000.0}]}, {"date": "2026-07-03", "snapshot_time": "2026-07-03 15:00:00 +08:00", "source": "历史截图整理", "doc_date": "2026/7/3", "exchange_rates": {"US": 6.7807, "HK": 0.8642}, "summary": {"holdings_pos_cost_pct": null, "holdings_pos_curr_pct": 100.3, "holdings_roi": -4.47, "holdings_invested": 2369000.0, "holdings_current": 2263000.0, "holdings_pnl": -106000.0, "holdings_dividends": 41000.0, "year_start": 2505000.0, "salary_surplus": 150000.0, "base": 2580000.0, "total_pnl": -325000.0, "total_roi": -12.59, "regions": {"整体": {"invested": 2360000.0, "current": 2255000.0, "pnl": -232000.0}, "国内": {"invested": 2050000.0, "current": 1905000.0, "pnl": -272000.0}, "境外": {"invested": 310000.0, "current": 350000.0, "pnl": 40000.0}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "海螺水泥", "cost_price_raw": "¥19.7", "current_price_raw": "¥17.14", "cost_price": 19.7, "current_price": 17.14, "pos_cost_pct": 38.5, "pos_curr_pct": 35.0, "roi": -13.2, "quantity": 46200, "invested": 912000.0, "current": 792000.0, "dividends": null, "pnl": -120000.0}, {"market": "CN", "currency": "CNY", "name": "罗普斯金", "cost_price_raw": "¥4.9", "current_price_raw": "¥4.95", "cost_price": 4.9, "current_price": 4.95, "pos_cost_pct": 0.63, "pos_curr_pct": 0.66, "roi": 0.8, "quantity": 3000, "invested": 15000.0, "current": 15000.0, "dividends": null, "pnl": 0.0}, {"market": "HK", "currency": "HKD", "name": "康方生物", "cost_price_raw": "HK$97.3", "current_price_raw": "HK$102.4", "cost_price": 97.3, "current_price": 102.4, "pos_cost_pct": 21.27, "pos_curr_pct": 23.46, "roi": 5.3, "quantity": 6000, "invested": 504000.0, "current": 531000.0, "dividends": null, "pnl": 27000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$22.9", "current_price_raw": "$29.91", "cost_price": 22.9, "current_price": 29.91, "pos_cost_pct": 5.91, "pos_curr_pct": 8.09, "roi": 30.8, "quantity": 900, "invested": 140000.0, "current": 183000.0, "dividends": null, "pnl": 43000.0}, {"market": "HK", "currency": "HKD", "name": "再鼎医药", "cost_price_raw": "HK$13.5", "current_price_raw": "HK$15.0", "cost_price": 13.5, "current_price": 15.0, "pos_cost_pct": 2.32, "pos_curr_pct": 2.7, "roi": 11.0, "quantity": 4700, "invested": 55000.0, "current": 61000.0, "dividends": null, "pnl": 6000.0}, {"market": "HK", "currency": "HKD", "name": "亚盛医药", "cost_price_raw": "HK$34.0", "current_price_raw": "HK$36.9", "cost_price": 34.0, "current_price": 36.9, "pos_cost_pct": 3.0, "pos_curr_pct": 3.36, "roi": 8.5, "quantity": 2400, "invested": 71000.0, "current": 76000.0, "dividends": null, "pnl": 5000.0}, {"market": "HK", "currency": "HKD", "name": "药明合联", "cost_price_raw": "HK$47.9", "current_price_raw": "HK$61.7", "cost_price": 47.9, "current_price": 61.7, "pos_cost_pct": 0.89, "pos_curr_pct": 1.19, "roi": 28.7, "quantity": 500, "invested": 21000.0, "current": 27000.0, "dividends": null, "pnl": 6000.0}, {"market": "HK", "currency": "HKD", "name": "中国民航", "cost_price_raw": "HK$10.0", "current_price_raw": "HK$8.1", "cost_price": 10.0, "current_price": 8.1, "pos_cost_pct": 5.11, "pos_curr_pct": 4.33, "roi": -18.6, "quantity": 14000, "invested": 121000.0, "current": 98000.0, "dividends": null, "pnl": -23000.0}, {"market": "US", "currency": "USD", "name": "PDD", "cost_price_raw": "$81.5", "current_price_raw": "$82.39", "cost_price": 81.5, "current_price": 82.39, "pos_cost_pct": 7.01, "pos_curr_pct": 7.42, "roi": 1.2, "quantity": 300, "invested": 166000.0, "current": 168000.0, "dividends": null, "pnl": 2000.0}, {"market": "HK", "currency": "HKD", "name": "同仁堂国药", "cost_price_raw": "HK$6.9", "current_price_raw": "HK$6.5", "cost_price": 6.9, "current_price": 6.5, "pos_cost_pct": 6.59, "pos_curr_pct": 6.41, "roi": -6.8, "quantity": 26000, "invested": 156000.0, "current": 145000.0, "dividends": null, "pnl": -11000.0}, {"market": "HK", "currency": "HKD", "name": "保利物业", "cost_price_raw": "HK$40.8", "current_price_raw": "HK$26.6", "cost_price": 40.8, "current_price": 26.6, "pos_cost_pct": 2.36, "pos_curr_pct": 1.63, "roi": -34.8, "quantity": 1600, "invested": 56000.0, "current": 37000.0, "dividends": null, "pnl": -19000.0}, {"market": "HK", "currency": "HKD", "name": "中海物业", "cost_price_raw": "HK$4.5", "current_price_raw": "HK$3.3", "cost_price": 4.5, "current_price": 3.3, "pos_cost_pct": 3.33, "pos_curr_pct": 2.56, "roi": -26.7, "quantity": 20000, "invested": 79000.0, "current": 58000.0, "dividends": null, "pnl": -21000.0}, {"market": "US", "currency": "USD", "name": "SMMT", "cost_price_raw": "$14.6", "current_price_raw": "$15.42", "cost_price": 14.6, "current_price": 15.42, "pos_cost_pct": 1.27, "pos_curr_pct": 1.37, "roi": 5.6, "quantity": 300, "invested": 30000.0, "current": 31000.0, "dividends": null, "pnl": 1000.0}, {"market": "HK", "currency": "HKD", "name": "汇贤产业信托", "cost_price_raw": "HK$0.416", "current_price_raw": "HK$0.395", "cost_price": 0.42, "current_price": 0.4, "pos_cost_pct": 1.82, "pos_curr_pct": 1.81, "roi": -5.0, "quantity": 120000, "invested": 43000.0, "current": 41000.0, "dividends": null, "pnl": -2000.0}]}, {"date": "2026-07-27", "snapshot_time": "2026-07-27 23:59:39 +08:00", "source": "腾讯文档-持仓", "file_id": "fGemVXqsvRGM", "doc_date": "2026-07-27", "exchange_rates": {"US": 6.764, "HK": 0.8622}, "summary": {"holdings_pos_cost_pct": 99.8, "holdings_pos_curr_pct": 99.8, "holdings_roi": -5.67, "holdings_invested": 2416000.0, "holdings_current": 2280000.0, "holdings_pnl": -136000.0, "holdings_dividends": 41000.0, "year_start": 2505000.0, "salary_surplus": 150000.0, "base": 2580000.0, "total_pnl": -308000.0, "total_roi": -11.96, "regions": {"整体": {"invested": 2408000.0, "current": 2272000.0, "pnl": -137000.0}, "国内": {"invested": 2052000.0, "current": 1913000.0, "pnl": -138000.0}, "境外": {"invested": 357000.0, "current": 358000.0, "pnl": 1000.0}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "海螺水泥", "cost_price_raw": "¥19.7", "current_price_raw": "¥17.75", "cost_price": 19.7, "current_price": 17.75, "pos_cost_pct": 37.9, "pos_curr_pct": 36.1, "roi": -10.1, "quantity": 46200, "invested": 912000.0, "current": 820000.0, "dividends": 27754.0, "pnl": -92000.0}, {"market": "HK", "currency": "HKD", "name": "康方生物", "cost_price_raw": "HK$96.4", "current_price_raw": "HK$98.6", "cost_price": 96.4, "current_price": 98.6, "pos_cost_pct": 24.2, "pos_curr_pct": 26.2, "roi": 2.2, "quantity": 7000, "invested": 582000.0, "current": 595000.0, "dividends": null, "pnl": 13000.0}, {"market": "HK", "currency": "HKD", "name": "亚盛医药", "cost_price_raw": "HK$36.2", "current_price_raw": "HK$36.0", "cost_price": 36.2, "current_price": 36.0, "pos_cost_pct": 13.0, "pos_curr_pct": 13.6, "roi": -0.7, "quantity": 10000, "invested": 312000.0, "current": 310000.0, "dividends": null, "pnl": -2000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "cost_price_raw": "$20.5", "current_price_raw": "$18.92", "cost_price": 20.5, "current_price": 18.92, "pos_cost_pct": 4.0, "pos_curr_pct": 3.9, "roi": -7.8, "quantity": 700, "invested": 97000.0, "current": 90000.0, "dividends": null, "pnl": -7000.0}, {"market": "US", "currency": "USD", "name": "SMMT", "cost_price_raw": "$14.1", "current_price_raw": "$13.25", "cost_price": 14.1, "current_price": 13.25, "pos_cost_pct": 3.2, "pos_curr_pct": 3.2, "roi": -6.0, "quantity": 800, "invested": 76000.0, "current": 72000.0, "dividends": null, "pnl": -4000.0}, {"market": "US", "currency": "USD", "name": "SMMT Call 270115", "cost_price_raw": null, "current_price_raw": null, "cost_price": null, "current_price": null, "pos_cost_pct": null, "pos_curr_pct": null, "roi": null, "quantity": null, "invested": 14000.0, "current": 14000.0, "dividends": null, "pnl": 0.0}, {"market": "HK", "currency": "HKD", "name": "同仁堂国药", "cost_price_raw": "HK$10.3", "current_price_raw": "HK$6.8", "cost_price": 10.3, "current_price": 6.8, "pos_cost_pct": 0.7, "pos_curr_pct": 0.5, "roi": -34.1, "quantity": 2000, "invested": 18000.0, "current": 12000.0, "dividends": 7200.0, "pnl": -6000.0}, {"market": "HK", "currency": "HKD", "name": "中国民航", "cost_price_raw": "HK$10.0", "current_price_raw": "HK$8.4", "cost_price": 10.0, "current_price": 8.4, "pos_cost_pct": 5.0, "pos_curr_pct": 4.5, "roi": -16.2, "quantity": 14000, "invested": 121000.0, "current": 101000.0, "dividends": null, "pnl": -20000.0}, {"market": "HK", "currency": "HKD", "name": "中海物业", "cost_price_raw": "HK$4.5", "current_price_raw": "HK$3.5", "cost_price": 4.5, "current_price": 3.5, "pos_cost_pct": 2.4, "pos_curr_pct": 2.0, "roi": -23.9, "quantity": 15000, "invested": 59000.0, "current": 45000.0, "dividends": 2070.0, "pnl": -14000.0}, {"market": "HK", "currency": "HKD", "name": "保利物业", "cost_price_raw": "HK$40.8", "current_price_raw": "HK$28.1", "cost_price": 40.8, "current_price": 28.1, "pos_cost_pct": 2.3, "pos_curr_pct": 1.7, "roi": -31.2, "quantity": 1600, "invested": 56000.0, "current": 39000.0, "dividends": 4259.0, "pnl": -17000.0}, {"market": "US", "currency": "USD", "name": "PDD", "cost_price_raw": "$78.0", "current_price_raw": "$85.06", "cost_price": 78.0, "current_price": 85.06, "pos_cost_pct": 3.3, "pos_curr_pct": 3.8, "roi": 9.1, "quantity": 150, "invested": 79000.0, "current": 86000.0, "dividends": null, "pnl": 7000.0}, {"market": "US", "currency": "USD", "name": "新氧", "cost_price_raw": "$1.8", "current_price_raw": "$2.13", "cost_price": 1.8, "current_price": 2.13, "pos_cost_pct": 2.0, "pos_curr_pct": 2.5, "roi": 21.3, "quantity": 4000, "invested": 48000.0, "current": 58000.0, "dividends": null, "pnl": 10000.0}, {"market": "HK", "currency": "HKD", "name": "汇贤产业信托", "cost_price_raw": "HK$0.416", "current_price_raw": "HK$0.380", "cost_price": 0.42, "current_price": 0.38, "pos_cost_pct": 1.8, "pos_curr_pct": 1.7, "roi": -8.6, "quantity": 120000, "invested": 43000.0, "current": 39000.0, "dividends": null, "pnl": -4000.0}]}, {"date": "2026-07-28", "snapshot_time": "2026-07-28 23:39:56 +08:00", "source": "腾讯文档-持仓", "file_id": "fGemVXqsvRGM", "doc_date": "2026-07-28", "exchange_rates": {"US": 6.771, "HK": 0.8632}, "summary": {"holdings_pos_cost_pct": 98.7, "holdings_pos_curr_pct": 98.9, "holdings_roi": -6.46, "holdings_invested": 2415000.0, "holdings_current": 2259000.0, "holdings_pnl": -156000.0, "holdings_dividends": 28000.0, "year_start": 2505000.0, "salary_surplus": 150000.0, "base": 2580000.0, "total_pnl": -321000.0, "total_roi": -12.45, "regions": {"整体": {"invested": 2415000.0, "current": 2259000.0, "pnl": -156000.0}, "国内": {"invested": 2061000.0, "current": 1912000.0, "pnl": -149000.0}, "境外": {"invested": 353000.0, "current": 347000.0, "pnl": -7000.0}}}, "holdings": [{"market": "CN", "currency": "CNY", "name": "海螺水泥", "code": "600585.SH", "cost_price_raw": "¥19.7", "current_price_raw": "¥17.96", "cost_price": 19.7, "current_price": 17.96, "pos_cost_pct": 37.8, "pos_curr_pct": 36.7, "roi": -9.0, "quantity": 46200, "invested": 912000.0, "current": 830000.0, "dividends": 27754.0, "pnl": -82000.0}, {"market": "HK", "currency": "HKD", "name": "康方生物", "code": "09926.HK", "cost_price_raw": "HK$96.4", "current_price_raw": "HK$96.0", "cost_price": 96.4, "current_price": 96.0, "pos_cost_pct": 24.1, "pos_curr_pct": 25.7, "roi": -0.5, "quantity": 7000, "invested": 583000.0, "current": 580000.0, "dividends": null, "pnl": -3000.0}, {"market": "HK", "currency": "HKD", "name": "亚盛医药", "code": "06855.HK", "cost_price_raw": "HK$36.2", "current_price_raw": "HK$35.3", "cost_price": 36.2, "current_price": 35.3, "pos_cost_pct": 12.9, "pos_curr_pct": 13.5, "roi": -2.7, "quantity": 10000, "invested": 313000.0, "current": 304000.0, "dividends": null, "pnl": -9000.0}, {"market": "US", "currency": "USD", "name": "传奇生物", "code": "LEGN.US", "cost_price_raw": "$20.5", "current_price_raw": "$18.74", "cost_price": 20.5, "current_price": 18.74, "pos_cost_pct": 4.0, "pos_curr_pct": 3.9, "roi": -8.7, "quantity": 700, "invested": 97000.0, "current": 89000.0, "dividends": null, "pnl": -8000.0}, {"market": "US", "currency": "USD", "name": "SMMT", "code": "SMMT.US", "cost_price_raw": "$14.6", "current_price_raw": "$12.47", "cost_price": 14.6, "current_price": 12.47, "pos_cost_pct": 2.5, "pos_curr_pct": 2.2, "roi": -14.8, "quantity": 600, "invested": 59000.0, "current": 51000.0, "dividends": null, "pnl": -8000.0}, {"market": "US", "currency": "USD", "name": "SMMT Call 270115", "code": null, "cost_price_raw": null, "current_price_raw": null, "cost_price": null, "current_price": null, "pos_cost_pct": null, "pos_curr_pct": null, "roi": null, "quantity": null, "invested": 14000.0, "current": 14000.0, "dividends": null, "pnl": 0.0}, {"market": "HK", "currency": "HKD", "name": "中国民航", "code": "00696.HK", "cost_price_raw": "HK$10.0", "current_price_raw": "HK$8.5", "cost_price": 10.0, "current_price": 8.5, "pos_cost_pct": 5.0, "pos_curr_pct": 4.5, "roi": -15.0, "quantity": 14000, "invested": 121000.0, "current": 103000.0, "dividends": null, "pnl": -18000.0}, {"market": "US", "currency": "USD", "name": "PDD", "code": "PDD.US", "cost_price_raw": "$78.0", "current_price_raw": "$86.08", "cost_price": 78.0, "current_price": 86.08, "pos_cost_pct": 3.3, "pos_curr_pct": 3.9, "roi": 10.4, "quantity": 150, "invested": 79000.0, "current": 87000.0, "dividends": null, "pnl": 8000.0}, {"market": "US", "currency": "USD", "name": "新氧", "code": "SY.US", "cost_price_raw": "$1.8", "current_price_raw": "$1.97", "cost_price": 1.8, "current_price": 1.97, "pos_cost_pct": 2.5, "pos_curr_pct": 3.0, "roi": 9.4, "quantity": 5000, "invested": 61000.0, "current": 67000.0, "dividends": null, "pnl": 6000.0}, {"market": "HK", "currency": "HKD", "name": "保利物业", "code": "06049.HK", "cost_price_raw": "HK$40.8", "current_price_raw": "HK$28.0", "cost_price": 40.8, "current_price": 28.0, "pos_cost_pct": 2.3, "pos_curr_pct": 1.7, "roi": -31.3, "quantity": 1600, "invested": 56000.0, "current": 39000.0, "dividends": 4259.0, "pnl": -17000.0}, {"market": "HK", "currency": "HKD", "name": "中海物业", "code": "02669.HK", "cost_price_raw": "HK$4.5", "current_price_raw": "HK$3.5", "cost_price": 4.5, "current_price": 3.5, "pos_cost_pct": 2.4, "pos_curr_pct": 2.0, "roi": -23.9, "quantity": 15000, "invested": 59000.0, "current": 45000.0, "dividends": 2070.0, "pnl": -14000.0}, {"market": "HK", "currency": "HKD", "name": "汇贤产业信托", "code": "87001.HK", "cost_price_raw": "HK$0.416", "current_price_raw": "HK$0.380", "cost_price": 0.42, "current_price": 0.38, "pos_cost_pct": 1.8, "pos_curr_pct": 1.7, "roi": -8.6, "quantity": 120000, "invested": 43000.0, "current": 39000.0, "dividends": null, "pnl": -4000.0}, {"market": "HK", "currency": "HKD", "name": "同仁堂国药", "code": "03613.HK", "cost_price_raw": "HK$10.3", "current_price_raw": "HK$6.8", "cost_price": 10.3, "current_price": 6.8, "pos_cost_pct": 0.7, "pos_curr_pct": 0.5, "roi": -33.5, "quantity": 2000, "invested": 18000.0, "current": 12000.0, "dividends": 7200.0, "pnl": -6000.0}]}]};
+const stats = {"snapshot_count": 12, "latest_date": "2026-07-28", "holdings_count": 13, "max_roi_name": "PDD", "max_roi": 10.4, "min_roi_name": "同仁堂国药", "min_roi": -33.5, "max_pnl_name": "PDD", "max_pnl": 8000.0, "min_pnl_name": "海螺水泥", "min_pnl": -82000.0, "max_drawdown": -21.16, "max_daily_return": 9.79, "min_daily_return": -15.73, "avg_daily_return": -0.64, "max_streak_pos": 2, "max_streak_neg": 2};
+
+const snapshots = rawData.snapshots || [];
+const latest = snapshots[snapshots.length - 1] || {};
+const summary = latest.summary || {};
+const holdings = latest.holdings || [];
+
+// ── Swiss palette ──
+const INK   = '#111111';
+const RED   = '#e4002b';
+const SLATE = '#6b7280';
+const RULE  = '#e4e4e4';
+const INK2  = '#5b5b5b';
+const INK3  = '#9a9a9a';
+const PROFIT = '#e4002b';
+const LOSS   = '#007a33';
+// 仓位率三档灰阶
+const POS_INK = '#374151';
+const POS_MID = '#9ca3af';
+const POS_LT  = '#d1d5db';
+
+const fmtWan = v => v == null ? '—' : (Math.abs(v/10000) >= 1 ? (v/10000).toLocaleString('zh-CN',{maximumFractionDigits:1}) + '万' : v.toLocaleString('zh-CN',{maximumFractionDigits:0}));
+const fmtPct = v => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(2) + '%';
+const colorClass = v => v == null ? '' : (v > 0 ? 'up' : v < 0 ? 'down' : '');
+const FONT = "'Inter','Noto Sans SC',sans-serif";
+
+// ── Meta ──
+document.getElementById('meta').innerHTML =
+  snapshots.length > 1
+    ? '报告区间 <b>' + snapshots[0].date + ' → ' + latest.date + '</b>'
+    : '快照日期 <b>' + (latest.date || '—') + '</b>'
+  + '　·　样本 <b>' + snapshots.length + ' 天</b>'
+  + '　·　持仓 <b>' + holdings.length + ' 只</b>';
+
+// ── 01 Overview strip ──
+const stripEl = document.getElementById('strip');
+const holdingsCurrent = summary.holdings_current;
+const totalPnl = summary.total_pnl;
+const totalRoi = summary.total_roi;
+const cells = [
+  { num:'01 · TOTAL VALUE', label:'总当前值', value: fmtWan(holdingsCurrent), sub: holdings.length + ' 只持仓', cls:'' },
+  { num:'02 · P&L', label:'总收益', value: fmtWan(totalPnl), sub:'文档汇总', cls: colorClass(totalPnl) },
+  { num:'03 · ROI', label:'总收益率', value: fmtPct(totalRoi), sub:'年初至今', cls: colorClass(totalRoi) },
+  { num:'04 · MAX DRAWDOWN', label:'最大回撤', value: stats.max_drawdown != null ? stats.max_drawdown.toFixed(2) + '%' : '—', sub: snapshots.length > 1 ? '峰值至谷值' : '需多日数据', cls:'down' },
+];
+stripEl.innerHTML = cells.map(c => `
+  <div class="cell">
+    <div class="num">${c.num}</div>
+    <div class="val ${c.cls}">${c.value}</div>
+    <div class="sub">${c.label} · ${c.sub}</div>
+  </div>`).join('');
+
+// ── Time series ──
+const dates = snapshots.map(s => s.date);
+const assetValues = snapshots.map(s => (s.summary || {}).holdings_current || 0);
+const pnlValues   = snapshots.map(s => (s.summary || {}).total_pnl);
+const roiValues   = snapshots.map(s => (s.summary || {}).total_roi);
+
+const assetWan = assetValues.map(v => v ? +(v/10000).toFixed(2) : null);
+const pnlWan   = pnlValues.map(v => v != null ? +(v/10000).toFixed(2) : null);
+const roiVals  = roiValues.map(v => v != null ? v : null);
+
+// position rate series + region current values
+const regionKeys = ['整体', '国内', '境外'];
+const posRate = {};
+regionKeys.forEach(r => posRate[r] = []);
+const regCur = {};
+regionKeys.forEach(r => regCur[r] = []);
+snapshots.forEach(s => {
+  const sg = s.summary || {};
+  const b = sg.base;
+  const regions = sg.regions || {};
+  regionKeys.forEach(r => {
+    const reg = regions[r];
+    const cur = (reg && reg.current != null) ? reg.current : null;
+    const inv = (reg && reg.invested != null) ? reg.invested : null;
+    regCur[r].push(cur);
+    if (b && b > 0 && inv != null) {
+      posRate[r].push(+(inv / b * 100).toFixed(2));
+    } else {
+      posRate[r].push(null);
+    }
+  });
+});
+
+// drawdown per region (peak-to-current)
+function ddSeries(arr){
+  let peak = 0;
+  return arr.map(v => {
+    if (v == null) return null;
+    if (v > peak) peak = v;
+    return peak > 0 ? Math.round((v - peak) / peak * 100 * 100) / 100 : 0;
+  });
+}
+const ddOverall  = ddSeries(regCur['整体']);
+const ddDomestic = ddSeries(regCur['国内']);
+const ddOverseas = ddSeries(regCur['境外']);
+
+const multiDay = snapshots.length > 1;
+const pt = multiDay ? 3 : 6;
+
+// ── 02 Master combined chart (资产/收益/收益率, 双轴) ──
+const masterDatasets = [
+  { label:'资产走势', data: assetWan, borderColor: INK, borderWidth: 2.5, yAxisID:'yMoney',
+    tension:.25, pointRadius: pt, pointBackgroundColor: INK, pointHoverRadius: pt+2 },
+  { label:'收益走势', data: pnlWan, borderColor: RED, borderWidth: 2, yAxisID:'yMoney',
+    tension:.25, pointRadius: pt, pointBackgroundColor: RED, pointHoverRadius: pt+2 },
+  { label:'收益率', data: roiVals, borderColor: RED, borderWidth: 2, borderDash:[6,4], yAxisID:'yPerf',
+    tension:.25, pointRadius: pt, pointBackgroundColor: RED, pointHoverRadius: pt+2 },
+];
+
+new Chart(document.getElementById('chartMaster'), {
+  type: 'line',
+  data: { labels: dates, datasets: masterDatasets },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+    plugins: {
+      legend: {
+        position: 'top',
+        onHover: (e) => { e.native.target.style.cursor = 'pointer'; },
+        onLeave: (e) => { e.native.target.style.cursor = ''; },
+        labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 26, padding: 16,
+                  color: INK, font: { size: 12, family: FONT, weight: '500' } }
+      },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const v = ctx.parsed.y;
+            if (v == null) return ctx.dataset.label + ': —';
+            if (ctx.dataset.yAxisID === 'yMoney') return ctx.dataset.label + ': ' + fmtWan(v * 10000);
+            return ctx.dataset.label + ': ' + v.toFixed(2) + '%';
+          }
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: INK2, font: { size: 11, family: FONT } } },
+      yMoney: {
+        position: 'left',
+        title: { display: true, text: '金额 (万)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
+        grid: { color: RULE }, border: { color: INK },
+        ticks: { color: INK2, font: { size: 11, family: FONT } }
+      },
+      yPerf: {
+        position: 'right',
+        title: { display: true, text: '收益率 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
+        grid: { drawOnChartArea: false }, border: { display: false },
+        ticks: { color: INK3, font: { size: 11, family: FONT }, callback: v => v + '%' }
+      }
+    }
+  }
+});
+
+// ── 03 Drawdown (single filled area) ──
+new Chart(document.getElementById('chartDrawdown'), {
+  type: 'line',
+  data: {
+    labels: dates,
+    datasets: [
+      { label:'回撤', data: ddOverall, borderColor: RED, borderWidth: 2,
+        backgroundColor: 'rgba(228,0,43,0.32)', fill: true,
+        tension:.2, pointRadius: pt, pointBackgroundColor: RED, pointHoverRadius: pt+2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+    plugins: {
+      legend: { position: 'top',
+        onHover: (e) => { e.native.target.style.cursor = 'pointer'; },
+        onLeave: (e) => { e.native.target.style.cursor = ''; },
+        labels: { usePointStyle: true, pointStyle: 'rect', boxWidth: 14, padding: 14, color: INK, font: { size: 12, family: FONT, weight: '500' } } },
+      tooltip: { callbacks: { label: ctx => (ctx.parsed.y == null ? '—' : '回撤: ' + ctx.parsed.y.toFixed(2) + '%') } }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: INK2, font: { size: 11, family: FONT } } },
+      y: {
+        title: { display: true, text: '回撤 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
+        grid: { color: RULE }, border: { color: INK },
+        ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '%' } }
+    }
+  }
+});
+
+// ── 04 Position rate (single curve, from holdings_pos_curr_pct) ──
+const posRateData = snapshots.map(s => (s.summary || {}).holdings_pos_curr_pct);
+const fullLine = dates.map(() => 100);
+new Chart(document.getElementById('chartPosition'), {
+  type: 'line',
+  data: {
+    labels: dates,
+    datasets: [
+      { label:'仓位率', data: posRateData, borderColor: INK, borderWidth: 2.5,
+        tension:.25, pointRadius: pt, pointBackgroundColor: INK, pointHoverRadius: pt+2 },
+      { label:'满仓 100%', data: fullLine, borderColor: SLATE, borderWidth: 1.5, borderDash:[6,5],
+        pointRadius: 0, fill: false },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+    plugins: {
+      legend: { position: 'top',
+        onHover: (e) => { e.native.target.style.cursor = 'pointer'; },
+        onLeave: (e) => { e.native.target.style.cursor = ''; },
+        labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 26, padding: 14, color: INK, font: { size: 12, family: FONT, weight: '500' } } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(2) + '%') } }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: INK2, font: { size: 11, family: FONT } } },
+      y: { min: 0, suggestedMax: 100,
+        title: { display: true, text: '仓位率 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
+        grid: { color: RULE }, border: { color: INK },
+        ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '%' } }
+    }
+  }
+});
+
+// ── 05 Allocation (doughnut, grayscale + red accent) ──
+const allocData = holdings
+  .filter(h => h.current != null && h.current > 0)
+  .map(h => ({ name: h.name, value: h.current }))
+  .sort((a, b) => b.value - a.value);
+
+const GREY_RAMP = ['#3a3a3a','#5b5b5b','#7a7a7a','#9a9a9a','#b5b5b5','#cccccc','#dcdcdc','#e8e8e8'];
+const allocColors = allocData.map((d, i) => i === 0 ? RED : GREY_RAMP[(i - 1) % GREY_RAMP.length]);
+
+new Chart(document.getElementById('chartAllocation'), {
+  type: 'doughnut',
+  data: { labels: allocData.map(d => d.name), datasets: [{ data: allocData.map(d => d.value), backgroundColor: allocColors, borderWidth: 1, borderColor: '#fff' }] },
+  options: {
+    responsive: true, maintainAspectRatio: true, aspectRatio: 1.2, cutout: '58%',
+    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 10, color: INK, font: { size: 11, family: FONT } } },
+      tooltip: { callbacks: { label: ctx => {
+        const total = allocData.reduce((s, d) => s + d.value, 0);
+        const pct = (ctx.parsed / total * 100).toFixed(1);
+        return ctx.label + ': ' + fmtWan(ctx.parsed) + ' (' + pct + '%)';
+      } } }
+    }
+  }
+});
+
+// ── 03 Market (doughnut, Swiss-toned) ──
+const marketMap = {};
+holdings.forEach(h => {
+  const m = h.market || '其他';
+  if (h.current != null) marketMap[m] = (marketMap[m] || 0) + h.current;
+});
+const marketLabels = Object.keys(marketMap);
+const marketData = marketLabels.map(m => marketMap[m]);
+const marketNames = { CN: 'A股', HK: '港股', US: '美股' };
+const marketColor = { CN: RED, HK: '#5b5b5b', US: '#9a9a9a', '其他': '#cccccc' };
+const marketColors = marketLabels.map(m => marketColor[m] || '#cccccc');
+
+new Chart(document.getElementById('chartMarket'), {
+  type: 'doughnut',
+  data: { labels: marketLabels.map(m => marketNames[m] || m), datasets: [{ data: marketData, backgroundColor: marketColors, borderWidth: 1, borderColor: '#fff' }] },
+  options: {
+    responsive: true, maintainAspectRatio: true, aspectRatio: 1.2, cutout: '58%',
+    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 10, color: INK, font: { size: 11, family: FONT } } },
+      tooltip: { callbacks: { label: ctx => {
+        const total = marketData.reduce((s, v) => s + v, 0);
+        const pct = (ctx.parsed / total * 100).toFixed(1);
+        return ctx.label + ': ' + fmtWan(ctx.parsed) + ' (' + pct + '%)';
+      } } }
+    }
+  }
+});
+
+// ── 04 Ranking (bar, red up / green down) ──
+const ranked = holdings.filter(h => h.pnl != null).sort((a, b) => b.pnl - a.pnl);
+new Chart(document.getElementById('chartRanking'), {
+  type: 'bar',
+  data: {
+    labels: ranked.map(h => h.name),
+    datasets: [{
+      label: '收益',
+      data: ranked.map(h => h.pnl / 10000),
+      backgroundColor: ranked.map(h => h.pnl > 0 ? PROFIT : h.pnl < 0 ? LOSS : '#9a9a9a'),
+      borderRadius: 0,
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => fmtWan(ctx.parsed.x * 10000) + ' (' + fmtPct(ranked[ctx.dataIndex].roi) + ')' } }
+    },
+    scales: {
+      x: { grid: { color: RULE }, border: { color: INK }, ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '万' } },
+      y: { grid: { display: false }, ticks: { color: INK, font: { size: 12, family: FONT } } }
+    }
+  }
+});
+
+// ── 05 Stats grid ──
+const statsEl = document.getElementById('statsGrid');
+const statItems = [];
+statItems.push({ l: '持仓数量', v: stats.holdings_count + ' 只' });
+if (stats.max_drawdown != null) statItems.push({ l: '最大回撤', v: stats.max_drawdown.toFixed(2) + '%', cls: 'down' });
+if (stats.max_daily_return != null) statItems.push({ l: '最大日收益', v: fmtPct(stats.max_daily_return), cls: colorClass(stats.max_daily_return) });
+if (stats.min_daily_return != null) statItems.push({ l: '最大日亏损', v: fmtPct(stats.min_daily_return), cls: colorClass(stats.min_daily_return) });
+if (stats.max_roi != null) statItems.push({ l: '最大收益率', v: stats.max_roi_name + ' ' + fmtPct(stats.max_roi), cls: colorClass(stats.max_roi) });
+if (stats.min_roi != null) statItems.push({ l: '最小收益率', v: stats.min_roi_name + ' ' + fmtPct(stats.min_roi), cls: colorClass(stats.min_roi) });
+if (stats.max_pnl != null) statItems.push({ l: '最大收益额', v: stats.max_pnl_name + ' ' + fmtWan(stats.max_pnl), cls: colorClass(stats.max_pnl) });
+if (stats.min_pnl != null) statItems.push({ l: '最大亏损额', v: stats.min_pnl_name + ' ' + fmtWan(stats.min_pnl), cls: colorClass(stats.min_pnl) });
+statItems.push({ l: '持仓收益率', v: fmtPct(summary.holdings_roi), cls: colorClass(summary.holdings_roi) });
+statItems.push({ l: '持仓收益', v: fmtWan(summary.holdings_pnl), cls: colorClass(summary.holdings_pnl) });
+
+statsEl.innerHTML = statItems.map(s => `
+  <div class="stat">
+    <div class="l">${s.l}</div>
+    <div class="v ${s.cls || ''}">${s.v}</div>
+  </div>`).join('');
+
+// ── 06 Holdings table ──
+const totalCurrent = holdings.reduce((s, h) => s + (h.current || 0), 0);
+const tbody = document.getElementById('holdingsBody');
+const sortedHoldings = [...holdings].sort((a, b) => (b.current || 0) - (a.current || 0));
+tbody.innerHTML = sortedHoldings.map(h => {
+  const pct = totalCurrent > 0 && h.current ? (h.current / totalCurrent * 100).toFixed(1) + '%' : '—';
+  return `<tr>
+    <td>${h.market || '—'}</td>
+    <td class="name">${h.name}</td>
+    <td>${h.cost_price_raw || '—'}</td>
+    <td>${h.current_price_raw || '—'}</td>
+    <td>${h.quantity != null ? h.quantity.toLocaleString() : '—'}</td>
+    <td>${fmtWan(h.invested)}</td>
+    <td>${fmtWan(h.current)}</td>
+    <td class="${colorClass(h.pnl)}">${fmtWan(h.pnl)}</td>
+    <td class="${colorClass(h.roi)}">${fmtPct(h.roi)}</td>
+    <td>${fmtWan(h.dividends)}</td>
+    <td>${pct}</td>
+  </tr>`;
+}).join('');
+
+// ── 09 P&L Calendar ──
+(function(){
+  const calGrid = document.getElementById('calGrid');
+  const calTitle = document.getElementById('calTitle');
+  let view = 'day';
+  let cursor = new Date();
+
+  // compute daily P&L from snapshots
+  const pnlMap = {};
+  const prevAsset = {};
+  snapshots.forEach((s, i) => {
+    const d = s.date;
+    const pnl = (s.summary || {}).total_pnl;
+    const cur = (s.summary || {}).holdings_current || 0;
+    if (i > 0) {
+      const prevD = snapshots[i-1].date;
+      const prevPnl = snapshots[i-1].summary.total_pnl;
+      const prevCur = snapshots[i-1].summary.holdings_current || 1;
+      pnlMap[d] = {
+        amt: prevPnl != null && pnl != null ? +(pnl - prevPnl).toFixed(0) : null,
+        pct: prevCur ? +((pnl - prevPnl) / prevCur * 100).toFixed(2) : null
+      };
+    }
+  });
+
+  function colorFor(val, max) {
+    if (val == null || max === 0) return '#f5f5f5';
+    const r = val / max;
+    if (r < 0) {
+      const t = Math.min(1, Math.abs(r));
+      return `rgba(0,122,51,${0.15 + t * 0.85})`;
+    }
+    if (r > 0) {
+      const t = Math.min(1, r);
+      return `rgba(228,0,43,${0.15 + t * 0.85})`;
+    }
+    return '#f5f5f5';
+  }
+
+  function renderDay() {
+    const y = cursor.getFullYear(), m = cursor.getMonth();
+    calTitle.textContent = `${y}年${m+1}月`;
+    calGrid.className = 'cal-grid day';
+    const DOW = ['一','二','三','四','五','六','日'];
+    let html = DOW.map(d => `<div class="cal-cell weekday">${d}</div>`).join('');
+
+    const first = new Date(y,m,1).getDay()||7;
+    const days = new Date(y,m+1,0).getDate();
+    const today = new Date().toISOString().slice(0,10);
+    const vals = []; for(let i=1;i<=days;i++){const dd=`${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;const e=pnlMap[dd];vals.push(e?Math.abs(e.amt):0);}
+    const maxV = Math.max(...vals, 1);
+
+    for(let i=1;i<first;i++) html+='<div class="cal-cell no-data"></div>';
+    for(let d=1;d<=days;d++){
+      const dd = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const e = pnlMap[dd];
+      let bg = '#f5f5f5', darkText = false, cls = ' no-data', textCls = '';
+      if (e) {
+        const intensity = Math.min(1, Math.abs(e.amt) / maxV);
+        darkText = intensity > 0.45;
+        if (e.amt > 0) bg = `rgba(228,0,43,${0.12 + intensity * 0.88})`;
+        else bg = `rgba(0,122,51,${0.12 + intensity * 0.88})`;
+        cls = '';
+        textCls = e.amt > 0 ? 'up' : 'down';
+      }
+      const border = dd === today ? 'border:2px solid #111;' : '';
+      const tc = darkText ? 'color:#fff;' : '';
+      html += `<div class="cal-cell${cls}" style="background:${bg};${border}${tc}">
+        <span class="day-num">${d}</span>
+        ${e ? `<span class="day-amt ${textCls}" style="${tc}">${e.amt>0?'+':''}${fmtWan(e.amt).replace('万','')}</span><span class="day-pct ${textCls}" style="${tc}">${e.pct>0?'+':''}${e.pct}%</span>` : ''}
+      </div>`;
+    }
+    calGrid.innerHTML = html;
+  }
+
+  function renderMonth() {
+    const y = cursor.getFullYear();
+    calTitle.textContent = `${y}年`;
+    calGrid.className = 'cal-grid month';
+    let html = '';
+    for(let m=0;m<12;m++){
+      let sum=0,maxA=0,totalCurr=0;const days=[];
+      for(let d=1;d<=new Date(y,m+1,0).getDate();d++){
+        const dd=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const e=pnlMap[dd];if(e){sum+=e.amt;days.push(e.amt);maxA=Math.max(maxA,Math.abs(e.amt));}
+      }
+      // find the snapshot closest to end of month for asset value
+      const monthEnd = new Date(y,m+1,0);
+      const snap = [...snapshots].reverse().find(s => new Date(s.date) <= monthEnd);
+      if(snap) totalCurr = snap.summary.holdings_current || 1;
+      const roi = totalCurr > 0 && sum ? +(sum / totalCurr * 100).toFixed(2) : null;
+      const intensity = maxA ? Math.min(1, Math.abs(sum)/maxA) : 0;
+      const dark = intensity > 0.45;
+      const tc = dark ? 'color:#fff;' : '';
+      const bg = sum===0&&!days.length?'#f5f5f5':(sum>=0?`rgba(228,0,43,${0.12+intensity*0.88})`:`rgba(0,122,51,${0.12+intensity*0.88})`);
+      html += `<div class="cal-cell" style="background:${bg};${tc}">
+        <span class="day-num">${m+1}月</span>
+        ${days.length ? `<span class="day-amt ${sum>0?'up':'down'}" style="${tc}">${fmtWan(sum)}</span><span class="day-pct ${sum>0?'up':'down'}" style="${tc}">${roi?roi.toFixed(1):'—'}%</span>` : '<span class="day-amt">—</span>'}
+      </div>`;
+    }
+    calGrid.innerHTML = html;
+  }
+
+  function renderYear() {
+    const years = [...new Set(snapshots.map(s=>+s.date.slice(0,4)))].sort();
+    calTitle.textContent = '全部年份';
+    calGrid.className = 'cal-grid year';
+    let html = '';
+    years.forEach(y => {
+      const yrSnaps = snapshots.filter(s=>s.date.slice(0,4)==String(y));
+      const totalPnl = yrSnaps.length>1 ? yrSnaps[yrSnaps.length-1].summary.total_pnl : 0;
+      const totalRoi = yrSnaps.length ? yrSnaps[yrSnaps.length-1].summary.total_roi : null;
+      const intensity = Math.min(1, Math.abs(totalPnl) / 500000);
+      const dark = intensity > 0.3;
+      const tc = dark ? 'color:#fff;' : '';
+      const bg = totalPnl>=0?`rgba(228,0,43,${0.12+intensity*0.88})`:`rgba(0,122,51,${0.12+intensity*0.88})`;
+      html += `<div class="cal-cell" style="background:${bg};${tc}">
+        <span class="day-num">${y}</span>
+        <span class="day-amt ${totalPnl>0?'up':'down'}" style="${tc}">${fmtWan(totalPnl)}</span>
+        <span class="day-pct ${totalPnl>0?'up':'down'}" style="${tc}">${totalRoi!=null?totalRoi.toFixed(1):'—'}%</span>
+      </div>`;
+    });
+    calGrid.innerHTML = html;
+  }
+
+  function render(){if(view==='day')renderDay();else if(view==='month')renderMonth();else renderYear();}
+
+  document.getElementById('calPrev').onclick = () => {
+    if(view==='day') cursor.setMonth(cursor.getMonth()-1);
+    else if(view==='month') cursor.setFullYear(cursor.getFullYear()-1);
+    else return;
+    render();
+  };
+  document.getElementById('calNext').onclick = () => {
+    if(view==='day') cursor.setMonth(cursor.getMonth()+1);
+    else if(view==='month') cursor.setFullYear(cursor.getFullYear()+1);
+    else return;
+    render();
+  };
+  document.querySelectorAll('.cal-btn').forEach(b => b.onclick = () => {
+    document.querySelector('.cal-btn.active').classList.remove('active');
+    b.classList.add('active');
+    view = b.dataset.view;
+    cursor = new Date();
+    render();
+  });
+
+  render();
+})();
+
+// ── Notice (single day) ──
+if (!multiDay) {
+  const n = document.createElement('div');
+  n.className = 'notice';
+  n.textContent = '当前仅 1 天数据：综合图已展示各曲线当前取值，点击图例可单独查看；走势与回撤趋势需多日数据方能显现。每日 15:00 自动快照后逐步积累。';
+  document.querySelector('.masthead').after(n);
+}
+</script>
+<script>
+async function saveAsImage(){
+  const btn = document.querySelector('.save-btn');
+  btn.textContent = 'SAVING...';
+  btn.disabled = true;
+  try {
+    const canvas = await html2canvas(document.getElementById('page'), { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    const link = document.createElement('a');
+    link.download = 'portfolio_' + (latest.date || 'report') + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } finally {
+    btn.textContent = 'SAVE AS PNG';
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
