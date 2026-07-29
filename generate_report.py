@@ -501,6 +501,7 @@ td.name{font-weight:500;text-align:left;}
 <script>
 const rawData = __DATA__;
 const stats = __STATS__;
+const pageConfig = __CONFIG__;
 
 const snapshots = rawData.snapshots || [];
 const latest = snapshots[snapshots.length - 1] || {};
@@ -1077,6 +1078,21 @@ async function saveAsImage(){
   }
 }
 </script>
+<script>
+// Apply config: hide disabled sections
+if (pageConfig && pageConfig.sections) {
+  Object.keys(pageConfig.sections).forEach(id => {
+    if (!pageConfig.sections[id]) {
+      const el = document.querySelector('[data-section="' + id + '"]');
+      if (el) el.style.display = 'none';
+    }
+  });
+}
+if (pageConfig && !pageConfig.save_button) {
+  const btn = document.querySelector('.save-btn');
+  if (btn) btn.style.display = 'none';
+}
+</script>
 </body>
 </html>
 """
@@ -1086,7 +1102,18 @@ def generate_report(snapshots, stats):
     """生成 HTML 报告"""
     data_json = json.dumps({"snapshots": snapshots}, ensure_ascii=False)
     stats_json = json.dumps(stats, ensure_ascii=False)
-    html = HTML_TEMPLATE.replace("__DATA__", data_json).replace("__STATS__", stats_json)
+
+    # Load config
+    config = {"sections": {}, "save_button": True}
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+    except:
+        pass
+    config_json = json.dumps(config, ensure_ascii=False)
+
+    html = HTML_TEMPLATE.replace("__DATA__", data_json).replace("__STATS__", stats_json).replace("__CONFIG__", config_json)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_file = os.path.join(script_dir, "report.html")
