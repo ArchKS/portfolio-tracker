@@ -866,13 +866,19 @@ if (!multiDay) {
     snap.holdings.forEach(h => {
       if (currNames.has(h.name)) return;
       if (!closedMap[h.name]) {
-        closedMap[h.name] = { name: h.name, pnl: h.pnl || 0, roi: h.roi || 0, first: snap.date, last: snap.date };
+        closedMap[h.name] = {
+          name: h.name, first: snap.date, last: snap.date,
+          first_invested: h.invested || 0, last_current: h.current || 0
+        };
       } else {
         closedMap[h.name].last = snap.date;
-        if (h.pnl != null) closedMap[h.name].pnl = h.pnl;
-        if (h.roi != null) closedMap[h.name].roi = h.roi;
+        if (h.current != null) closedMap[h.name].last_current = h.current;
       }
     });
+  });
+  Object.values(closedMap).forEach(c => {
+    c.pnl = c.last_current - c.first_invested;
+    c.roi = c.first_invested ? (c.pnl / c.first_invested * 100) : 0;
   });
   const closed = Object.values(closedMap).sort((a,b) => a.pnl - b.pnl);
   if (closed.length === 0) {

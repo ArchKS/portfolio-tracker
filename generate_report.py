@@ -319,7 +319,7 @@ td.name{font-weight:500;text-align:left;}
 </div>
 
 <!-- 01 Overview -->
-<div class="section">
+<div class="section" data-section="overview">
   <div class="section-head">
     <span class="idx">01</span>
     <h2>概览 / OVERVIEW</h2>
@@ -329,7 +329,7 @@ td.name{font-weight:500;text-align:left;}
 </div>
 
 <!-- 02 综合走势 -->
-<div class="section">
+<div class="section" data-section="summary">
   <div class="section-head">
     <span class="idx">02</span>
     <h2>资产 · 收益 · 收益率</h2>
@@ -345,7 +345,7 @@ td.name{font-weight:500;text-align:left;}
 </div>
 
 <!-- 03 回撤分析 -->
-<div class="section">
+<div class="section" data-section="drawdown">
   <div class="section-head">
     <span class="idx">03</span>
     <h2>回撤分析 / DRAWDOWN</h2>
@@ -361,7 +361,7 @@ td.name{font-weight:500;text-align:left;}
 </div>
 
 <!-- 04 仓位率 -->
-<div class="section">
+<div class="section" data-section="position">
   <div class="section-head">
     <span class="idx">04</span>
     <h2>仓位率 / POSITION RATE</h2>
@@ -377,7 +377,7 @@ td.name{font-weight:500;text-align:left;}
 </div>
 
 <!-- 05 结构分布 -->
-<div class="section">
+<div class="section" data-section="allocation">
   <div class="section-head">
     <span class="idx">05</span>
     <h2>结构分布 / ALLOCATION</h2>
@@ -401,7 +401,7 @@ td.name{font-weight:500;text-align:left;}
 </div>
 
 <!-- 06 Ranking -->
-<div class="section">
+<div class="section" data-section="ranking">
   <div class="section-head">
     <span class="idx">06</span>
     <h2>持仓收益排行 / RANKING</h2>
@@ -416,7 +416,7 @@ td.name{font-weight:500;text-align:left;}
 </div>
 
 <!-- 07 Statistics -->
-<div class="section">
+<div class="section" data-section="stats">
   <div class="section-head">
     <span class="idx">07</span>
     <h2>统计摘要 / STATISTICS</h2>
@@ -425,7 +425,7 @@ td.name{font-weight:500;text-align:left;}
 </div>
 
 <!-- 08 Holdings detail -->
-<div class="section">
+<div class="section" data-section="holdings">
   <div class="section-head">
     <span class="idx">08</span>
     <h2>持仓明细 / HOLDINGS</h2>
@@ -455,7 +455,7 @@ td.name{font-weight:500;text-align:left;}
   </div>
 </div>
 <!-- 09 P&L Calendar -->
-<div class="section">
+<div class="section" data-section="calendar">
   <div class="section-head">
     <span class="idx">09</span>
     <h2>盈亏日历 / P&L CALENDAR</h2>
@@ -483,7 +483,7 @@ td.name{font-weight:500;text-align:left;}
 </div>
 
 <!-- 10 清仓盈亏 -->
-<div class="section">
+<div class="section" data-section="closed">
   <div class="section-head">
     <span class="idx">10</span>
     <h2>清仓盈亏 / CLOSED POSITIONS</h2>
@@ -1012,13 +1012,19 @@ if (!multiDay) {
     snap.holdings.forEach(h => {
       if (currNames.has(h.name)) return;
       if (!closedMap[h.name]) {
-        closedMap[h.name] = { name: h.name, pnl: h.pnl || 0, roi: h.roi || 0, first: snap.date, last: snap.date };
+        closedMap[h.name] = {
+          name: h.name, first: snap.date, last: snap.date,
+          first_invested: h.invested || 0, last_current: h.current || 0
+        };
       } else {
         closedMap[h.name].last = snap.date;
-        if (h.pnl != null) closedMap[h.name].pnl = h.pnl;
-        if (h.roi != null) closedMap[h.name].roi = h.roi;
+        if (h.current != null) closedMap[h.name].last_current = h.current;
       }
     });
+  });
+  Object.values(closedMap).forEach(c => {
+    c.pnl = c.last_current - c.first_invested;
+    c.roi = c.first_invested ? (c.pnl / c.first_invested * 100) : 0;
   });
   const closed = Object.values(closedMap).sort((a,b) => a.pnl - b.pnl);
   if (closed.length === 0) {

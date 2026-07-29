@@ -59,7 +59,7 @@
     {
       "market": "OP",
       "currency": "CNY",
-      "name": "LC26009_C200000",
+      "name": "LC2609_C200000",
       "cost_price_raw": "1.3万",
       "current_price_raw": "0.0万",
       "cost_price": 13000.0,
@@ -67,7 +67,7 @@
       "pos_cost_pct": 15.48,
       "pos_curr_pct": 15.87,
       "roi": 0.0,
-      "quantity": 27,
+      "quantity": 50,
       "invested": 364000.0,
       "current": 364000.0,
       "dividends": null,
