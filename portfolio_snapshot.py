@@ -209,10 +209,15 @@ def parse_holdings(csv_text):
 
             # 左侧：标签在市场列，值在名称列（年初/工资结余/基数/收益/收益率）
             if market in SUMMARY_LABELS:
-                val = parse_amount(name)
-                if val is None:
+                key = SUMMARY_LABELS[market]
+                if key == "total_roi":
                     val = parse_percent(name)
-                summary[SUMMARY_LABELS[market]] = val
+                    if val is not None: val = round(val * 100, 2)
+                else:
+                    val = parse_amount(name)
+                    if val is None:
+                        val = parse_percent(name)
+                summary[key] = val
                 continue
 
             # 到达期权/信用卡等无关区域时停止

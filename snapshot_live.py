@@ -92,9 +92,14 @@ def parse_holdings(csv_text):
                     "pnl": parse_amount(row[12]) if len(row) > 12 else None,
                 }
             if market in LABELS:
-                val = parse_amount(row[2])
-                if val is None: val = parse_percent(row[2])
-                summary[LABELS[market]] = val
+                key = LABELS[market]
+                if key == "total_roi":
+                    val = parse_percent(row[2])
+                    if val is not None: val = round(val * 100, 2)
+                else:
+                    val = parse_amount(row[2])
+                    if val is None: val = parse_percent(row[2])
+                summary[key] = val
                 # also check for 境外 region on same row
                 c8 = row[9].strip() if len(row) > 9 else ""
                 if c8 in ("整体","国内","境外"):
@@ -111,6 +116,15 @@ def parse_holdings(csv_text):
         if not name: continue
         if name in ("现金","年初","工资结余","基数","收益","收益率","EXP:"): continue
         if name.startswith("ps：") or name.startswith("信用卡"): continue
+
+        # Fix short rows: e.g. SMMT Call has only 5 cols, data shifted left
+        if code and not re.match(r'^\d{4,6}\.(SH|SZ|HK)$', code) and not re.match(r'^[A-Z]+\.US$', code):
+            # Not a valid stock code → pad left to align with 投入/当前 columns
+            pad_needed = 10 - 3  # shift from col3 to col10
+            row = row[:3] + [''] * pad_needed + row[3:]
+            while len(row) < 14: row.append("")
+            code = row[3].strip() if len(row) > 3 else ""
+            name = row[2].strip() if len(row) > 2 else ""
 
         # code is in col[3]; everything shifted right by 1
         cost_raw = row[4].strip() or None

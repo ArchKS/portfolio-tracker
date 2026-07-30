@@ -445,7 +445,6 @@ td.name{font-weight:500;text-align:left;}
             <th>当前</th>
             <th>收益</th>
             <th>收益率</th>
-            <th>股息</th>
             <th>仓位</th>
           </tr>
         </thead>
@@ -831,18 +830,18 @@ const totalCurrent = holdings.reduce((s, h) => s + (h.current || 0), 0);
 const tbody = document.getElementById('holdingsBody');
 const sortedHoldings = [...holdings].sort((a, b) => (b.current || 0) - (a.current || 0));
 tbody.innerHTML = sortedHoldings.map(h => {
+  const isNote = h.current_price_raw == null && (h.quantity == null || h.quantity === 0);
   const pct = totalCurrent > 0 && h.current ? (h.current / totalCurrent * 100).toFixed(1) + '%' : '—';
   return `<tr>
     <td>${h.market || '—'}</td>
     <td class="name">${h.name}</td>
-    <td>${h.cost_price_raw || '—'}</td>
+    <td>${isNote ? '—' : (h.cost_price_raw || '—')}</td>
     <td>${h.current_price_raw || '—'}</td>
     <td>${h.quantity != null ? h.quantity.toLocaleString() : '—'}</td>
     <td>${fmtWan(h.invested)}</td>
     <td>${fmtWan(h.current)}</td>
     <td class="${colorClass(h.pnl)}">${fmtWan(h.pnl)}</td>
     <td class="${colorClass(h.roi)}">${fmtPct(h.roi)}</td>
-    <td>${fmtWan(h.dividends)}</td>
     <td>${pct}</td>
   </tr>`;
 }).join('');
