@@ -1,0 +1,111 @@
+{
+  "date": "2026-03-10",
+  "snapshot_time": "2026-03-10 15:00:00 +08:00",
+  "source": "历史截图整理",
+  "doc_date": "2026/3/10",
+  "exchange_rates": {
+    "US": 6.7807,
+    "HK": 0.8642
+  },
+  "summary": {
+    "holdings_pos_cost_pct": null,
+    "holdings_pos_curr_pct": 100,
+    "holdings_roi": 79.75,
+    "holdings_invested": 1432000.0,
+    "holdings_current": 2574000.0,
+    "holdings_pnl": 1142000.0,
+    "holdings_dividends": 0,
+    "year_start": 2505000.0,
+    "salary_surplus": 125000.0,
+    "base": 2568000.0,
+    "total_pnl": -55000.0,
+    "total_roi": -2.14,
+    "regions": {
+      "整体": {
+        "invested": 1432000.0,
+        "current": 2575000.0,
+        "pnl": 1143000.0
+      },
+      "国内": {
+        "invested": 824000.0,
+        "current": 2081808.47,
+        "pnl": 1257808.47
+      },
+      "境外": {
+        "invested": 608000.0,
+        "current": 493191.53,
+        "pnl": -114808.47
+      }
+    }
+  },
+  "holdings": [
+    {
+      "market": "CN",
+      "currency": "CNY",
+      "name": "中矿",
+      "cost_price_raw": "¥29.6",
+      "current_price_raw": "¥80.13",
+      "cost_price": 29.6,
+      "current_price": 80.13,
+      "pos_cost_pct": 51.54,
+      "pos_curr_pct": 77.51,
+      "roi": 170.3,
+      "quantity": 24900,
+      "invested": 738000.0,
+      "current": 1995000.0,
+      "dividends": null,
+      "pnl": 1257000.0
+    },
+    {
+      "market": "US",
+      "currency": "USD",
+      "name": "传奇生物",
+      "cost_price_raw": "$25.3",
+      "current_price_raw": "$19.14",
+      "cost_price": 25.3,
+      "current_price": 19.14,
+      "pos_cost_pct": 34.78,
+      "pos_curr_pct": 14.65,
+      "roi": -24.3,
+      "quantity": 2868,
+      "invested": 498000.0,
+      "current": 377000.0,
+      "dividends": null,
+      "pnl": -121000.0
+    },
+    {
+      "market": "HK",
+      "currency": "HKD",
+      "name": "再鼎医药",
+      "cost_price_raw": "HK$14.3",
+      "current_price_raw": "HK$15.1",
+      "cost_price": 14.3,
+      "current_price": 15.1,
+      "pos_cost_pct": 7.68,
+      "pos_curr_pct": 4.51,
+      "roi": 5.3,
+      "quantity": 8800,
+      "invested": 110000.0,
+      "current": 116000.0,
+      "dividends": null,
+      "pnl": 6000.0
+    },
+    {
+      "market": "CN",
+      "currency": "CNY",
+      "name": "2605 C14000",
+      "cost_price_raw": "¥10800.00",
+      "current_price_raw": "¥10800.00",
+      "cost_price": 10800.0,
+      "current_price": 10800.0,
+      "pos_cost_pct": 6.01,
+      "pos_curr_pct": 3.34,
+      "roi": 0.0,
+      "quantity": 8,
+      "invested": 86000.0,
+      "current": 86000.0,
+      "dividends": null,
+      "pnl": 0.0
+    }
+  ]
+}

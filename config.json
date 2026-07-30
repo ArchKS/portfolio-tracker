@@ -1,0 +1,16 @@
+{
+  "_comment": "控制页面模块显隐，true=显示，false=隐藏",
+  "sections": {
+    "overview":    true,
+    "summary":     true,
+    "drawdown":    true,
+    "position":    true,
+    "allocation":  true,
+    "ranking":     true,
+    "stats":       true,
+    "holdings":    true,
+    "calendar":    true,
+    "closed":      false
+  },
+  "save_button": true
+}

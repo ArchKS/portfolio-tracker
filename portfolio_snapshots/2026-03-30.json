@@ -1,0 +1,162 @@
+{
+  "date": "2026-03-30",
+  "snapshot_time": "2026-03-30 15:00:00 +08:00",
+  "source": "历史截图整理",
+  "doc_date": "2026/3/30",
+  "exchange_rates": {
+    "US": 6.7807,
+    "HK": 0.8642
+  },
+  "summary": {
+    "holdings_pos_cost_pct": null,
+    "holdings_pos_curr_pct": 88.5,
+    "holdings_roi": 28.24,
+    "holdings_invested": 1742000.0,
+    "holdings_current": 2234000.0,
+    "holdings_pnl": 492000.0,
+    "holdings_dividends": 0,
+    "year_start": 2505000.0,
+    "salary_surplus": 150000.0,
+    "base": 2580000.0,
+    "total_pnl": -131000.0,
+    "total_roi": -5.08,
+    "regions": {
+      "整体": {
+        "invested": 1742000.0,
+        "current": 2524000.0,
+        "pnl": 782000.0
+      },
+      "国内": {
+        "invested": 947000.0,
+        "current": 1728612.35,
+        "pnl": 781612.35
+      },
+      "境外": {
+        "invested": 795000.0,
+        "current": 795387.65,
+        "pnl": 387.65
+      }
+    }
+  },
+  "holdings": [
+    {
+      "market": "CN",
+      "currency": "CNY",
+      "name": "中矿资源",
+      "cost_price_raw": "¥31.0",
+      "current_price_raw": "¥73.47",
+      "cost_price": 31.0,
+      "current_price": 73.47,
+      "pos_cost_pct": 24.91,
+      "pos_curr_pct": 46.06,
+      "roi": 137.0,
+      "quantity": 14000,
+      "invested": 434000.0,
+      "current": 1029000.0,
+      "dividends": null,
+      "pnl": 595000.0
+    },
+    {
+      "market": "CN",
+      "currency": "CNY",
+      "name": "LC2701",
+      "cost_price_raw": "16.0万",
+      "current_price_raw": "1.7万",
+      "cost_price": 160000.0,
+      "current_price": 17000.0,
+      "pos_cost_pct": 20.09,
+      "pos_curr_pct": 15.67,
+      "roi": null,
+      "quantity": 5,
+      "invested": 350000.0,
+      "current": 350000.0,
+      "dividends": null,
+      "pnl": 0.0
+    },
+    {
+      "market": "HK",
+      "currency": "HKD",
+      "name": "天齐锂业",
+      "cost_price_raw": "HK$43.5",
+      "current_price_raw": "HK$47.8",
+      "cost_price": 43.5,
+      "current_price": 47.8,
+      "pos_cost_pct": 18.08,
+      "pos_curr_pct": 15.49,
+      "roi": null,
+      "quantity": 8200,
+      "invested": 315000.0,
+      "current": 346000.0,
+      "dividends": null,
+      "pnl": 31000.0
+    },
+    {
+      "market": "US",
+      "currency": "USD",
+      "name": "传奇生物",
+      "cost_price_raw": "$24.6",
+      "current_price_raw": "$17.05",
+      "cost_price": 24.6,
+      "current_price": 17.05,
+      "pos_cost_pct": 24.4,
+      "pos_curr_pct": 13.21,
+      "roi": null,
+      "quantity": 2500,
+      "invested": 425000.0,
+      "current": 295000.0,
+      "dividends": null,
+      "pnl": -130000.0
+    },
+    {
+      "market": "CN",
+      "currency": "CNY",
+      "name": "LC2607 C180000",
+      "cost_price_raw": "1.9万",
+      "current_price_raw": "1.9万",
+      "cost_price": 11650,
+      "current_price": 13455,
+      "pos_cost_pct": 8.61,
+      "pos_curr_pct": 6.22,
+      "roi": null,
+      "quantity": 24,
+      "invested": 150000.0,
+      "current": 139000.0,
+      "dividends": null,
+      "pnl": -11000.0
+    },
+    {
+      "market": "US",
+      "currency": "USD",
+      "name": "SQQQ PUT",
+      "cost_price_raw": "$10.0",
+      "current_price_raw": "11.32",
+      "cost_price": 10.0,
+      "current_price": 11.32,
+      "pos_cost_pct": 3.16,
+      "pos_curr_pct": 2.82,
+      "roi": null,
+      "quantity": 800,
+      "invested": 55000.0,
+      "current": 63000.0,
+      "dividends": null,
+      "pnl": 8000.0
+    },
+    {
+      "market": "CN",
+      "currency": "CNY",
+      "name": "生猪2609",
+      "cost_price_raw": "1.3万",
+      "current_price_raw": "1.2万",
+      "cost_price": 13000.0,
+      "current_price": 12000.0,
+      "pos_cost_pct": 0.75,
+      "pos_curr_pct": 0.54,
+      "roi": null,
+      "quantity": 1,
+      "invested": 13000.0,
+      "current": 12000.0,
+      "dividends": null,
+      "pnl": -1000.0
+    }
+  ]
+}
