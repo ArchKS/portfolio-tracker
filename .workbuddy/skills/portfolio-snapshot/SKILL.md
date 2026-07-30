@@ -52,11 +52,17 @@ Write `csv_data` to `{PROJECT}/.tmp_csv.csv` (use the Write tool).
 
 ### 4. Pull live prices
 
-Call `mcp__westock-mcp__data_quote` with:
+Extract all non-empty stock codes from the CSV column 3 (the 「代码」 column).
+Filter to entries ending with .SH, .SZ, .HK, or .US.
+Convert to westock format:
 
-```
-codes = "sh600585,hk09926,hk06855,usLEGN,usSMMT,hk03613,hk00696,hk02669,hk06049,usPDD,usSY,hk87001"
-```
+- `XXX.SH` → `sh` + XXX (e.g. `600585.SH` → `sh600585`)
+- `XXX.SZ` → `sz` + XXX
+- `XXX.HK` → `hk` + XXX  (e.g. `09926.HK` → `hk09926`)
+- `XXX.US` → `us` + XXX (uppercase, e.g. `PDD.US` → `usPDD`)
+
+Join with commas and call `mcp__westock-mcp__data_quote`. This ensures
+new stocks added to the spreadsheet are automatically picked up.
 
 For each stock in the response, extract the `price` field.
 
@@ -125,9 +131,8 @@ Delete `{PROJECT}/.tmp_csv.csv` and `{PROJECT}/.tmp_prices.json`.
 
 ## Notes
 
-- The stock code list in step 4 must match the codes in the
-  spreadsheet. If the user adds or removes holdings, update the
-  list accordingly.
+- Stock codes are extracted dynamically from the CSV 「代码」 column.
+  Adding or removing stocks in the spreadsheet requires no code changes.
 - The `app.codebuddy.work` domain has CDN caching; the
   `e2b.ap-beijing.sandbox.cloudstudio.club` URL is direct and
   updates instantly. Use whichever `shareLink` is returned.
