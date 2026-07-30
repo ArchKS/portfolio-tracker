@@ -860,11 +860,10 @@ tbody.innerHTML = sortedHoldings.map(h => {
   const prevAsset = {};
   snapshots.forEach((s, i) => {
     const d = s.date;
-    const pnl = (s.summary || {}).total_pnl;
+    const pnl = (s.summary || {}).holdings_pnl;
     const cur = (s.summary || {}).holdings_current || 0;
     if (i > 0) {
-      const prevD = snapshots[i-1].date;
-      const prevPnl = snapshots[i-1].summary.total_pnl;
+      const prevPnl = snapshots[i-1].summary.holdings_pnl;
       const prevCur = snapshots[i-1].summary.holdings_current || 1;
       pnlMap[d] = {
         amt: prevPnl != null && pnl != null ? +(pnl - prevPnl).toFixed(0) : null,

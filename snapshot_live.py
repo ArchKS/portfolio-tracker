@@ -225,7 +225,7 @@ def build_snapshot(positions, summary, prices):
         "exchange_rates": {k:v for k,v in rates.items() if k in ("US","HK")} or None,
         "summary": {
             "holdings_pos_cost_pct": round(total_inv/total_inv*100,4) if total_inv else None,
-            "holdings_pos_curr_pct": round(total_cur/total_cur*100,4) if total_cur else None,
+            "holdings_pos_curr_pct": round(total_cur / stock_cash * 100, 2) if stock_cash else None,
             "holdings_roi": roi,
             "holdings_invested": total_inv,
             "holdings_current": total_cur,
