@@ -10,7 +10,14 @@
     "stats":       true,
     "holdings":    true,
     "calendar":    true,
-    "closed":      false
+    "closed":      false,
+    "annual_returns": true
+  },
+  "annual_returns_history": {
+    "2022": 0.58,
+    "2023": 5.23,
+    "2024": 24.0,
+    "2025": 164.8
   },
   "save_button": true
 }

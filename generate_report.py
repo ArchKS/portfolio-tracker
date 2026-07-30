@@ -408,7 +408,6 @@ td.name{font-weight:500;text-align:left;}
   </div>
   <div class="chart-card">
     <div class="chart-title">各标的收益（万）</div>
-    <div class="chart-desc">红涨绿跌</div>
     <div class="chart-canvas-wrap" style="height:420px;">
       <canvas id="chartRanking"></canvas>
     </div>
@@ -494,6 +493,27 @@ td.name{font-weight:500;text-align:left;}
     <div class="chart-canvas-wrap" style="min-height:360px;">
       <canvas id="chartClosed"></canvas>
     </div>
+  </div>
+</div>
+
+<!-- 11 年化收益率 -->
+<div class="section" data-section="annual_returns">
+  <div class="section-head">
+    <span class="idx">11</span>
+    <h2>年化收益率 / ANNUAL RETURNS</h2>
+  </div>
+  <div class="chart-card">
+    <table class="holdings-table" id="annualReturnsTable">
+      <thead>
+        <tr>
+          <th style="text-align:left">年份</th>
+          <th style="text-align:right">收益率</th>
+          <th style="text-align:right">累计净值</th>
+        </tr>
+      </thead>
+      <tbody id="annualReturnsBody"></tbody>
+      <tfoot id="annualReturnsFoot"></tfoot>
+    </table>
   </div>
 </div>
 </div>
@@ -1077,6 +1097,38 @@ async function saveAsImage(){
 }
 </script>
 <script>
+// ── Annual Returns Table ──
+(function() {
+  const arData = (stats.annual_returns || []);
+  if (arData.length === 0) return;
+  const tbody = document.getElementById('annualReturnsBody');
+  const tfoot = document.getElementById('annualReturnsFoot');
+  if (!tbody) return;
+  let nav = 1.0;
+  arData.forEach(d => {
+    nav *= (1 + d.return / 100);
+    const color = d.return >= 0 ? PROFIT : LOSS;
+    const yearLabel = d.type === 'current' ? d.year + ' (YTD)' : String(d.year);
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + yearLabel + '</td>'
+      + '<td style="text-align:right;color:' + color + ';font-weight:600;">' + (d.return >= 0 ? '+' : '') + d.return.toFixed(2) + '%</td>'
+      + '<td style="text-align:right">' + nav.toFixed(4) + '</td>';
+    tbody.appendChild(tr);
+  });
+  // CAGR row
+  const cagr = stats.annual_cagr;
+  if (cagr != null) {
+    const color = cagr >= 0 ? PROFIT : LOSS;
+    const tr = document.createElement('tr');
+    tr.style.borderTop = '2px solid ' + INK;
+    tr.innerHTML = '<td style="font-weight:700;padding:8px 10px;">投资以来年化</td>'
+      + '<td style="text-align:right;padding:8px 10px;color:' + color + ';font-weight:700;">' + (cagr >= 0 ? '+' : '') + cagr.toFixed(2) + '%</td>'
+      + '<td style="text-align:right;font-weight:600;padding:8px 10px;">' + (stats.annual_cumulative_nav || 0).toFixed(4) + '</td>';
+    if (tfoot) tfoot.appendChild(tr);
+  }
+})();
+</script>
+<script>
 // Apply config: hide disabled sections
 if (pageConfig && pageConfig.sections) {
   Object.keys(pageConfig.sections).forEach(id => {
@@ -1110,6 +1162,41 @@ def generate_report(snapshots, stats):
     except:
         pass
     config_json = json.dumps(config, ensure_ascii=False)
+
+    # Calculate annual returns: historical (from config) + current year YTD (no annualization) + overall CAGR
+    from datetime import datetime
+    annual_data = []
+    history = config.get("annual_returns_history", {})
+    cumulative_nav = 1.0  # 累计净值
+    first_year = None
+    for year, ret in sorted(history.items()):
+        annual_data.append({"year": int(year), "return": round(ret, 2), "type": "history"})
+        cumulative_nav *= (1 + ret / 100)
+        if first_year is None:
+            first_year = int(year)
+    latest_snap = snapshots[-1] if snapshots else {}
+    latest_summary = latest_snap.get("summary", {})
+    total_roi = latest_summary.get("total_roi")
+    snap_date = latest_snap.get("date", "")
+    if total_roi is not None and snap_date:
+        try:
+            d = datetime.strptime(snap_date, "%Y-%m-%d")
+            annual_data.append({"year": d.year, "return": round(total_roi, 2), "type": "current"})
+            cumulative_nav *= (1 + total_roi / 100)
+            # CAGR: from first_year Jan 1 to snapshot date
+            if first_year is not None:
+                from_start = datetime(first_year, 1, 1)
+                total_days = (d - from_start).days
+                if total_days > 0:
+                    years = total_days / 365.0
+                    cagr = cumulative_nav ** (1.0 / years) - 1
+                    stats["annual_cagr"] = round(cagr * 100, 2)
+                    stats["annual_cumulative_nav"] = round(cumulative_nav, 4)
+                    stats["annual_years"] = round(years, 2)
+        except:
+            pass
+    stats["annual_returns"] = annual_data
+    stats_json = json.dumps(stats, ensure_ascii=False)
 
     html = HTML_TEMPLATE.replace("__DATA__", data_json).replace("__STATS__", stats_json).replace("__CONFIG__", config_json)
 
