@@ -205,6 +205,16 @@ body{
 .section-download-btn:disabled{cursor:wait;}
 .section-download-btn svg{width:16px;height:16px;display:block;}
 .section-head .note{margin-left:auto;font-size:12px;color:var(--ink-3);letter-spacing:.02em;}
+.section.section-export-mode{max-width:none!important;background:#fff;}
+.section.section-export-mode .section-head{flex-wrap:nowrap;gap:14px;}
+.section.section-export-mode .section-head h2{font-size:21px;}
+.section.section-export-mode .section-head .note{width:auto;margin-left:auto;font-size:12px;}
+.section.section-export-mode .table-scroll{overflow:visible!important;}
+.section.section-export-mode table{width:100%;font-size:13px;}
+.section.section-export-mode thead th{padding:12px 16px;font-size:11px;}
+.section.section-export-mode tbody td{padding:11px 16px;}
+.section.section-export-mode .chart-grid-2{grid-template-columns:1fr 1fr;}
+.section.section-export-mode .chart-card{padding:24px;}
 .report-timestamp{text-align:center;color:#b5b5b5;font-size:10px;letter-spacing:.04em;margin-top:8px;padding-top:12px;}
 
 /* ── Data strip (overview) ── */
@@ -1093,7 +1103,8 @@ async function downloadElementAsPng(element, filename, horizontalPadding = 0){
   const canvas = await html2canvas(element, {
     scale: renderScale,
     useCORS: true,
-    backgroundColor: '#ffffff'
+    backgroundColor: '#ffffff',
+    windowWidth: Math.max(document.documentElement.clientWidth, element.scrollWidth)
   });
   let outputCanvas = canvas;
   if (horizontalPadding > 0) {
@@ -1110,6 +1121,20 @@ async function downloadElementAsPng(element, filename, horizontalPadding = 0){
   link.download = filename;
   link.href = outputCanvas.toDataURL('image/png');
   link.click();
+}
+
+function waitForExportLayout(){
+  return new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
+}
+
+function resizeSectionCharts(section){
+  if (typeof Chart === 'undefined' || typeof Chart.getChart !== 'function') return;
+  section.querySelectorAll('canvas').forEach(canvas => {
+    const chart = Chart.getChart(canvas);
+    if (chart) chart.resize();
+  });
 }
 
 async function saveAsImage(){
@@ -1143,16 +1168,27 @@ document.querySelectorAll('.section-head h2').forEach(title => {
 
     const sectionId = section.dataset.section || 'section';
     const originalCursor = document.body.style.cursor;
+    const originalWidth = section.style.width;
+    const scrollWidths = Array.from(section.querySelectorAll('.table-scroll')).map(el => el.scrollWidth);
+    const exportWidth = Math.max(1120, section.scrollWidth, ...scrollWidths);
     downloadButton.disabled = true;
     downloadButton.style.visibility = 'hidden';
     document.body.style.cursor = 'wait';
+    section.classList.add('section-export-mode');
+    section.style.width = exportWidth + 'px';
     try {
+      await waitForExportLayout();
+      resizeSectionCharts(section);
+      await waitForExportLayout();
       await downloadElementAsPng(
         section,
         'portfolio_' + sectionId + '_' + (latest.date || 'report') + '.png',
         16
       );
     } finally {
+      section.classList.remove('section-export-mode');
+      section.style.width = originalWidth;
+      resizeSectionCharts(section);
       document.body.style.cursor = originalCursor;
       downloadButton.style.visibility = '';
       downloadButton.disabled = false;
