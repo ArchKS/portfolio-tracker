@@ -728,19 +728,23 @@ tbody.innerHTML = sortedHoldings.map(h => {
   let cursor = new Date();
   const fmtCal = v => v == null ? '—' : (v/10000).toFixed(1);  // always 万, 1 decimal
 
-  // compute daily P&L: 今日整体资产 - 昨日整体资产 = 当日收益
+  // compute daily stock P&L only when both today and the previous calendar day have snapshots
   const pnlMap = {};
   snapshots.forEach((s, i) => {
     const d = s.date;
-    const overall = ((s.summary || {}).regions || {}).整体 || {};
-    const cur = overall.current || 0;
     if (i > 0) {
-      const prevOverall = ((snapshots[i-1].summary || {}).regions || {}).整体 || {};
-      const prevCur = prevOverall.current || 0;
-      pnlMap[d] = {
-        amt: prevCur && cur ? +(cur - prevCur).toFixed(0) : null,
-        pct: prevCur ? +((cur - prevCur) / prevCur * 100).toFixed(2) : null
-      };
+      const prev = snapshots[i-1];
+      const dayGap = Math.round((Date.parse(d + 'T00:00:00Z') - Date.parse(prev.date + 'T00:00:00Z')) / 86400000);
+      if (dayGap === 1) {
+        const cur = (s.summary || {}).holdings_current;
+        const prevCur = (prev.summary || {}).holdings_current;
+        if (cur != null && prevCur > 0) {
+          pnlMap[d] = {
+            amt: +(cur - prevCur).toFixed(0),
+            pct: +((cur - prevCur) / prevCur * 100).toFixed(2)
+          };
+        }
+      }
     }
   });
 
