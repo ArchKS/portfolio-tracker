@@ -13,6 +13,8 @@ import glob
 import sys
 from datetime import datetime, timedelta, timezone
 
+from generate_timeline import generate_timeline_svg
+
 
 # ── 数据处理 ──────────────────────────────────────────────
 
@@ -231,6 +233,9 @@ body{
 .chart-card .chart-desc{font-size:12px;color:var(--ink-3);margin:6px 0 14px;letter-spacing:.02em;}
 .chart-canvas-wrap{position:relative;height:440px;}
 .chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.timeline-card{border:1px solid var(--rule);background:#fbfbf8;overflow-x:auto;overflow-y:hidden;}
+.timeline-card svg{display:block;width:100%;height:auto;min-width:900px;}
+.timeline-empty{padding:32px;color:var(--ink-3);font-size:13px;}
 
 /* ── Stats grid ── */
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);border-bottom:none;}
@@ -466,10 +471,20 @@ td.name{font-weight:500;text-align:left;}
     </div>
   </div>
 </div>
-<!-- 09 P&L Calendar -->
-<div class="section" data-section="calendar">
+<!-- 09 Timeline -->
+<div class="section" data-section="timeline">
   <div class="section-head">
     <span class="idx">09</span>
+    <h2>重仓股持有时间线 / TIMELINE</h2>
+    <span class="note">交易记录与显示设置来自 config.json</span>
+  </div>
+  <div class="timeline-card">__TIMELINE_SVG__</div>
+</div>
+
+<!-- 10 P&L Calendar -->
+<div class="section" data-section="calendar">
+  <div class="section-head">
+    <span class="idx">10</span>
     <h2>盈亏日历 / P&L CALENDAR</h2>
     <div class="cal-toggles">
       <button class="cal-btn active" data-view="day">日</button>
@@ -494,10 +509,10 @@ td.name{font-weight:500;text-align:left;}
   </div>
 </div>
 
-<!-- 10 清仓盈亏 -->
+<!-- 11 清仓盈亏 -->
 <div class="section" data-section="closed">
   <div class="section-head">
-    <span class="idx">10</span>
+    <span class="idx">11</span>
     <h2>清仓盈亏 / CLOSED POSITIONS</h2>
     <span class="note">已卖出标的的盈亏</span>
   </div>
@@ -510,10 +525,10 @@ td.name{font-weight:500;text-align:left;}
   </div>
 </div>
 
-<!-- 11 年化收益率 -->
+<!-- 12 年化收益率 -->
 <div class="section" data-section="annual_returns">
   <div class="section-head">
-    <span class="idx">11</span>
+    <span class="idx">12</span>
     <h2>年化收益率 / ANNUAL RETURNS</h2>
   </div>
   <div class="chart-card">
@@ -1229,13 +1244,36 @@ document.querySelectorAll('.section-head h2').forEach(title => {
 })();
 </script>
 <script>
-// Apply config: hide disabled sections
+// Apply config: order sections exactly as listed, then hide disabled sections.
 if (pageConfig && pageConfig.sections) {
-  Object.keys(pageConfig.sections).forEach(id => {
-    if (!pageConfig.sections[id]) {
-      const el = document.querySelector('[data-section="' + id + '"]');
-      if (el) el.style.display = 'none';
+  const page = document.getElementById('page');
+  const timestamp = page ? page.querySelector('.report-timestamp') : null;
+  const allSections = Array.from(document.querySelectorAll('.section[data-section]'));
+  const configuredSections = Object.keys(pageConfig.sections)
+    .map(id => document.querySelector('[data-section="' + id + '"]'))
+    .filter(Boolean);
+  const configuredSet = new Set(configuredSections);
+  const orderedSections = configuredSections.concat(
+    allSections.filter(section => !configuredSet.has(section))
+  );
+
+  if (page) {
+    orderedSections.forEach(section => page.insertBefore(section, timestamp));
+  }
+
+  orderedSections.forEach(section => {
+    const id = section.dataset.section;
+    if (Object.prototype.hasOwnProperty.call(pageConfig.sections, id)) {
+      section.style.display = pageConfig.sections[id] ? '' : 'none';
     }
+  });
+
+  let visibleIndex = 1;
+  orderedSections.forEach(section => {
+    if (section.style.display === 'none') return;
+    const index = section.querySelector('.section-head .idx');
+    if (index) index.textContent = String(visibleIndex).padStart(2, '0');
+    visibleIndex += 1;
   });
 }
 if (pageConfig && !pageConfig.save_button) {
@@ -1262,6 +1300,9 @@ def generate_report(snapshots, stats):
     except:
         pass
     config_json = json.dumps(config, ensure_ascii=False)
+    timeline_svg = generate_timeline_svg(config, write_file=True)
+    if not timeline_svg:
+        timeline_svg = '<div class="timeline-empty">请在 config.json 中配置 timeline.trades。</div>'
 
     # Calculate annual returns: historical (from config) + current year YTD (no annualization) + overall CAGR
     annual_data = []
@@ -1302,6 +1343,7 @@ def generate_report(snapshots, stats):
             .replace("__DATA__", data_json)
             .replace("__STATS__", stats_json)
             .replace("__CONFIG__", config_json)
+            .replace("__TIMELINE_SVG__", timeline_svg)
             .replace("__GENERATED_AT__", generated_at))
 
     script_dir = os.path.dirname(os.path.abspath(__file__))

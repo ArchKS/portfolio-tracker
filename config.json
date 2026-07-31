@@ -1,16 +1,17 @@
 {
   "_comment": "控制页面模块显隐，true=显示，false=隐藏",
   "sections": {
-    "overview":    true,
-    "summary":     true,
-    "drawdown":    true,
-    "position":    true,
-    "allocation":  true,
-    "ranking":     true,
-    "stats":       true,
-    "holdings":    true,
-    "calendar":    true,
-    "closed":      false,
+    "overview": true,
+    "summary": true,
+    "drawdown": true,
+    "position": true,
+    "allocation": true,
+    "ranking": true,
+    "stats": true,
+    "timeline": true,
+    "calendar": true,
+    "closed": false,
+    "holdings": true,
     "annual_returns": true
   },
   "annual_returns_history": {
@@ -19,5 +20,70 @@
     "2024": 24.0,
     "2025": 164.8
   },
-  "save_button": true
+  "save_button": true,
+  "timeline": {
+    "show_amount": true,
+    "output_file": "timeline.svg",
+    "output_format": "svg",
+    "png_scale": 4,
+    "layout": {
+      "left_margin": 55,
+      "row_start_y": 135,
+      "row_height": 55,
+      "plot_x_end": 1300,
+      "right_label_pad": 18,
+      "plot_x_start_left": 170,
+      "plot_x_start_bar_center": 75
+    },
+    "trades": [
+      {
+        "name": "美团",
+        "buy_date": "2023-02-17",
+        "sell_date": "2024-06-14",
+        "buy_amount": 13.2,
+        "profit": 5.1,
+        "annualized": null
+      },
+      {
+        "name": "牧原",
+        "buy_date": "2023-05-05",
+        "sell_date": "2024-10-10",
+        "buy_amount": 34.5,
+        "profit": 1.5,
+        "annualized": null
+      },
+      {
+        "name": "药明生物",
+        "buy_date": "2024-06-12",
+        "sell_date": "2025-04-08",
+        "buy_amount": 10.8,
+        "profit": 8.6,
+        "annualized": null
+      },
+      {
+        "name": "中矿",
+        "buy_date": "2024-04-25",
+        "sell_date": "2026-05-08",
+        "buy_amount": 80,
+        "profit": 112.1,
+        "annualized": null
+      },
+      {
+        "name": "天齐",
+        "buy_date": "2026-03-12",
+        "sell_date": "2026-05-18",
+        "buy_amount": 134.1,
+        "profit": 22.2,
+        "annualized": null
+      },
+      {
+        "name": "锂矿等效",
+        "buy_date": "2024-04-25",
+        "sell_date": "2026-05-18",
+        "buy_amount": 80,
+        "profit": 134.3,
+        "annualized": null
+      }
+    ]
+  }
 }
