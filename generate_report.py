@@ -11,7 +11,7 @@ import json
 import os
 import glob
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 
 # ── 数据处理 ──────────────────────────────────────────────
@@ -198,9 +198,14 @@ body{
 .section{margin-bottom:44px;}
 .section-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:20px;}
 .section-head .idx{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
-.section-head h2{font-size:21px;font-weight:700;letter-spacing:-.01em;cursor:zoom-in;user-select:none;}
-.section-head h2:hover{color:var(--accent);}
+.section-head h2{font-size:21px;font-weight:700;letter-spacing:-.01em;}
+.section-download-btn{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;align-self:center;padding:0;border:0;border-radius:4px;background:transparent;color:var(--ink-3);cursor:pointer;}
+.section-download-btn:hover{background:#f1f1f1;color:var(--ink);}
+.section-download-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.section-download-btn:disabled{cursor:wait;}
+.section-download-btn svg{width:16px;height:16px;display:block;}
 .section-head .note{margin-left:auto;font-size:12px;color:var(--ink-3);letter-spacing:.02em;}
+.report-timestamp{text-align:center;color:#b5b5b5;font-size:10px;letter-spacing:.04em;margin-top:8px;padding-top:12px;}
 
 /* ── Data strip (overview) ── */
 .strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);}
@@ -517,6 +522,7 @@ td.name{font-weight:500;text-align:left;}
     </table>
   </div>
 </div>
+<div class="report-timestamp">生成于 __GENERATED_AT__</div>
 </div>
 <script>
 const rawData = __DATA__;
@@ -1124,15 +1130,23 @@ async function saveAsImage(){
 }
 
 document.querySelectorAll('.section-head h2').forEach(title => {
-  title.title = '双击保存此板块为图片';
-  title.addEventListener('dblclick', async event => {
+  const downloadButton = document.createElement('button');
+  downloadButton.type = 'button';
+  downloadButton.className = 'section-download-btn';
+  downloadButton.title = '下载此板块图片';
+  downloadButton.setAttribute('aria-label', '下载' + title.textContent.trim() + '图片');
+  downloadButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  title.insertAdjacentElement('afterend', downloadButton);
+
+  downloadButton.addEventListener('click', async event => {
     event.preventDefault();
     const section = title.closest('.section');
-    if (!section || title.dataset.exporting === 'true') return;
+    if (!section || downloadButton.disabled) return;
 
     const sectionId = section.dataset.section || 'section';
     const originalCursor = document.body.style.cursor;
-    title.dataset.exporting = 'true';
+    downloadButton.disabled = true;
+    downloadButton.style.visibility = 'hidden';
     document.body.style.cursor = 'wait';
     try {
       await downloadElementAsPng(
@@ -1142,7 +1156,8 @@ document.querySelectorAll('.section-head h2').forEach(title => {
       );
     } finally {
       document.body.style.cursor = originalCursor;
-      delete title.dataset.exporting;
+      downloadButton.style.visibility = '';
+      downloadButton.disabled = false;
     }
   });
 });
@@ -1215,7 +1230,6 @@ def generate_report(snapshots, stats):
     config_json = json.dumps(config, ensure_ascii=False)
 
     # Calculate annual returns: historical (from config) + current year YTD (no annualization) + overall CAGR
-    from datetime import datetime
     annual_data = []
     history = config.get("annual_returns_history", {})
     cumulative_nav = 1.0  # 累计净值
@@ -1249,7 +1263,12 @@ def generate_report(snapshots, stats):
     stats["annual_returns"] = annual_data
     stats_json = json.dumps(stats, ensure_ascii=False)
 
-    html = HTML_TEMPLATE.replace("__DATA__", data_json).replace("__STATS__", stats_json).replace("__CONFIG__", config_json)
+    generated_at = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
+    html = (HTML_TEMPLATE
+            .replace("__DATA__", data_json)
+            .replace("__STATS__", stats_json)
+            .replace("__CONFIG__", config_json)
+            .replace("__GENERATED_AT__", generated_at))
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_file = os.path.join(script_dir, "report.html")
