@@ -231,7 +231,6 @@ body{
 
 /* ── Table ── */
 .table-box{border:1px solid var(--rule);padding:0;}
-.table-box .tb-title{font-size:16px;font-weight:700;padding:18px 20px 14px;border-bottom:1px solid var(--rule);letter-spacing:-.01em;}
 .table-scroll{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
 thead th{text-align:right;padding:12px 16px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);border-bottom:2px solid var(--rule-strong);font-weight:600;white-space:nowrap;}
@@ -436,7 +435,6 @@ td.name{font-weight:500;text-align:left;}
     <h2>持仓明细 / HOLDINGS</h2>
   </div>
   <div class="table-box">
-    <div class="tb-title">完整持仓（按当前市值降序）</div>
     <div class="table-scroll">
       <table id="holdingsTable">
         <thead>
@@ -723,9 +721,9 @@ new Chart(document.getElementById('chartPosition'), {
   data: {
     labels: dates,
     datasets: [
-      { label:'仓位率', data: posRateData, borderColor: INK, borderWidth: 2.5,
+      { label:'仓位', data: posRateData, borderColor: INK, borderWidth: 2.5,
         tension:.25, pointRadius: pt, pointBackgroundColor: INK, pointHoverRadius: pt+2 },
-      { label:'满仓 100%', data: fullLine, borderColor: SLATE, borderWidth: 1.5, borderDash:[6,5],
+      { label:'满仓', data: fullLine, borderColor: SLATE, borderWidth: 1.5, borderDash:[6,5],
         pointRadius: 0, fill: false },
     ]
   },
