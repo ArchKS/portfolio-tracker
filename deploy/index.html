@@ -938,15 +938,27 @@ if (!multiDay) {
 
 </script>
 <script>
-async function downloadElementAsPng(element, filename){
+async function downloadElementAsPng(element, filename, horizontalPadding = 0){
+  const renderScale = 2;
   const canvas = await html2canvas(element, {
-    scale: 2,
+    scale: renderScale,
     useCORS: true,
     backgroundColor: '#ffffff'
   });
+  let outputCanvas = canvas;
+  if (horizontalPadding > 0) {
+    const paddingPx = horizontalPadding * renderScale;
+    outputCanvas = document.createElement('canvas');
+    outputCanvas.width = canvas.width + paddingPx * 2;
+    outputCanvas.height = canvas.height;
+    const context = outputCanvas.getContext('2d');
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+    context.drawImage(canvas, paddingPx, 0);
+  }
   const link = document.createElement('a');
   link.download = filename;
-  link.href = canvas.toDataURL('image/png');
+  link.href = outputCanvas.toDataURL('image/png');
   link.click();
 }
 
@@ -979,7 +991,8 @@ document.querySelectorAll('.section-head h2').forEach(title => {
     try {
       await downloadElementAsPng(
         section,
-        'portfolio_' + sectionId + '_' + (latest.date || 'report') + '.png'
+        'portfolio_' + sectionId + '_' + (latest.date || 'report') + '.png',
+        16
       );
     } finally {
       document.body.style.cursor = originalCursor;
