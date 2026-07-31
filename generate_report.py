@@ -1113,7 +1113,7 @@ if (!multiDay) {
 
 </script>
 <script>
-async function downloadElementAsPng(element, filename, horizontalPadding = 0){
+async function downloadElementAsPng(element, filename, horizontalPadding = 0, verticalPadding = 0){
   const renderScale = 2;
   const canvas = await html2canvas(element, {
     scale: renderScale,
@@ -1122,15 +1122,16 @@ async function downloadElementAsPng(element, filename, horizontalPadding = 0){
     windowWidth: Math.max(document.documentElement.clientWidth, element.scrollWidth)
   });
   let outputCanvas = canvas;
-  if (horizontalPadding > 0) {
-    const paddingPx = horizontalPadding * renderScale;
+  if (horizontalPadding > 0 || verticalPadding > 0) {
+    const horizontalPaddingPx = horizontalPadding * renderScale;
+    const verticalPaddingPx = verticalPadding * renderScale;
     outputCanvas = document.createElement('canvas');
-    outputCanvas.width = canvas.width + paddingPx * 2;
-    outputCanvas.height = canvas.height;
+    outputCanvas.width = canvas.width + horizontalPaddingPx * 2;
+    outputCanvas.height = canvas.height + verticalPaddingPx * 2;
     const context = outputCanvas.getContext('2d');
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
-    context.drawImage(canvas, paddingPx, 0);
+    context.drawImage(canvas, horizontalPaddingPx, verticalPaddingPx);
   }
   const link = document.createElement('a');
   link.download = filename;
@@ -1159,7 +1160,9 @@ async function saveAsImage(){
   try {
     await downloadElementAsPng(
       document.getElementById('page'),
-      'portfolio_' + (latest.date || 'report') + '.png'
+      'portfolio_' + (latest.date || 'report') + '.png',
+      24,
+      48
     );
   } finally {
     btn.textContent = 'SAVE AS PNG';
