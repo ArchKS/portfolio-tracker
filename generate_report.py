@@ -575,6 +575,17 @@ const fmtWan = v => v == null ? '—' : (Math.abs(v/10000) >= 1 ? (v/10000).toLo
 const fmtPct = v => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(2) + '%';
 const colorClass = v => v == null ? '' : (v > 0 ? 'up' : v < 0 ? 'down' : '');
 const FONT = "'Inter','Noto Sans SC',sans-serif";
+const dateAxisTicks = {
+  autoSkip: true,
+  maxTicksLimit: window.innerWidth <= 600 ? 4 : 8,
+  autoSkipPadding: 16,
+  minRotation: 0,
+  maxRotation: 0,
+  callback(value) {
+    const dateLabel = this.getLabelForValue(value);
+    return dateLabel ? dateLabel.slice(5).replace('-', '/') : '';
+  }
+};
 
 // ── Meta ──
 document.getElementById('meta').innerHTML =
@@ -689,7 +700,10 @@ new Chart(document.getElementById('chartMaster'), {
       }
     },
     scales: {
-      x: { grid: { display: false }, ticks: { color: INK2, font: { size: 11, family: FONT } } },
+      x: {
+        grid: { display: false },
+        ticks: { ...dateAxisTicks, color: INK2, font: { size: 11, family: FONT } }
+      },
       yMoney: {
         position: 'left',
         title: { display: true, text: '金额 (万)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
@@ -729,7 +743,10 @@ new Chart(document.getElementById('chartDrawdown'), {
       tooltip: { callbacks: { label: ctx => (ctx.parsed.y == null ? '—' : '回撤: ' + ctx.parsed.y.toFixed(2) + '%') } }
     },
     scales: {
-      x: { grid: { display: false }, ticks: { color: INK2, font: { size: 11, family: FONT } } },
+      x: {
+        grid: { display: false },
+        ticks: { ...dateAxisTicks, color: INK2, font: { size: 11, family: FONT } }
+      },
       y: {
         title: { display: true, text: '回撤 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
         grid: { color: RULE }, border: { color: INK },
@@ -764,7 +781,10 @@ new Chart(document.getElementById('chartPosition'), {
       tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(2) + '%') } }
     },
     scales: {
-      x: { grid: { display: false }, ticks: { color: INK2, font: { size: 11, family: FONT } } },
+      x: {
+        grid: { display: false },
+        ticks: { ...dateAxisTicks, color: INK2, font: { size: 11, family: FONT } }
+      },
       y: { min: 0, suggestedMax: 100,
         title: { display: true, text: '仓位率 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
         grid: { color: RULE }, border: { color: INK },
