@@ -874,19 +874,18 @@ tbody.innerHTML = sortedHoldings.map(h => {
   let cursor = new Date();
   const fmtCal = v => v == null ? '—' : (v/10000).toFixed(1);  // always 万, 1 decimal
 
-  // compute daily P&L from snapshots
+  // compute daily P&L: 今日整体资产 - 昨日整体资产 = 当日收益
   const pnlMap = {};
-  const prevAsset = {};
   snapshots.forEach((s, i) => {
     const d = s.date;
-    const pnl = (s.summary || {}).holdings_pnl;
-    const cur = (s.summary || {}).holdings_current || 0;
+    const overall = ((s.summary || {}).regions || {}).整体 || {};
+    const cur = overall.current || 0;
     if (i > 0) {
-      const prevPnl = snapshots[i-1].summary.holdings_pnl;
-      const prevCur = snapshots[i-1].summary.holdings_current || 1;
+      const prevOverall = ((snapshots[i-1].summary || {}).regions || {}).整体 || {};
+      const prevCur = prevOverall.current || 0;
       pnlMap[d] = {
-        amt: prevPnl != null && pnl != null ? +(pnl - prevPnl).toFixed(0) : null,
-        pct: prevCur ? +((pnl - prevPnl) / prevCur * 100).toFixed(2) : null
+        amt: prevCur && cur ? +(cur - prevCur).toFixed(0) : null,
+        pct: prevCur ? +((cur - prevCur) / prevCur * 100).toFixed(2) : null
       };
     }
   });
@@ -955,7 +954,7 @@ tbody.innerHTML = sortedHoldings.map(h => {
       // find the snapshot closest to end of month for asset value
       const monthEnd = new Date(y,m+1,0);
       const snap = [...snapshots].reverse().find(s => new Date(s.date) <= monthEnd);
-      if(snap) totalCurr = snap.summary.holdings_current || 1;
+      if(snap) totalCurr = (((snap.summary || {}).regions || {}).整体 || {}).current || 1;
       const roi = totalCurr > 0 && sum ? +(sum / totalCurr * 100).toFixed(2) : null;
       const intensity = maxA ? Math.min(1, Math.abs(sum)/maxA) : 0;
       const dark = intensity > 0.45;
@@ -1121,9 +1120,9 @@ async function saveAsImage(){
     const color = cagr >= 0 ? PROFIT : LOSS;
     const tr = document.createElement('tr');
     tr.style.borderTop = '2px solid ' + INK;
-    tr.innerHTML = '<td style="font-weight:700;padding:8px 10px;">投资以来年化</td>'
-      + '<td style="text-align:right;padding:8px 10px;color:' + color + ';font-weight:700;">' + (cagr >= 0 ? '+' : '') + cagr.toFixed(2) + '%</td>'
-      + '<td style="text-align:right;font-weight:600;padding:8px 10px;">' + (stats.annual_cumulative_nav || 0).toFixed(4) + '</td>';
+    tr.innerHTML = '<td style="font-weight:700;padding:4px 16px;">投资以来年化</td>'
+      + '<td style="text-align:right;padding:8px 16px;color:' + color + ';font-weight:700;">' + (cagr >= 0 ? '+' : '') + cagr.toFixed(2) + '%</td>'
+      + '<td style="text-align:right;font-weight:600;padding:8px 16px;">' + (stats.annual_cumulative_nav || 0).toFixed(4) + '</td>';
     if (tfoot) tfoot.appendChild(tr);
   }
 })();
