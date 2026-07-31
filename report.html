@@ -52,7 +52,8 @@ body{
 .section{margin-bottom:44px;}
 .section-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:20px;}
 .section-head .idx{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
-.section-head h2{font-size:21px;font-weight:700;letter-spacing:-.01em;}
+.section-head h2{font-size:21px;font-weight:700;letter-spacing:-.01em;cursor:zoom-in;user-select:none;}
+.section-head h2:hover{color:var(--accent);}
 .section-head .note{margin-left:auto;font-size:12px;color:var(--ink-3);letter-spacing:.02em;}
 
 /* ── Data strip (overview) ── */
@@ -937,21 +938,55 @@ if (!multiDay) {
 
 </script>
 <script>
+async function downloadElementAsPng(element, filename){
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff'
+  });
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
 async function saveAsImage(){
   const btn = document.querySelector('.save-btn');
   btn.textContent = 'SAVING...';
   btn.disabled = true;
   try {
-    const canvas = await html2canvas(document.getElementById('page'), { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-    const link = document.createElement('a');
-    link.download = 'portfolio_' + (latest.date || 'report') + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    await downloadElementAsPng(
+      document.getElementById('page'),
+      'portfolio_' + (latest.date || 'report') + '.png'
+    );
   } finally {
     btn.textContent = 'SAVE AS PNG';
     btn.disabled = false;
   }
 }
+
+document.querySelectorAll('.section-head h2').forEach(title => {
+  title.title = '双击保存此板块为图片';
+  title.addEventListener('dblclick', async event => {
+    event.preventDefault();
+    const section = title.closest('.section');
+    if (!section || title.dataset.exporting === 'true') return;
+
+    const sectionId = section.dataset.section || 'section';
+    const originalCursor = document.body.style.cursor;
+    title.dataset.exporting = 'true';
+    document.body.style.cursor = 'wait';
+    try {
+      await downloadElementAsPng(
+        section,
+        'portfolio_' + sectionId + '_' + (latest.date || 'report') + '.png'
+      );
+    } finally {
+      document.body.style.cursor = originalCursor;
+      delete title.dataset.exporting;
+    }
+  });
+});
 </script>
 <script>
 // ── Annual Returns Table ──
