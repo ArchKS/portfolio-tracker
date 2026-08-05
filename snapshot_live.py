@@ -174,7 +174,11 @@ def build_snapshot(positions, summary, prices):
             cur = inv  # fallback to invested
 
         pnl = round(cur - inv, 2)
-        roi = round(pnl / inv * 100, 4) if inv else None
+        # 收益率直接用现价和成本价计算（纯股价涨幅，不受汇率/数量影响）
+        if live_price and p["cost"]:
+            roi = round((live_price - p["cost"]) / p["cost"] * 100, 4)
+        else:
+            roi = None
 
         holdings.append({
             "market": mkt,
@@ -275,7 +279,8 @@ if __name__ == "__main__":
         prices = json.load(f)
 
     positions, summary, meta = parse_holdings(csv_text)
-    meta["exchange_rates"] = summary.pop("exchange_rates", None)
+    # 汇率由 parse_holdings 放入 meta；build_snapshot 从 summary 读取，需先转存
+    summary["exchange_rates"] = meta.get("exchange_rates") or summary.pop("exchange_rates", None)
     snapshot = build_snapshot(positions, summary, prices)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))

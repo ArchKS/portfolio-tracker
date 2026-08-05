@@ -254,6 +254,8 @@ thead th:nth-child(2),tbody td.name{text-align:left;}
 tbody td{padding:11px 16px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
 tbody tr:hover{background:#fafafa;}
 td.name{font-weight:500;text-align:left;}
+tbody tr.summary-row{font-weight:600;background:#fafafa;}
+tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 
 /* ── Notice ── */
 .notice{border-left:3px solid var(--accent);background:#fafafa;padding:12px 16px;font-size:13px;color:var(--ink-2);letter-spacing:.02em;margin-bottom:36px;}
@@ -899,7 +901,7 @@ statsEl.innerHTML = statItems.map(s => `
 const totalCurrent = holdings.reduce((s, h) => s + (h.current || 0), 0);
 const tbody = document.getElementById('holdingsBody');
 const sortedHoldings = [...holdings].sort((a, b) => (b.current || 0) - (a.current || 0));
-tbody.innerHTML = sortedHoldings.map(h => {
+let holdingsHtml = sortedHoldings.map(h => {
   const isNote = h.current_price_raw == null && (h.quantity == null || h.quantity === 0);
   const pct = totalCurrent > 0 && h.current ? (h.current / totalCurrent * 100).toFixed(1) + '%' : '—';
   return `<tr>
@@ -915,6 +917,26 @@ tbody.innerHTML = sortedHoldings.map(h => {
     <td>${pct}</td>
   </tr>`;
 }).join('');
+
+// Cash row: 现金 = 整体 - 持仓
+const overallCur = (summary.regions && summary.regions['\u6574\u4f53'] && summary.regions['\u6574\u4f53'].current) || 0;
+const overallInv = (summary.regions && summary.regions['\u6574\u4f53'] && summary.regions['\u6574\u4f53'].invested) || 0;
+const cashCurrent = overallCur - totalCurrent;
+const cashInvested = overallInv - holdings.reduce((s, h) => s + (h.invested || 0), 0);
+holdingsHtml += `<tr class="summary-row">
+  <td>—</td>
+  <td class="name">现金</td>
+  <td>—</td>
+  <td>—</td>
+  <td>—</td>
+  <td>${fmtWan(cashInvested)}</td>
+  <td>${fmtWan(cashCurrent)}</td>
+  <td>—</td>
+  <td>—</td>
+  <td>${overallCur !== 0 ? (cashCurrent / overallCur * 100).toFixed(1) + '%' : '—'}</td>
+</tr>`;
+
+tbody.innerHTML = holdingsHtml;
 
 // ── 09 P&L Calendar ──
 (function(){
@@ -1086,17 +1108,20 @@ if (!multiDay) {
       if (!closedMap[h.name]) {
         closedMap[h.name] = {
           name: h.name, first: snap.date, last: snap.date,
-          first_invested: h.invested || 0, last_current: h.current || 0
+          first_invested: h.invested || 0, last_current: h.current || 0,
+          first_cost: h.cost_price, last_price: h.current_price
         };
       } else {
         closedMap[h.name].last = snap.date;
         if (h.current != null) closedMap[h.name].last_current = h.current;
+        if (h.current_price != null) closedMap[h.name].last_price = h.current_price;
       }
     });
   });
   Object.values(closedMap).forEach(c => {
     c.pnl = c.last_current - c.first_invested;
-    c.roi = c.first_invested ? (c.pnl / c.first_invested * 100) : 0;
+    // 收益率优先用（卖出价-成本价）/成本价，缺失时回退投入口径
+    c.roi = (c.first_cost && c.last_price) ? ((c.last_price - c.first_cost) / c.first_cost * 100) : (c.first_invested ? (c.pnl / c.first_invested * 100) : 0);
   });
   const closed = Object.values(closedMap).sort((a,b) => a.pnl - b.pnl);
   if (closed.length === 0) {

@@ -111,8 +111,11 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 - 仓位分母 = 文档"整体"投入/当前（含现金调整，非纯持仓总额）
 - 固定现金差额 = 文档整体当前 - 文档持仓当前（不随行情变）
 - 实时整体当前 = 实时持仓当前 + 固定现金差额
+- 个股收益率 roi = (现价 - 成本价) / 成本价 × 100（纯股价涨幅，不受汇率/数量影响；无现价或成本价时为 None）
+- 个股 pnl = 当前市值 - 投入（人民币金额口径）
 - total_pnl = 实时整体当前 - 基数（基数 = 年初 + 工资结余/2）
 - total_roi = total_pnl / 基数 × 100（保留两位小数）
+- 已平仓持仓收益率 = (卖出价 - 成本价) / 成本价 × 100（generate_report.py，缺失时回退投入口径）
 
 ### 9. 清理
 
@@ -133,6 +136,7 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 | 整体当前不随行情更新 | overall_cur 直接取文档固定值 | 改为 `实时持仓当前 + 固定现金差额`（差额=文档整体当前-文档持仓当前） |
 | 总计行 doc_invested/current 为 null | 总计行数据左对齐（col5/6/7），代码读 col11/12/13 | 总计行列索引改为 col5/6/7 |
 | 个股股息全为 None | 股息在 col12，代码读 col13 | 股息列改为 col12；holdings_dividends 改为个股合计 |
+| 美股/港股收益率虚高 | `__main__` 中 `meta["exchange_rates"]=summary.pop("exchange_rates",None)` 把 parse_holdings 提取到的汇率覆盖为 None，build_snapshot 永远用默认 US=6.78/HK=0.86 | 改为 `summary["exchange_rates"]=meta.get("exchange_rates") or summary.pop(...)`，让 build_snapshot 读到文档真实汇率（US>RMB 6.7505） |
 | CSV 列偏移/短行需手动修复 | 旧流程在步骤3手动修复 | snapshot_live.py 内部已处理，步骤3只需提取原始段 |
 
 ## 关键文件
