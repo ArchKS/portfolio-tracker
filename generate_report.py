@@ -248,7 +248,7 @@ body{
 .table-box{border:1px solid var(--rule);padding:0;}
 .table-scroll{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
-thead th{text-align:right;padding:12px 16px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);border-bottom:2px solid var(--rule-strong);font-weight:600;white-space:nowrap;}
+thead th{text-align:right;padding:12px 20px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);border-bottom:2px solid var(--rule-strong);font-weight:600;white-space:nowrap;}
 thead th:first-child,tbody td:first-child{text-align:left;}
 thead th:nth-child(2),tbody td.name{text-align:left;}
 tbody td{padding:11px 16px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
@@ -538,8 +538,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
       <thead>
         <tr>
           <th style="text-align:left">年份</th>
-          <th style="text-align:right">收益率</th>
           <th style="text-align:right">累计净值</th>
+          <th style="text-align:right">收益率</th>
         </tr>
       </thead>
       <tbody id="annualReturnsBody"></tbody>
@@ -1266,27 +1266,68 @@ document.querySelectorAll('.section-head h2').forEach(title => {
   if (arData.length === 0) return;
   const tbody = document.getElementById('annualReturnsBody');
   const tfoot = document.getElementById('annualReturnsFoot');
+  const theadTr = document.querySelector('#annualReturnsTable thead tr');
   if (!tbody) return;
+
+  const benchmarks = stats.benchmarks || {};
+  const benchNames = Object.keys(benchmarks);
+  const showBench = benchNames.length > 0;
+
+  // Add benchmark header columns
+  if (showBench && theadTr) {
+    benchNames.forEach(name => {
+      const th = document.createElement('th');
+      th.style.textAlign = 'right';
+      th.textContent = name;
+      theadTr.appendChild(th);
+    });
+  }
+
   let nav = 1.0;
   arData.forEach(d => {
     nav *= (1 + d.return / 100);
     const color = d.return >= 0 ? PROFIT : LOSS;
     const yearLabel = d.type === 'current' ? d.year + ' (YTD)' : String(d.year);
+    let html = '<td>' + yearLabel + '</td>'
+      + '<td style="text-align:right">' + nav.toFixed(4) + '</td>'
+      + '<td style="text-align:right;color:' + color + ';font-weight:600;">' + (d.return >= 0 ? '+' : '') + d.return.toFixed(2) + '%</td>';
+    if (showBench) {
+      benchNames.forEach(name => {
+        const bench = benchmarks[name];
+        const entry = bench.data.find(b => b.year === d.year);
+        if (entry) {
+          const c = entry.return >= 0 ? PROFIT : LOSS;
+          html += '<td style="text-align:right;color:' + c + ';">' + (entry.return >= 0 ? '+' : '') + entry.return.toFixed(2) + '%</td>';
+        } else {
+          html += '<td style="text-align:right;">—</td>';
+        }
+      });
+    }
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + yearLabel + '</td>'
-      + '<td style="text-align:right;color:' + color + ';font-weight:600;">' + (d.return >= 0 ? '+' : '') + d.return.toFixed(2) + '%</td>'
-      + '<td style="text-align:right">' + nav.toFixed(4) + '</td>';
+    tr.innerHTML = html;
     tbody.appendChild(tr);
   });
   // CAGR row
   const cagr = stats.annual_cagr;
   if (cagr != null) {
     const color = cagr >= 0 ? PROFIT : LOSS;
+    let html = '<td style="font-weight:700;padding:4px 16px;">投资以来年化</td>'
+      + '<td style="text-align:right;font-weight:600;padding:8px 16px;">' + (stats.annual_cumulative_nav || 0).toFixed(4) + '</td>'
+      + '<td style="text-align:right;padding:8px 16px;color:' + color + ';font-weight:700;">' + (cagr >= 0 ? '+' : '') + cagr.toFixed(2) + '%</td>';
+    if (showBench) {
+      benchNames.forEach(name => {
+        const b = benchmarks[name];
+        if (b.cagr != null) {
+          const c = b.cagr >= 0 ? PROFIT : LOSS;
+          html += '<td style="text-align:right;padding:8px 16px;color:' + c + ';font-weight:700;">' + (b.cagr >= 0 ? '+' : '') + b.cagr.toFixed(2) + '%</td>';
+        } else {
+          html += '<td style="text-align:right;padding:8px 16px;">—</td>';
+        }
+      });
+    }
     const tr = document.createElement('tr');
     tr.style.borderTop = '2px solid ' + INK;
-    tr.innerHTML = '<td style="font-weight:700;padding:4px 16px;">投资以来年化</td>'
-      + '<td style="text-align:right;padding:8px 16px;color:' + color + ';font-weight:700;">' + (cagr >= 0 ? '+' : '') + cagr.toFixed(2) + '%</td>'
-      + '<td style="text-align:right;font-weight:600;padding:8px 16px;">' + (stats.annual_cumulative_nav || 0).toFixed(4) + '</td>';
+    tr.innerHTML = html;
     if (tfoot) tfoot.appendChild(tr);
   }
 })();
@@ -1384,6 +1425,54 @@ def generate_report(snapshots, stats):
         except:
             pass
     stats["annual_returns"] = annual_data
+
+    # Benchmark indices (沪深300, 纳斯达克, etc.)
+    benchmarks_cfg = config.get("annual_returns_benchmarks", {})
+    if benchmarks_cfg.get("show") and benchmarks_cfg.get("indices"):
+        # Try to load 2026 YTD from temp file (fetched by pipeline)
+        bench_ytd = {}
+        bench_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".tmp_benchmarks.json")
+        if os.path.exists(bench_path):
+            try:
+                with open(bench_path, "r", encoding="utf-8") as f:
+                    bench_ytd = json.load(f)
+            except:
+                pass
+
+        benchmark_data = {}
+        for name, idx_cfg in benchmarks_cfg["indices"].items():
+            idx_history = idx_cfg.get("history", {})
+            idx_annual = []
+            idx_nav = 1.0
+            idx_first_year = None
+            for yr, ret in sorted(idx_history.items()):
+                idx_annual.append({"year": int(yr), "return": round(ret, 2)})
+                idx_nav *= (1 + ret / 100)
+                if idx_first_year is None:
+                    idx_first_year = int(yr)
+            # 2026 YTD (from fetched data)
+            ytd = bench_ytd.get(name)
+            if ytd is not None:
+                idx_annual.append({"year": 2026, "return": round(ytd, 2)})
+                idx_nav *= (1 + ytd / 100)
+            # CAGR
+            idx_cagr = None
+            if idx_first_year is not None and snap_date:
+                try:
+                    d2 = datetime.strptime(snap_date, "%Y-%m-%d")
+                    total_days2 = (d2 - datetime(idx_first_year, 1, 1)).days
+                    if total_days2 > 0:
+                        years2 = total_days2 / 365.0
+                        idx_cagr = round((idx_nav ** (1.0 / years2) - 1) * 100, 2)
+                except:
+                    pass
+            benchmark_data[name] = {
+                "data": idx_annual,
+                "cagr": idx_cagr,
+                "cum_nav": round(idx_nav, 4),
+            }
+        stats["benchmarks"] = benchmark_data
+
     stats_json = json.dumps(stats, ensure_ascii=False)
 
     generated_at = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")

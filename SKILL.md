@@ -80,6 +80,21 @@ CSV 必须包含以下汇总行（在"总计"行之后），供脚本提取：
 {"600585.SH": 18.64, "09926.HK": 93.9, ...}
 ```
 
+### 4b. 获取基准指数 YTD
+
+读取 `config.json` 中 `annual_returns_benchmarks`，若 `show` 为 `true`：
+
+- 从 `indices` 取各指数的 `code`（如 `sh000300`、`usIXIC`）
+- 逗号拼接，调用 `mcp__westock-mcp__data_quote`
+- 从返回结果提取每个指数的 `chg_ytd` 字段（YTD 涨跌幅%）
+- 写入 `{PROJECT}/.tmp_benchmarks.json`：
+
+```json
+{"沪深300": 0.61, "纳斯达克": 14.38}
+```
+
+若调用失败或 `chg_ytd` 缺失，跳过该指数（报告中年化为空）。`generate_report.py` 会自动读取此文件。
+
 ### 5. 生成快照
 
 ```bash
@@ -105,6 +120,7 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 - 持仓数量、投入总额、当前市值
 - 持仓收益（金额+百分比）
 - 总收益（total_pnl，自算）、总收益率（total_roi，自算，两位小数）
+- 基准对比（沪深300/纳斯达克 YTD + CAGR，若 config 中 show=true）
 - 公网链接（deploy 返回的 shareLink）
 
 **计算公式**（snapshot_live.py 内部）：
@@ -119,7 +135,7 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 
 ### 9. 清理
 
-删除 `{PROJECT}/.tmp_csv.csv`、`{PROJECT}/.tmp_prices.json`、`{PROJECT}/.tmp_raw.json`。
+删除 `{PROJECT}/.tmp_csv.csv`、`{PROJECT}/.tmp_prices.json`、`{PROJECT}/.tmp_raw.json`、`{PROJECT}/.tmp_benchmarks.json`。
 
 ## 已知问题与修复记录
 
@@ -145,7 +161,7 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 |------|------|
 | `snapshot_live.py` | CSV + 价格JSON → 快照JSON（内部处理短行pad、总计行/股息列对齐；仓位分母用"整体"；收益/收益率自算） |
 | `generate_report.py` | 快照JSON → HTML报告（isNote处理无成本价持仓） |
-| `config.json` | 控制页面模块显隐 |
+| `config.json` | 控制页面模块显隐；annual_returns_history 历史收益；annual_returns_benchmarks 基准对比(沪深300/纳斯达克) |
 | `portfolio_snapshots/*.json` | 每日快照存档 |
 | `deploy/index.html` | 部署用 HTML |
 
@@ -156,4 +172,4 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 - MCP 工具不可用时自动走方案B
 - CSV 短行/列偏移由 snapshot_live.py 内部自动处理
 - 收益/收益率自算，不依赖文档"收益"/"收益率"行
-- 完成后始终清理临时文件（.tmp_csv.csv、.tmp_prices.json、.tmp_raw.json）
+- 完成后始终清理临时文件（.tmp_csv.csv、.tmp_prices.json、.tmp_raw.json、.tmp_benchmarks.json）
