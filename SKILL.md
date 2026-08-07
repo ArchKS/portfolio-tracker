@@ -21,17 +21,17 @@ agent_created: true
 
 ### 1. 确定路径
 
-- `{PYTHON}` = `C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\python.exe`
+- `{PYTHON}` = `/Users/zendu/.workbuddy/binaries/python/versions/3.13.12/bin/python3`
 - `{PROJECT}` = skill 目录（`~/.workbuddy/skills/portfolio-snapshot/`），脚本和数据均在此目录
-- `{TDOC_SKILL}` = `C:\Program Files\WorkBuddy\resources\app.asar.unpacked\resources\builtin-plugins\tencent-docs-plugin\skills\tencent-docs`
+- `{TDOC_SKILL}` = `/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/resources/builtin-plugins/tencent-docs-plugin/skills/tencent-docs`
 
 ### 2. 读取腾讯文档
 
 **方案A（优先）**：用 tencent-docs skill 的 `tdoc_call` 入口（宿主注入票据，无需 Token）：
 
 ```bash
-cd "{TDOC_SKILL}" && python3 tencentdocs.py tdoc_init  # 检查就绪
-cd "{TDOC_SKILL}" && python3 tencentdocs.py tdoc_call tencent-docs get_content '{"file_id":"fGemVXqsvRGM"}' > "{PROJECT}/.tmp_raw.json"
+cd "{TDOC_SKILL}" && "{PYTHON}" tencentdocs.py tdoc_init  # 检查就绪
+cd "{TDOC_SKILL}" && "{PYTHON}" tencentdocs.py tdoc_call tencent-docs get_content '{"file_id":"fGemVXqsvRGM"}' > "{PROJECT}/.tmp_raw.json"
 ```
 
 从 `.tmp_raw.json` 提取 `result.structuredContent.content`（CSV 格式文本）。
@@ -134,6 +134,18 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 - total_roi = total_pnl / 基数 × 100（保留两位小数）
 - 已平仓持仓收益率 = (卖出价 - 成本价) / 成本价 × 100（generate_report.py，缺失时回退投入口径）
 
+**持仓明细现金行**（generate_report.py 前端 JS）：
+- 现金当前 = 整体当前 - 持仓当前（可为负数）
+- 现金投入 = 整体投入 - 持仓投入
+- 现金仓位占比 = 现金当前 / 整体当前 × 100（负数正常显示）
+- 现金收益、收益率 → 显示"—"（不计算）
+
+**年化收益率表基准对比**（generate_report.py，config 中 `annual_returns_benchmarks.show=true` 时显示）：
+- 沪深300（sh000300）、纳斯达克（usIXIC）各年收益从 config.json 读取（2022-2025）
+- 2026 YTD 从 `.tmp_benchmarks.json` 读取（westock `chg_ytd` 字段，实时获取）
+- 基准累计净值 = ∏(1 + 各年收益率)
+- 基准 CAGR = (累计净值) ^ (1 / 年数) - 1
+
 ### 9. 清理
 
 删除 `{PROJECT}/.tmp_csv.csv`、`{PROJECT}/.tmp_prices.json`、`{PROJECT}/.tmp_raw.json`、`{PROJECT}/.tmp_benchmarks.json`。
@@ -173,7 +185,7 @@ git push origin main
 | 文件 | 作用 |
 |------|------|
 | `snapshot_live.py` | CSV + 价格JSON → 快照JSON（内部处理短行pad、总计行/股息列对齐；仓位分母用"整体"；收益/收益率自算） |
-| `generate_report.py` | 快照JSON → HTML报告（isNote处理无成本价持仓） |
+| `generate_report.py` | 快照JSON → HTML报告（isNote处理无成本价持仓；持仓明细末尾追加"现金"行，显示投入/当前/仓位占比，收益和收益率为"—"；仓位占比负数正常显示） |
 | `config.json` | 控制页面模块显隐；annual_returns_history 历史收益；annual_returns_benchmarks 基准对比(沪深300/纳斯达克) |
 | `portfolio_snapshots/*.json` | 每日快照存档 |
 | `deploy/index.html` | 部署用 HTML |
