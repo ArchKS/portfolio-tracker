@@ -599,11 +599,11 @@ document.getElementById('meta').innerHTML =
 
 // ── 01 Overview strip ──
 const stripEl = document.getElementById('strip');
-const holdingsCurrent = summary.holdings_current;
+const holdingsCurrent = summary.regions?.['整体']?.current ?? summary.holdings_current;
 const totalPnl = summary.total_pnl;
 const totalRoi = summary.total_roi;
 const cells = [
-  { num:'01 · TOTAL VALUE', label:'总当前值', value: fmtWan(holdingsCurrent), sub: holdings.length + ' 只持仓', cls:'' },
+  { num:'01 · TOTAL VALUE', label:'总当前值', value: fmtWan(holdingsCurrent), sub:'含现金 · ' + holdings.length + ' 只持仓', cls:'' },
   { num:'02 · P&L', label:'总收益', value: fmtWan(totalPnl), sub:'文档汇总', cls: colorClass(totalPnl) },
   { num:'03 · ROI', label:'总收益率', value: fmtPct(totalRoi), sub:'年初至今', cls: colorClass(totalRoi) },
   { num:'04 · MAX DRAWDOWN', label:'最大回撤', value: stats.max_drawdown != null ? stats.max_drawdown.toFixed(2) + '%' : '—', sub: snapshots.length > 1 ? '峰值至谷值' : '需多日数据', cls:'down' },
