@@ -122,6 +122,7 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 - 总收益（total_pnl，自算）、总收益率（total_roi，自算，两位小数）
 - 基准对比（沪深300/纳斯达克 YTD + CAGR，若 config 中 show=true）
 - 公网链接（deploy 返回的 shareLink）
+- Git commit hash（步骤 10）
 
 **计算公式**（snapshot_live.py 内部）：
 - 仓位分母 = 文档"整体"投入/当前（含现金调整，非纯持仓总额）
@@ -136,6 +137,17 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 ### 9. 清理
 
 删除 `{PROJECT}/.tmp_csv.csv`、`{PROJECT}/.tmp_prices.json`、`{PROJECT}/.tmp_raw.json`、`{PROJECT}/.tmp_benchmarks.json`。
+
+### 10. Git 提交并推送
+
+```bash
+cd "{PROJECT}"
+git add -A
+git commit -m "每日持仓快照 $(date +%Y-%m-%d)"
+git push origin main
+```
+
+若 `git push` 因网络失败，重试一次。报告结果中附上 commit hash。
 
 ## 已知问题与修复记录
 
@@ -174,3 +186,4 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 - CSV 短行/列偏移由 snapshot_live.py 内部自动处理
 - 收益/收益率自算，不依赖文档"收益"/"收益率"行
 - 完成后始终清理临时文件（.tmp_csv.csv、.tmp_prices.json、.tmp_raw.json、.tmp_benchmarks.json）
+- 清理后执行 git add + commit + push（临时文件已被 .gitignore 忽略，快照和报告会提交）
