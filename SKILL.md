@@ -23,7 +23,7 @@ agent_created: true
 
 - `{PYTHON}` = `/Users/zendu/.workbuddy/binaries/python/versions/3.13.12/bin/python3`
 - `{PROJECT}` = skill 目录（`~/.workbuddy/skills/portfolio-snapshot/`），脚本和数据均在此目录
-- `{TDOC_SKILL}` = `/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/resources/builtin-plugins/tencent-docs-plugin/skills/tencent-docs`
+- `{TDOC_SKILL}` = `/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/resources/plugins/workbuddy-builtin/builtin-plugins/tencent-docs-plugin/skills/tencent-docs`（实际路径含 `plugins/workbuddy-builtin` 层级，旧路径 `.../resources/builtin-plugins/...` 已失效；若 App 升级路径变动，用 `find "$(dirname "$(dirname "$(dirname "$(dirname "$(dirname "$(dirname "/Applications/WorkBuddy.app/Contents/Resources/app.asar.unpacked/resources")")")")")")" -name tencentdocs.py 2>/dev/null` 搜索定位）
 
 ### 2. 读取腾讯文档
 
