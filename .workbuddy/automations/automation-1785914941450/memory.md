@@ -95,3 +95,12 @@
 - Total PnL: -33.6万 | Total ROI: -13.02%
 - Deploy: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net
 - Notes: 13 只股票行情全部获取成功（SMMT Call 13501 正确排除）。亚盛医药 +2.96% 领涨、SMMT +5.48%、PDD +0.98%。
+
+## 2026-08-11 (Tue) 05:56
+- Status: SUCCESS（部署一次成功；git push 一次成功）
+- Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
+- Holdings: 14 | Invested: 242.3万 | Current: 236.6万 | Holdings PnL: -5.6万 (-2.32%)
+- Total PnL: -23.5万 | Total ROI: -9.09%
+- Benchmarks: 沪深300 YTD 1.56% (CAGR -1.07%) | 纳斯达克 YTD 14.47% (CAGR 12.43%)
+- Deploy: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net | commit: 7f4b145 (已推送)
+- Notes: 13 只股票行情全部获取成功（美股已含 8/10 周一收盘价：SMMT 14.87 +6.52%、PDD 93.0 +1.35%、SY 2.27 +4.13%、LEGN 20.66 -0.43%）。A/港股 8/10 周一收盘：康方 101.5 +1.5%、亚盛 36.34 -0.27%、药明合联 62.55 +0.97%、中国民航 8.49 +1.8%。纳斯达克 YTD 14.47%（8/10 收盘后回落，较 8/10 早盘 14.84% 降 0.37pct）。CSV 解析注意：结束行 col1='收益率'（row25），row269 是年度收益表头（col0='收益率 '），必须用 col1 匹配取第一个，否则段落会截到 269 行。
