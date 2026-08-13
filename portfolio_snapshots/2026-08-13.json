@@ -1,6 +1,6 @@
 {
   "date": "2026-08-13",
-  "snapshot_time": "2026-08-13 14:27:52 +08:00",
+  "snapshot_time": "2026-08-13 16:26:11 +08:00",
   "source": "westock-mcp 实时行情",
   "file_id": "fGemVXqsvRGM",
   "doc_date": null,
@@ -10,32 +10,32 @@
   },
   "summary": {
     "holdings_pos_cost_pct": 100.7485,
-    "holdings_pos_curr_pct": 100.76,
-    "holdings_roi": -1.8779,
+    "holdings_pos_curr_pct": 100.77,
+    "holdings_roi": -2.3166,
     "holdings_invested": 2422075.4000000004,
-    "holdings_current": 2376591.4299999997,
-    "holdings_pnl": -45483.97,
+    "holdings_current": 2365965.6299999994,
+    "holdings_pnl": -56109.77,
     "holdings_dividends": 41283.0,
     "year_start": 2505000.0,
     "salary_surplus": 78000.0,
     "base": 2583000.0,
-    "total_pnl": -224408.57,
-    "total_roi": -8.69,
+    "total_pnl": -235034.37,
+    "total_roi": -9.1,
     "regions": {
       "整体": {
         "invested": 2404080.0,
-        "current": 2358591.43,
-        "pnl": -45488.57
+        "current": 2347965.63,
+        "pnl": -56114.37
       },
       "国内": {
         "invested": 821374.0,
-        "current": 719325.34,
-        "pnl": -102048.66
+        "current": 716841.54,
+        "pnl": -104532.46
       },
       "境外": {
         "invested": 1600701.4,
-        "current": 1639266.09,
-        "pnl": 38564.69
+        "current": 1631124.09,
+        "pnl": 30422.69
       }
     }
   },
@@ -46,17 +46,17 @@
       "name": "海螺水泥",
       "code": "600585.SH",
       "cost_price_raw": "19.888",
-      "current_price_raw": "17.55",
+      "current_price_raw": "17.49",
       "cost_price": 19.89,
-      "current_price": 17.55,
+      "current_price": 17.49,
       "quantity": 41300,
       "invested": 821374.0,
-      "current": 724815.0,
-      "pnl": -96559.0,
-      "roi": -11.7647,
+      "current": 722337.0,
+      "pnl": -99037.0,
+      "roi": -12.0664,
       "dividends": 27754.0,
       "pos_cost_pct": 34.1658,
-      "pos_curr_pct": 30.7308
+      "pos_curr_pct": 30.7644
     },
     {
       "market": "HK",
@@ -64,17 +64,17 @@
       "name": "康方生物",
       "code": "09926.HK",
       "cost_price_raw": "96.445",
-      "current_price_raw": "104.3",
+      "current_price_raw": "103.6",
       "cost_price": 96.44,
-      "current_price": 104.3,
+      "current_price": 103.6,
       "quantity": 7000,
       "invested": 580059.0,
-      "current": 627301.92,
-      "pnl": 47242.92,
-      "roi": 8.1501,
+      "current": 623091.84,
+      "pnl": 43032.84,
+      "roi": 7.4243,
       "dividends": null,
       "pos_cost_pct": 24.1281,
-      "pos_curr_pct": 26.5965
+      "pos_curr_pct": 26.5375
     },
     {
       "market": "HK",
@@ -82,17 +82,17 @@
       "name": "亚盛医药",
       "code": "06855.HK",
       "cost_price_raw": "36.225",
-      "current_price_raw": "37.64",
+      "current_price_raw": "37.12",
       "cost_price": 36.23,
-      "current_price": 37.64,
+      "current_price": 37.12,
       "quantity": 10000,
       "invested": 311245.0,
-      "current": 323402.88,
-      "pnl": 12157.88,
-      "roi": 3.8918,
+      "current": 318935.04,
+      "pnl": 7690.04,
+      "roi": 2.4565,
       "dividends": null,
       "pos_cost_pct": 12.9465,
-      "pos_curr_pct": 13.7117
+      "pos_curr_pct": 13.5835
     },
     {
       "market": "US",
@@ -110,7 +110,7 @@
       "roi": 2.8386,
       "dividends": null,
       "pos_cost_pct": 4.7886,
-      "pos_curr_pct": 5.0192
+      "pos_curr_pct": 5.0419
     },
     {
       "market": "US",
@@ -128,7 +128,7 @@
       "roi": 3.1421,
       "dividends": null,
       "pos_cost_pct": 2.4643,
-      "pos_curr_pct": 2.5907
+      "pos_curr_pct": 2.6025
     },
     {
       "market": "HK",
@@ -136,17 +136,17 @@
       "name": "药明合联",
       "code": "02268.HK",
       "cost_price_raw": "50.347",
-      "current_price_raw": "63.2",
+      "current_price_raw": "63.35",
       "cost_price": 50.35,
-      "current_price": 63.2,
+      "current_price": 63.35,
       "quantity": 2000,
       "invested": 86516.3,
-      "current": 108602.88,
-      "pnl": 22086.58,
-      "roi": 25.5214,
+      "current": 108860.64,
+      "pnl": 22344.34,
+      "roi": 25.8193,
       "dividends": null,
       "pos_cost_pct": 3.5987,
-      "pos_curr_pct": 4.6046
+      "pos_curr_pct": 4.6364
     },
     {
       "market": "US",
@@ -164,7 +164,7 @@
       "roi": null,
       "dividends": null,
       "pos_cost_pct": 0.5611,
-      "pos_curr_pct": 0.5719
+      "pos_curr_pct": 0.5745
     },
     {
       "market": "HK",
@@ -172,17 +172,17 @@
       "name": "中国民航",
       "code": "00696.HK",
       "cost_price_raw": "10",
-      "current_price_raw": "8.425",
+      "current_price_raw": "8.46",
       "cost_price": 10.0,
-      "current_price": 8.425,
+      "current_price": 8.46,
       "quantity": 14000,
       "invested": 120288.0,
-      "current": 101342.64,
-      "pnl": -18945.36,
-      "roi": -15.75,
+      "current": 101763.65,
+      "pnl": -18524.35,
+      "roi": -15.4,
       "dividends": null,
       "pos_cost_pct": 5.0035,
-      "pos_curr_pct": 4.2967
+      "pos_curr_pct": 4.3341
     },
     {
       "market": "US",
@@ -200,7 +200,7 @@
       "roi": 14.1538,
       "dividends": null,
       "pos_cost_pct": 3.2824,
-      "pos_curr_pct": 3.8192
+      "pos_curr_pct": 3.8365
     },
     {
       "market": "US",
@@ -218,7 +218,7 @@
       "roi": 25.0,
       "dividends": null,
       "pos_cost_pct": 2.5249,
-      "pos_curr_pct": 3.217
+      "pos_curr_pct": 3.2315
     },
     {
       "market": "HK",
@@ -226,17 +226,17 @@
       "name": "保利物业",
       "code": "06049.HK",
       "cost_price_raw": "40.8",
-      "current_price_raw": "27.62",
+      "current_price_raw": "27.64",
       "cost_price": 40.8,
-      "current_price": 27.62,
+      "current_price": 27.64,
       "quantity": 1600,
       "invested": 56088.6,
-      "current": 37969.77,
-      "pnl": -18118.83,
-      "roi": -32.3039,
+      "current": 37997.26,
+      "pnl": -18091.34,
+      "roi": -32.2549,
       "dividends": 4259.0,
       "pos_cost_pct": 2.3331,
-      "pos_curr_pct": 1.6098
+      "pos_curr_pct": 1.6183
     },
     {
       "market": "HK",
@@ -244,17 +244,17 @@
       "name": "中海物业",
       "code": "02669.HK",
       "cost_price_raw": "4.545",
-      "current_price_raw": "3.425",
+      "current_price_raw": "3.42",
       "cost_price": 4.54,
-      "current_price": 3.425,
+      "current_price": 3.42,
       "quantity": 15000,
       "invested": 58576.0,
-      "current": 44141.4,
-      "pnl": -14434.6,
-      "roi": -24.5595,
+      "current": 44076.96,
+      "pnl": -14499.04,
+      "roi": -24.6696,
       "dividends": 2070.0,
       "pos_cost_pct": 2.4365,
-      "pos_curr_pct": 1.8715
+      "pos_curr_pct": 1.8772
     },
     {
       "market": "HK",
@@ -272,7 +272,7 @@
       "roi": -10.7143,
       "dividends": null,
       "pos_cost_pct": 1.7824,
-      "pos_curr_pct": 1.6393
+      "pos_curr_pct": 1.6467
     },
     {
       "market": "HK",
@@ -280,17 +280,17 @@
       "name": "同仁堂国药",
       "code": "03613.HK",
       "cost_price_raw": "10.25",
-      "current_price_raw": "6.645",
+      "current_price_raw": "6.58",
       "cost_price": 10.25,
-      "current_price": 6.645,
+      "current_price": 6.58,
       "quantity": 2000,
       "invested": 17613.6,
-      "current": 11418.77,
-      "pnl": -6194.83,
-      "roi": -35.1707,
+      "current": 11307.07,
+      "pnl": -6306.53,
+      "roi": -35.8049,
       "dividends": 7200.0,
       "pos_cost_pct": 0.7327,
-      "pos_curr_pct": 0.4841
+      "pos_curr_pct": 0.4816
     }
   ]
 }
