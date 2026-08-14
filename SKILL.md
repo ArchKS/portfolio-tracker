@@ -52,7 +52,7 @@ content = json.loads(result['result']['content'][0]['text'])['content']
 
 ### 3. 解析 CSV
 
-用 Python `csv.reader` 解析 content。定位表头行（col2="市场"、col3 含"公司名称"，注意实际表头 col1 为空字符串）和结束行（col1="收益率"）。提取从 `max(0, header-3)` 到 `收益率` 行的段（含汇率行），写入 `{PROJECT}/.tmp_csv.csv`。
+用 Python `csv.reader` 解析 content。定位表头行（col2="市场"、col3 含"公司名称"，注意实际表头 col1 为空字符串）和结束行（row[1]="收益率"，**必须匹配 row[1] 而非 row[0]**——文档后部年度收益表头行 row[0]="收益率"（如 idx 269）也会匹配 row[0]，取第一个 row[1] 匹配才是汇总行（如 idx 25），否则段落过长会混入清仓复盘/收支/年度收益表等无关数据）。提取从 `max(0, header-3)` 到 `收益率` 行的段（含汇率行），写入 `{PROJECT}/.tmp_csv.csv`。
 
 ⚠️ **不需要手动做列偏移/短行修复**——`snapshot_live.py` 内部已处理（短行自动 pad、总计行/股息列对齐）。
 
