@@ -1,3 +1,12 @@
+## 2026-08-17 (Mon) 05:55
+- Status: SUCCESS（部署一次成功；git push 一次成功）
+- Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
+- Holdings: 14 | Invested: 242.2万 | Current: 228.9万 | Holdings PnL: -13.3万 (-5.47%)
+- Total PnL: -31.2万 | Total ROI: -12.06%
+- Benchmarks: 沪深300 YTD 0.78% | 纳斯达克 YTD 15.0%
+- Deploy: https://167b54fec43844e3986f9ea901a55bff.app.workbuddy.link | commit: e3da322 (已推送)
+- Notes: 13 只股票行情全部获取成功（行情 2026-08-14 周五收盘，周末后首个交易日盘前执行，与 8/15 执行数据一致）。表头定位条件注意：实际 row[0]=''（空）、row[1]='市场'、row[2]='公司名称'，SKILL.md 中 col2='市场' 的描述在本次 CSV 中实际位于 col1——匹配条件用 row[1]=='市场' and '公司' in row[2] 才命中。结束行 row[1]='收益率' row25。康方 96.0 -7.34%、亚盛 36.0 -3.02%、SMMT 13.35 -4.64%、药明合联 62.05 -2.05%；PDD 84.79 +0.74%。部署链接域名 app.workbuddy.link（sandboxId 167b54fec...）。
+
 ## 2026-08-15 (Sat) 05:56
 - Status: SUCCESS（部署一次成功；git push 一次成功）
 - Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
