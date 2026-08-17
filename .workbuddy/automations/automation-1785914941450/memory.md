@@ -1,3 +1,12 @@
+## 2026-08-17 (Mon) 13:58
+- Status: SUCCESS（部署一次成功；git push 一次成功）
+- Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
+- Holdings: 13 | Invested: 243.4万 | Current: 223.8万 | Holdings PnL: -19.7万 (-8.08%)
+- Total PnL: -36.3万 | Total ROI: -14.06%
+- Benchmarks: 沪深300 YTD 2.13% | 纳斯达克 YTD 15.0%
+- Deploy: https://167b54fec43844e3986f9ea901a55bff.app.workbuddy.link | commit: ab6ef63 (已推送)
+- Notes: **持仓表已更新：药明合联(02268.HK)已从文档移除**，持仓行 13 行（12 股票 + SMMT Call 期权），较早间 05:55 快照的 14 持仓减少 1。A/港股 8/17 实时：康方 90.2 -6.04%、亚盛 35.2 -2.22%、中国民航 8.445 -0.3%、海螺 17.36 0.0%；美股 8/14 收盘：SMMT 13.35 -4.64%、PDD 84.79 +0.74%、SY 2.24 +1.82%、LEGN 20.37 +0.49%。westock data_quote 首次调用遇服务限频(error_type=2)，sleep 8s 重试成功。CSV 表头 row2（col1='市场'）、结束行 col1='收益率' row24、segment rows[0:25]。
+
 ## 2026-08-17 (Mon) 05:55
 - Status: SUCCESS（部署一次成功；git push 一次成功）
 - Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
