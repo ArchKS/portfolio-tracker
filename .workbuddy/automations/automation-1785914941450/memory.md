@@ -176,3 +176,12 @@
 - Benchmarks: 沪深300 YTD 0.73% (CAGR -1.15%) | 纳斯达克 YTD 13.78% (CAGR 11.27%)
 - Deploy: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net | commit: e994de9 (已推送)
 - Notes: 13 只股票行情全部获取成功（行情 2026-08-11 周二收盘）。A/港股：康方 101.9 +0.39%、亚盛 36.44 +0.28%、药明合联 64.25 +2.72%、海螺 17.62 -1.23%、中国民航 8.41 -0.94%。美股 8/11 收盘：LEGN 21.83 +5.66%、SMMT 15.12 +1.65%、PDD 90.5 -2.69%、SY 2.21 -2.64%。沪深300 YTD 0.73%、纳斯达克 YTD 13.78%（较 8/11 的 14.47% 回落 0.69pct）。
+
+## 2026-08-21 (Fri) 06:01
+- Status: SUCCESS（部署一次成功；git push 一次成功）
+- Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
+- Holdings: 13 | Invested: 241.1万 | Current: 225.4万 | Holdings PnL: -15.7万 (-6.53%)
+- Total PnL: -33.6万 | Total ROI: -13.01%
+- Benchmarks: 沪深300 YTD -0.80% | 纳斯达克 YTD 12.16%
+- Deploy: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net | commit: 91c49f9 (已推送)
+- Notes: 12 只股票行情全部获取成功无缺失（A/港股 8/20 周三收盘、美股 8/20 收盘）。总收益 -33.6万 较 8/20 的 -34.7万 收窄（康方 +5.15% 领涨收 93.9、传奇生物 21.26 -5.93%、SMMT 12.43 -5.19%）。亚盛医药 33.6 -3.39%（当日振幅 12.19%）。CSV 表头 row2（col1='市场'）、结束行 col1='收益率' row24、segment rows[0:25]。汇率 US 6.723/HK 0.8569 正确读取。药明合联持续不在持仓表中。
