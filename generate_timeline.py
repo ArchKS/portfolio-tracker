@@ -72,7 +72,8 @@ def compute_row(trade, settings, as_of):
         )
     else:
         row["end_point"] = as_of
-        status = "已回本" if trade.get("broke_even") else "未回本"
+        # status = "已回本" if trade.get("broke_even") else "未回本"
+        status = "～" if trade.get("broke_even") else "-～"
         row["label"] = (
             f"未清仓｜{status}｜仓位{trade['position_pct']}%"
             if settings["show_amount"] and trade.get("position_pct") is not None

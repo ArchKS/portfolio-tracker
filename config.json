@@ -68,7 +68,7 @@
         "annualized": null
       },
       {
-        "name": "牧原",
+        "name": "牧原股份",
         "buy_date": "2023-05-05",
         "sell_date": "2024-10-10",
         "buy_amount": 34.5,
@@ -92,12 +92,33 @@
         "annualized": null
       },
       {
-        "name": "天齐",
+        "name": "天齐锂业",
         "buy_date": "2026-03-12",
         "sell_date": "2026-05-18",
         "buy_amount": 134.1,
         "profit": 22.2,
         "annualized": null
+      },
+      {
+        "name": "海螺水泥",
+         "buy_date": "2026-04-10",
+        "sell_date": null,
+        "buy_amount": 82.1,
+        "broke_even": false
+      },
+      {
+        "name": "康方生物",
+        "buy_date": "2026-06-01",
+        "sell_date": null,
+        "buy_amount": 73.4,
+        "broke_even": true
+      },
+      {
+        "name": "亚盛医药",
+        "buy_date": "2026-06-15",
+        "sell_date": null,
+        "buy_amount": 45,
+        "broke_even": true
       }
     ]
   }
