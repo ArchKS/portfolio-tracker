@@ -221,3 +221,12 @@
 - Benchmarks: 沪深300 YTD -0.85% | 纳斯达克 YTD 12.43%
 - Deploy: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net | commit: 4a88ec0 (已推送)
 - Notes: 8 只股票行情全部获取成功无缺失（行情 8/26 周三收盘：康方 94.2 +5.96%、SMMT 14.23 +6.51%、海螺 17.88 +1.59% 领涨；亚盛 32.94 -1.02%、LEGN 20.68 -2.91%、PDD 86.74 -1.15%、SY 2.4 -1.03%、汇贤 0.345 -1.43%）。总收益 -31.9万 较 8/26 的 -36.8万 大幅收窄（康方 +5.96% 与 SMMT +6.51% 双贡献）。CSV 表头 row2（col1='市场'）、结束行 col1='收益率' row20、segment rows[0:21]。汇率 US 6.7216/HK 0.8574。持仓仍为 9（8 股票 + SMMT Call），与 8/26 一致。
+
+## 2026-08-28 (Fri) 06:00
+- Status: SUCCESS（部署一次成功；git push 一次成功）
+- Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
+- Holdings: 9 | Invested: 236.2万 | Current: 237.7万 | Holdings PnL: +1.5万 (+0.65%)
+- Total PnL: -21.3万 | Total ROI: -8.25%
+- Benchmarks: 沪深300 YTD 0.01% (CAGR -1.38%) | 纳斯达克 YTD 14.2% (CAGR 12.24%)
+- Deploy: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net | commit: 05d2f99 (已推送)
+- Notes: 8 只股票行情全部获取成功无缺失（行情 8/27 周四收盘：亚盛 36.92 +12.08%、康方 101.2 +7.43% 双领涨；海螺 18.02 +0.78%、SMMT 14.33 +0.7%、汇贤 0.345 0%、LEGN 20.5 -0.87%、PDD 84.69 -2.36%、SY 2.32 -3.33%）。总收益 -21.3万 较 8/27 的 -31.9万 大幅收窄（亚盛/康方大涨贡献，港股创新药板块反弹）。CSV 表头 row2（col1='市场'）、结束行 col1='收益率' row20、segment rows[0:21]。汇率 US 6.7216/HK 0.8574。持仓仍为 9（8 股票 + SMMT Call），与 8/26、8/27 一致。沪深300 YTD 转正 0.01%（8/27 +0.86% 拉动），纳斯达克 YTD 14.2%。
