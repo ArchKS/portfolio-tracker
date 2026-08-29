@@ -661,7 +661,7 @@ const ddOverall  = ddSeries(regCur['整体']);
 const ddDomestic = ddSeries(regCur['国内']);
 const ddOverseas = ddSeries(regCur['境外']);
 
-// ai coding: 隐藏折线图数据点并使用单调平滑曲线 2026/08/29: 15:19
+// ai coding: 平滑折线并配置主图线型与默认显隐状态 2026/08/29: 15:25
 const smoothLine = {
   tension: .4,
   cubicInterpolationMode: 'monotone',
@@ -672,10 +672,10 @@ const smoothLine = {
 // ── 02 Master combined chart (资产/收益/收益率, 双轴) ──
 const masterDatasets = [
   { label:'资产走势', data: assetWan, borderColor: INK, borderWidth: 2.5, yAxisID:'yMoney',
-    ...smoothLine },
-  { label:'收益走势', data: pnlWan, borderColor: RED, borderWidth: 2, yAxisID:'yMoney',
-    ...smoothLine },
-  { label:'收益率', data: roiVals, borderColor: RED, borderWidth: 2, borderDash:[6,4], yAxisID:'yPerf',
+    hidden: true, ...smoothLine },
+  { label:'收益走势', data: pnlWan, borderColor: RED, borderWidth: 2, borderDash:[6,4], yAxisID:'yMoney',
+    hidden: true, ...smoothLine },
+  { label:'收益率', data: roiVals, borderColor: RED, borderWidth: 2, yAxisID:'yPerf',
     ...smoothLine },
 ];
 
