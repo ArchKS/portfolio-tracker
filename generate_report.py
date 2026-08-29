@@ -661,17 +661,22 @@ const ddOverall  = ddSeries(regCur['整体']);
 const ddDomestic = ddSeries(regCur['国内']);
 const ddOverseas = ddSeries(regCur['境外']);
 
-const multiDay = snapshots.length > 1;
-const pt = multiDay ? 3 : 6;
+// ai coding: 隐藏折线图数据点并使用单调平滑曲线 2026/08/29: 15:19
+const smoothLine = {
+  tension: .4,
+  cubicInterpolationMode: 'monotone',
+  pointRadius: 0,
+  pointHoverRadius: 0,
+};
 
 // ── 02 Master combined chart (资产/收益/收益率, 双轴) ──
 const masterDatasets = [
   { label:'资产走势', data: assetWan, borderColor: INK, borderWidth: 2.5, yAxisID:'yMoney',
-    tension:.25, pointRadius: pt, pointBackgroundColor: INK, pointHoverRadius: pt+2 },
+    ...smoothLine },
   { label:'收益走势', data: pnlWan, borderColor: RED, borderWidth: 2, yAxisID:'yMoney',
-    tension:.25, pointRadius: pt, pointBackgroundColor: RED, pointHoverRadius: pt+2 },
+    ...smoothLine },
   { label:'收益率', data: roiVals, borderColor: RED, borderWidth: 2, borderDash:[6,4], yAxisID:'yPerf',
-    tension:.25, pointRadius: pt, pointBackgroundColor: RED, pointHoverRadius: pt+2 },
+    ...smoothLine },
 ];
 
 new Chart(document.getElementById('chartMaster'), {
@@ -730,7 +735,7 @@ new Chart(document.getElementById('chartDrawdown'), {
     datasets: [
       { label:'回撤', data: ddOverall, borderColor: RED, borderWidth: 2,
         backgroundColor: 'rgba(228,0,43,0.32)', fill: true,
-        tension:.2, pointRadius: pt, pointBackgroundColor: RED, pointHoverRadius: pt+2 },
+        ...smoothLine },
     ]
   },
   options: {
@@ -766,9 +771,9 @@ new Chart(document.getElementById('chartPosition'), {
     labels: dates,
     datasets: [
       { label:'仓位', data: posRateData, borderColor: INK, borderWidth: 2.5,
-        tension:.25, pointRadius: pt, pointBackgroundColor: INK, pointHoverRadius: pt+2 },
+        ...smoothLine },
       { label:'满仓', data: fullLine, borderColor: SLATE, borderWidth: 1.5, borderDash:[6,5],
-        pointRadius: 0, fill: false },
+        ...smoothLine, fill: false },
     ]
   },
   options: {

@@ -1,3 +1,12 @@
+## 2026-08-29 (Sat) 06:00
+- Status: SUCCESS（部署一次成功；git push 一次成功）
+- Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
+- Holdings: 9 | Invested: 236.2万 | Current: 231.3万 | Holdings PnL: -4.8万 (-2.05%)
+- Total PnL: -27.7万 | Total ROI: -10.72%
+- Benchmarks: 沪深300 YTD -0.45% | 纳斯达克 YTD 13.6%
+- Deploy: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net | commit: 1d821ef (已推送)
+- Notes: 8 只股票行情全部获取成功无缺失（行情 8/28 周四收盘：海螺 18.24 +1.22%、PDD 85.69 +1.18%、SY 2.4 +3.45% 领涨；康方 95.35 -5.78%、亚盛 35.06 -5.04%、SMMT 13.73 -4.19%、LEGN 19.88 -3.02%、汇贤 0.34 -1.45%，港股创新药大跌拖累）。总收益 -27.7万 较 8/28 的 -21.3万 扩大（8/28 港股回调：康方 -5.78%、亚盛 -5.04%）。CSV 表头 row2（col1='市场'）、结束行 col1='收益率' row20、segment rows[0:21]。汇率 US 6.7216/HK 0.8574。持仓仍为 9（8 股票 + SMMT Call），与 8/26-8/28 一致。沪深300 YTD -0.45%（8/28 -0.46% 后回落转负），纳斯达克 YTD 13.6%。
+
 ## 2026-08-26 (Wed) 06:00
 - Status: SUCCESS（部署一次成功；git push 一次成功）
 - Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
