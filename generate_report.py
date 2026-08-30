@@ -310,19 +310,31 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .section-head{gap:8px;padding-bottom:8px;margin-bottom:14px;flex-wrap:wrap;}
   .section-head h2{font-size:16px;}
   .section-head .note{font-size:10px;margin-left:0;width:100%;}
-  .strip{grid-template-columns:repeat(2,1fr);}
-  .cell{padding:14px 12px;}
-  .cell .val{font-size:22px;margin-top:8px;}
-  .cell .sub{font-size:10px;}
+  /* ai coding: 移动端概览改为每行三列并校正分隔线 2026/08/30: 08:51 */
+  .strip{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .strip .cell:nth-child(1),.strip .cell:nth-child(2),.strip .cell:nth-child(3){border-bottom:1px solid var(--rule);}
+  .strip .cell:nth-child(2){border-right:1px solid var(--rule);}
+  .strip .cell:nth-child(3){border-right:none;}
+  .cell{min-width:0;padding:9px 4px;}
+  .cell .num{font-size:8px;letter-spacing:.04em;}
+  .cell .val{font-size:15px;margin-top:6px;white-space:nowrap;}
+  .cell .sub{font-size:8px;letter-spacing:0;overflow-wrap:anywhere;}
   .chart-card{padding:14px;}
   .chart-card .chart-title{font-size:14px;}
-  .chart-canvas-wrap{height:260px;}
-  .chart-canvas-wrap[style*="380px"],.chart-canvas-wrap[style*="340px"]{height:220px;}
-  .stat-grid{grid-template-columns:repeat(2,1fr);}
-  .stat:nth-child(2n){border-right:none;}
-  .stat{padding:12px 10px;}
-  .stat .v{font-size:15px;}
-  .stat .l{font-size:10px;}
+  /* ai coding: 移动端两个饼图改为并排两列并保持原始比例 2026/08/30: 08:52 */
+  .chart-grid-2{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .chart-grid-2 .chart-card{padding:10px;}
+  /* ai coding: 缩减移动端折线图和持仓收益排行高度 2026/08/30: 08:52 */
+  .chart-canvas-wrap{height:173px;}
+  .chart-canvas-wrap[style*="380px"],.chart-canvas-wrap[style*="340px"]{height:147px!important;}
+  .chart-canvas-wrap[style*="height:420px"]{height:280px!important;}
+  /* ai coding: 移动端统计摘要改为每行三列并校正分隔线 2026/08/30: 08:51 */
+  .stat-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .stat:nth-child(2n){border-right:1px solid var(--rule);}
+  .stat:nth-child(3n){border-right:none;}
+  .stat{min-width:0;padding:9px 4px;}
+  .stat .v{font-size:13px;white-space:nowrap;}
+  .stat .l{font-size:8px;letter-spacing:.04em;}
   table{font-size:11px;}
   thead th{padding:8px 10px;font-size:9px;}
   tbody td{padding:8px 10px;}
@@ -340,12 +352,12 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   <button class="save-btn" onclick="saveAsImage()">SAVE AS PNG</button>
 </div>
 
+<!-- ai coding: 精简章节文案并删除全部英文副标题 2026/08/30: 08:53 -->
 <!-- 01 Overview -->
 <div class="section" data-section="overview">
   <div class="section-head">
     <span class="idx">01</span>
-    <h2>概览 / OVERVIEW</h2>
-    <span class="note">数值取自文档汇总</span>
+    <h2>概览</h2>
   </div>
   <div class="strip" id="strip"></div>
 </div>
@@ -355,11 +367,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   <div class="section-head">
     <span class="idx">02</span>
     <h2>资产 · 收益 · 收益率</h2>
-    <span class="note">点击图例可显隐对应曲线</span>
   </div>
   <div class="chart-card">
-    <div class="chart-title">综合走势（双轴）</div>
-    <div class="chart-desc">左轴：金额（万） ｜ 右轴：收益率（%）</div>
     <div class="chart-canvas-wrap">
       <canvas id="chartMaster"></canvas>
     </div>
@@ -370,12 +379,9 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="drawdown">
   <div class="section-head">
     <span class="idx">03</span>
-    <h2>回撤分析 / DRAWDOWN</h2>
-    <span class="note">资产总值峰值回撤</span>
+    <h2>回撤分析</h2>
   </div>
   <div class="chart-card">
-    <div class="chart-title">回撤走势（峰值至当前）</div>
-    <div class="chart-desc">红色填充为从峰值的回落幅度</div>
     <div class="chart-canvas-wrap" style="height:340px;">
       <canvas id="chartDrawdown"></canvas>
     </div>
@@ -386,12 +392,9 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="position">
   <div class="section-head">
     <span class="idx">04</span>
-    <h2>仓位率 / POSITION RATE</h2>
-    <span class="note">持仓占当前总市值的百分比（文档 holdings_pos_curr_pct）</span>
+    <h2>仓位率</h2>
   </div>
   <div class="chart-card">
-    <div class="chart-title">仓位率走势</div>
-    <div class="chart-desc">灰色虚线为满仓 100% 参考线</div>
     <div class="chart-canvas-wrap" style="height:340px;">
       <canvas id="chartPosition"></canvas>
     </div>
@@ -402,7 +405,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="allocation">
   <div class="section-head">
     <span class="idx">05</span>
-    <h2>结构分布 / ALLOCATION</h2>
+    <h2>结构分布</h2>
   </div>
   <div class="chart-grid-2">
     <div class="chart-card">
@@ -426,7 +429,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="ranking">
   <div class="section-head">
     <span class="idx">06</span>
-    <h2>持仓收益排行 / RANKING</h2>
+    <h2>持仓收益排行</h2>
   </div>
   <div class="chart-card">
     <div class="chart-title">各标的收益（万）</div>
@@ -440,7 +443,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="stats">
   <div class="section-head">
     <span class="idx">07</span>
-    <h2>统计摘要 / STATISTICS</h2>
+    <h2>统计摘要</h2>
   </div>
   <div class="stat-grid" id="statsGrid"></div>
 </div>
@@ -449,7 +452,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="holdings">
   <div class="section-head">
     <span class="idx">08</span>
-    <h2>持仓明细 / HOLDINGS</h2>
+    <h2>持仓明细</h2>
   </div>
   <div class="table-box">
     <div class="table-scroll">
@@ -477,7 +480,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="timeline">
   <div class="section-head">
     <span class="idx">09</span>
-    <h2>重仓股持有时间线 / TIMELINE</h2>
+    <h2>重仓股持有时间线</h2>
     <span class="note">交易记录与显示设置来自 config.json</span>
   </div>
   <div class="timeline-card">__TIMELINE_SVG__</div>
@@ -487,7 +490,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="calendar">
   <div class="section-head">
     <span class="idx">10</span>
-    <h2>盈亏日历 / P&L CALENDAR</h2>
+    <h2>盈亏日历</h2>
     <div class="cal-toggles">
       <button class="cal-btn active" data-view="day">日</button>
       <button class="cal-btn" data-view="month">月</button>
@@ -515,7 +518,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="closed">
   <div class="section-head">
     <span class="idx">11</span>
-    <h2>清仓盈亏 / CLOSED POSITIONS</h2>
+    <h2>清仓盈亏</h2>
     <span class="note">已卖出标的的盈亏</span>
   </div>
   <div class="chart-card">
@@ -531,7 +534,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="annual_returns">
   <div class="section-head">
     <span class="idx">12</span>
-    <h2>年化收益率 / ANNUAL RETURNS</h2>
+    <h2>年化收益率</h2>
   </div>
   <div class="chart-card">
     <table class="holdings-table" id="annualReturnsTable">
@@ -577,6 +580,8 @@ const fmtWan = v => v == null ? '—' : (Math.abs(v/10000) >= 1 ? (v/10000).toLo
 const fmtPct = v => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(2) + '%';
 const colorClass = v => v == null ? '' : (v > 0 ? 'up' : v < 0 ? 'down' : '');
 const FONT = "'Inter','Noto Sans SC',sans-serif";
+// ai coding: 根据移动端断点控制 Y 轴标题显隐 2026/08/30: 08:44
+const showYAxisTitle = window.innerWidth > 600;
 const dateAxisTicks = {
   autoSkip: true,
   maxTicksLimit: window.innerWidth <= 600 ? 4 : 8,
@@ -713,13 +718,15 @@ new Chart(document.getElementById('chartMaster'), {
       },
       yMoney: {
         position: 'left',
-        title: { display: true, text: '金额 (万)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
+        // ai coding: 移动端隐藏金额 Y 轴标题 2026/08/30: 08:44
+        title: { display: showYAxisTitle, text: '金额 (万)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
         grid: { color: RULE }, border: { color: INK },
         ticks: { color: INK2, font: { size: 11, family: FONT } }
       },
       yPerf: {
         position: 'right',
-        title: { display: true, text: '收益率 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
+        // ai coding: 移动端隐藏收益率 Y 轴标题 2026/08/30: 08:44
+        title: { display: showYAxisTitle, text: '收益率 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
         grid: { drawOnChartArea: false }, border: { display: false },
         ticks: { color: INK3, font: { size: 11, family: FONT }, callback: v => v + '%' }
       }
@@ -755,7 +762,8 @@ new Chart(document.getElementById('chartDrawdown'), {
         ticks: { ...dateAxisTicks, color: INK2, font: { size: 11, family: FONT } }
       },
       y: {
-        title: { display: true, text: '回撤 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
+        // ai coding: 移动端隐藏回撤 Y 轴标题 2026/08/30: 08:44
+        title: { display: showYAxisTitle, text: '回撤 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
         grid: { color: RULE }, border: { color: INK },
         ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '%' } }
     }
@@ -793,7 +801,8 @@ new Chart(document.getElementById('chartPosition'), {
         ticks: { ...dateAxisTicks, color: INK2, font: { size: 11, family: FONT } }
       },
       y: { min: 0, suggestedMax: 100,
-        title: { display: true, text: '仓位率 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
+        // ai coding: 移动端隐藏仓位率 Y 轴标题 2026/08/30: 08:44
+        title: { display: showYAxisTitle, text: '仓位率 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
         grid: { color: RULE }, border: { color: INK },
         ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '%' } }
     }
