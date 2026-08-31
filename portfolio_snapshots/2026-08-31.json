@@ -1,41 +1,41 @@
 {
   "date": "2026-08-31",
-  "snapshot_time": "2026-08-31 16:31:08 +08:00",
+  "snapshot_time": "2026-08-31 21:54:39 +08:00",
   "source": "westock-mcp 实时行情",
   "file_id": "fGemVXqsvRGM",
   "doc_date": null,
   "exchange_rates": {
-    "US": 6.7216,
-    "HK": 0.8574
+    "US": 6.72,
+    "HK": 0.857
   },
   "summary": {
-    "holdings_pos_cost_pct": 100.2972,
-    "holdings_pos_curr_pct": 100.32,
-    "holdings_roi": -5.729,
-    "holdings_invested": 2361526.4999999995,
-    "holdings_current": 2226233.56,
-    "holdings_pnl": -135292.94,
+    "holdings_pos_cost_pct": 100.2962,
+    "holdings_pos_curr_pct": 100.31,
+    "holdings_roi": -5.6329,
+    "holdings_invested": 2368525.6999999997,
+    "holdings_current": 2235109.04,
+    "holdings_pnl": -133416.66,
     "holdings_dividends": 27754.0,
     "year_start": 2505000.0,
     "salary_surplus": 78000.0,
     "base": 2583000.0,
-    "total_pnl": -363766.44,
-    "total_roi": -14.08,
+    "total_pnl": -354890.96,
+    "total_roi": -13.74,
     "regions": {
       "整体": {
-        "invested": 2354530.0,
-        "current": 2219233.56,
-        "pnl": -135296.44
+        "invested": 2361530.0,
+        "current": 2228109.04,
+        "pnl": -133420.96
       },
       "国内": {
         "invested": 821374.0,
-        "current": 726652.96,
-        "pnl": -94721.04
+        "current": 726662.06,
+        "pnl": -94711.94
       },
       "境外": {
-        "invested": 1540152.5,
-        "current": 1492580.6,
-        "pnl": -47571.9
+        "invested": 1547151.7,
+        "current": 1501446.98,
+        "pnl": -45704.72
       }
     }
   },
@@ -55,8 +55,8 @@
       "pnl": -92429.0,
       "roi": -11.2619,
       "dividends": 27754.0,
-      "pos_cost_pct": 34.8848,
-      "pos_curr_pct": 32.8467
+      "pos_cost_pct": 34.7814,
+      "pos_curr_pct": 32.7159
     },
     {
       "market": "HK",
@@ -68,13 +68,13 @@
       "cost_price": 95.14,
       "current_price": 89.9,
       "quantity": 9000,
-      "invested": 734150.0,
-      "current": 693722.34,
-      "pnl": -40427.66,
+      "invested": 733807.0,
+      "current": 693398.7,
+      "pnl": -40408.3,
       "roi": -5.5077,
       "dividends": null,
-      "pos_cost_pct": 31.1803,
-      "pos_curr_pct": 31.2595
+      "pos_cost_pct": 31.0734,
+      "pos_curr_pct": 31.1205
     },
     {
       "market": "HK",
@@ -86,13 +86,13 @@
       "cost_price": 35.4,
       "current_price": 33.44,
       "quantity": 14800,
-      "invested": 449209.0,
-      "current": 424337.55,
-      "pnl": -24871.45,
+      "invested": 448999.0,
+      "current": 424139.58,
+      "pnl": -24859.42,
       "roi": -5.5367,
       "dividends": null,
-      "pos_cost_pct": 19.0785,
-      "pos_curr_pct": 19.1209
+      "pos_cost_pct": 19.0131,
+      "pos_curr_pct": 19.0359
     },
     {
       "market": "US",
@@ -100,35 +100,35 @@
       "name": "传奇生物",
       "code": "LEGN.US",
       "cost_price_raw": "19.6",
-      "current_price_raw": "19.88",
+      "current_price_raw": "19.86",
       "cost_price": 19.6,
-      "current_price": 19.88,
+      "current_price": 19.86,
       "quantity": 700,
-      "invested": 92220.4,
-      "current": 93537.79,
-      "pnl": 1317.39,
-      "roi": 1.4286,
+      "invested": 92198.4,
+      "current": 93421.44,
+      "pnl": 1223.04,
+      "roi": 1.3265,
       "dividends": null,
-      "pos_cost_pct": 3.9167,
-      "pos_curr_pct": 4.2149
+      "pos_cost_pct": 3.9042,
+      "pos_curr_pct": 4.1929
     },
     {
       "market": "US",
       "currency": "USD",
       "name": "SMMT",
       "code": "SMMT.US",
-      "cost_price_raw": "13.71",
-      "current_price_raw": "13.73",
-      "cost_price": 13.71,
-      "current_price": 13.73,
-      "quantity": 1000,
-      "invested": 92153.1,
-      "current": 92287.57,
-      "pnl": 134.47,
-      "roi": 0.1459,
+      "cost_price_raw": "13.68",
+      "current_price_raw": "13.61",
+      "cost_price": 13.68,
+      "current_price": 13.61,
+      "quantity": 1600,
+      "invested": 147087.0,
+      "current": 146334.72,
+      "pnl": -752.28,
+      "roi": -0.5117,
       "dividends": null,
-      "pos_cost_pct": 3.9139,
-      "pos_curr_pct": 4.1585
+      "pos_cost_pct": 6.2285,
+      "pos_curr_pct": 6.5677
     },
     {
       "market": "US",
@@ -140,31 +140,13 @@
       "cost_price": null,
       "current_price": null,
       "quantity": 0,
-      "invested": 20164.8,
-      "current": 20164.8,
+      "invested": 21840.0,
+      "current": 21840.0,
       "pnl": 0.0,
       "roi": null,
       "dividends": null,
-      "pos_cost_pct": 0.8564,
-      "pos_curr_pct": 0.9086
-    },
-    {
-      "market": "US",
-      "currency": "USD",
-      "name": "PDD",
-      "code": "PDD.US",
-      "cost_price_raw": "72.9",
-      "current_price_raw": "85.69",
-      "cost_price": 72.9,
-      "current_price": 85.69,
-      "quantity": 100,
-      "invested": 49000.5,
-      "current": 57597.39,
-      "pnl": 8596.89,
-      "roi": 17.5446,
-      "dividends": null,
-      "pos_cost_pct": 2.0811,
-      "pos_curr_pct": 2.5954
+      "pos_cost_pct": 0.9248,
+      "pos_curr_pct": 0.9802
     },
     {
       "market": "US",
@@ -172,17 +154,17 @@
       "name": "新氧",
       "code": "SY.US",
       "cost_price_raw": "1.8",
-      "current_price_raw": "2.4",
+      "current_price_raw": "2.74",
       "cost_price": 1.8,
-      "current_price": 2.4,
+      "current_price": 2.74,
       "quantity": 5000,
-      "invested": 60494.4,
-      "current": 80659.2,
-      "pnl": 20164.8,
-      "roi": 33.3333,
+      "invested": 60480.0,
+      "current": 92064.0,
+      "pnl": 31584.0,
+      "roi": 52.2222,
       "dividends": null,
-      "pos_cost_pct": 2.5693,
-      "pos_curr_pct": 3.6346
+      "pos_cost_pct": 2.5611,
+      "pos_curr_pct": 4.1319
     },
     {
       "market": "HK",
@@ -194,13 +176,13 @@
       "cost_price": 0.42,
       "current_price": 0.34,
       "quantity": 120000,
-      "invested": 42760.3,
-      "current": 34981.92,
-      "pnl": -7778.38,
+      "invested": 42740.3,
+      "current": 34965.6,
+      "pnl": -7774.7,
       "roi": -19.0476,
       "dividends": null,
-      "pos_cost_pct": 1.8161,
-      "pos_curr_pct": 1.5763
+      "pos_cost_pct": 1.8099,
+      "pos_curr_pct": 1.5693
     }
   ]
 }
