@@ -115,6 +115,15 @@
 - Deploy: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net | commit: 9b98a69 (已推送)
 - Notes: 12 只股票行情全部获取成功无缺失（行情为 8/24 周一收盘，周二盘前执行）。总收益 -37.9万 较 8/24 的 -36.7万 扩大（8/24 大跌：康方 88.35 -2.11%、SMMT 12.73 -3.27%、LEGN 20.94 -4.03%；亚盛 33.28 +1.28%、SY 2.35 +2.62% 领涨）。CSV 表头 row2（col1='市场'）、结束行 col1='收益率' row24、segment rows[0:25]。汇率 US 6.723/HK 0.8569。药明合联持续不在持仓表中。
 
+## 2026-09-01 (Tue) 06:00
+- Status: 部分成功（部署一次成功；git push 失败——直连 SSL_ERROR_SYSCALL、代理 127.0.0.1:7890 未监听，本地 commit 950a60a 待推）
+- Pipeline: tencent-docs → westock-mcp → snapshot_live.py → generate_report.py → cloudstudio deploy
+- Holdings: 8 | Invested: 234.7万 | Current: 222.3万 | Holdings PnL: -12.3万 (-5.25%)
+- Total PnL: -36.7万 | Total ROI: -14.19%
+- Benchmarks: 沪深300 YTD -0.1% | 纳斯达克 YTD 13.46%
+- Deploy: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net | commit: 950a60a (未推送)
+- Notes: **持仓表已更新：PDD(拼多多)已从文档移除**，持仓 8（7 股票 + SMMT Call 270115），较 8/29 的 9 持仓减少 1。7 只股票行情全部获取成功无缺失（行情 8/31 周一收盘：新氧 SY 2.91 +21.25% 领涨、LEGN 20.78 +4.53%；康方 89.9 -5.72%、亚盛 33.44 -4.62%、海螺 17.65 -3.23% 领跌，港股创新药大跌）。总收益 -36.7万 较 8/29 的 -27.7万 大幅扩大（8/31 港股创新药大跌 + PDD 移出）。CSV 表头 row2（col1='市场'）、结束行 col1='收益率' row19、segment rows[0:20]。汇率 US 6.7202/HK 0.857。现金行整体 2.36154e+06。git push 直连失败（LibreSSL SSL_ERROR_SYSCALL），代理 127.0.0.1:7890 未监听，需网络恢复后推送。
+
 # Automation Execution Memory
 
 ## 2026-08-10 (Mon) 08:29
