@@ -936,7 +936,7 @@ let holdingsHtml = sortedHoldings.map(h => {
 const overallCur = (summary.regions && summary.regions['\u6574\u4f53'] && summary.regions['\u6574\u4f53'].current) || 0;
 const overallInv = (summary.regions && summary.regions['\u6574\u4f53'] && summary.regions['\u6574\u4f53'].invested) || 0;
 const cashCurrent = overallCur - totalCurrent;
-const cashInvested = overallInv - holdings.reduce((s, h) => s + (h.invested || 0), 0);
+const cashInvested = cashCurrent;  // 现金不随行情变，投入=当前（与当前一致，避免用文档旧"整体投入"算出1.5万）
 holdingsHtml += `<tr class="summary-row">
   <td>—</td>
   <td class="name">现金</td>
