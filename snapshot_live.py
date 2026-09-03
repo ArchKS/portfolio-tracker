@@ -9,13 +9,13 @@ prices_json: {"code": price, ...} 来自 westock-mcp data_quote
 import csv, json, sys, os, re
 from datetime import datetime, timezone, timedelta
 
-def parse_amount(val):
+def parse_amount(val, nd=2):
     if not val or not val.strip(): return None
     s = val.strip().replace("¥","").replace("HK$","").replace("$","").replace(",","")
     m = 1.0
     if "万" in s: s = s.replace("万","").strip(); m = 10000
     elif "亿" in s: s = s.replace("亿","").strip(); m = 1e8
-    try: return round(float(s) * m, 2)
+    try: return round(float(s) * m, nd)
     except: return None
 
 def parse_percent(val):
@@ -69,6 +69,7 @@ def parse_holdings(csv_text):
 
     for i in range(header_idx+1, len(rows)):
         row = rows[i]
+        orig_len = len(row)  # before padding — needed to right-align short rows
         while len(row) < 14: row.append("")
         market = row[1].strip()
         name = row[2].strip()
@@ -119,9 +120,11 @@ def parse_holdings(csv_text):
 
         # Fix short rows: e.g. SMMT Call has only 5 cols, data shifted left
         if code and not re.match(r'^\d{4,6}\.(SH|SZ|HK)$', code) and not re.match(r'^[A-Z]+\.US$', code):
-            # Not a valid stock code → pad left to align with 投入/当前 columns
-            pad_needed = 10 - 3  # shift from col3 to col10
-            row = row[:3] + [''] * pad_needed + row[3:]
+            # Not a valid stock code → pad so the row's LAST value aligns with 当前 (col11)
+            # Handles both [名称,投入,当前] and [名称,pos/curr,投入,当前] short rows
+            pad_needed = 11 - (orig_len - 1)
+            if pad_needed > 0:
+                row = row[:3] + [''] * pad_needed + row[3:]
             while len(row) < 14: row.append("")
             code = row[3].strip() if len(row) > 3 else ""
             name = row[2].strip() if len(row) > 2 else ""
@@ -137,7 +140,7 @@ def parse_holdings(csv_text):
             "name": name,
             "code": code if code else None,
             "cost_raw": cost_raw,
-            "cost": parse_amount(row[4]),
+            "cost": parse_amount(row[4], 4),
             "qty": qty,
             "invested": invested,
             "dividends": dividends,
