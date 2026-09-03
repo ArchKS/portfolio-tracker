@@ -179,6 +179,8 @@ git push origin main
 | 美股/港股收益率虚高 | `__main__` 中 `meta["exchange_rates"]=summary.pop("exchange_rates",None)` 把 parse_holdings 提取到的汇率覆盖为 None，build_snapshot 永远用默认 US=6.78/HK=0.86 | 改为 `summary["exchange_rates"]=meta.get("exchange_rates") or summary.pop(...)`，让 build_snapshot 读到文档真实汇率（US>RMB 6.7505） |
 | CSV 列偏移/短行需手动修复 | 旧流程在步骤3手动修复 | snapshot_live.py 内部已处理，步骤3只需提取原始段 |
 | 结束行被年度收益表头覆盖 | 文档后部还有"收益率 2022 2023..."表头行也匹配"收益率"关键字，解析循环若取最后一个匹配会把 end_idx 覆盖成 269，段落过长 | 解析循环取**第一个**"收益率"匹配后立即 break；表头/结束行定位都用 `xxx is None` 守卫 |
+| SMMT Call 投入读成 0.01（2026-09-03） | 循环开头 `while len(row)<14` 先 pad 满 14 列，短行右对齐逻辑再用 `len(row)-1` 算偏移已失效，[名称,投入,当前] 或 [名称,权重,投入,当前] 短行的当前/投入被误放列；文档行无代码列时也会触发 | 记录 `orig_len`（pad 前长度），`pad_needed = 11 - (orig_len - 1)` 使末列对齐到"当前"(col11)，仅当 >0 时右移 |
+| 汇贤等低价股成本价精度丢失（2026-09-03） | `parse_amount` 默认 round 2 位，成本 0.4156→0.42，roi 偏差（-19.05% vs -19.39%） | `parse_amount(val, nd)` 增加精度参数，成本列用 `parse_amount(row[4], 4)` |
 
 ## 关键文件
 
