@@ -133,7 +133,7 @@
     {
       "market": "US",
       "currency": "USD",
-      "name": "SMMT Call 270115",
+      "name": "SMMT Call",
       "code": null,
       "cost_price_raw": null,
       "current_price_raw": null,
@@ -187,7 +187,7 @@
     {
       "market": "HK",
       "currency": "HKD",
-      "name": "汇贤产业信托",
+      "name": "汇贤",
       "code": "87001.HK",
       "cost_price_raw": "0.4156",
       "current_price_raw": "0.345",

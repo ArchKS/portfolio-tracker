@@ -60,7 +60,7 @@
 ### 2026-09-02（首次执行成功）
 - 数据源：腾讯文档 fGemVXqsvRGM（tdoc_init 缺宿主 token，改用 MCP get_content 成功）
 - 行情：westock-mcp data_quote 一次调用获取 7 只持仓 + 沪深300 + 纳斯达克
-- 快照：portfolio_snapshots/2026-09-02.json（8 只持仓，含 SMMT Call 270115）
+- 快照：portfolio_snapshots/2026-09-02.json（8 只持仓，含 SMMT Call）
 - 报告：report.html → deploy/index.html → 部署成功（shareLink: https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net）
 - Git：commit 8a209f3 成功；push 失败（直连 github 超时、代理 127.0.0.1:7890 未运行），需手动补推
 - 关键数据：投入 234.67万、当前 217.95万、持仓收益 -16.72万(-7.12%)、总收益 -41.05万、总收益率 -15.89%
