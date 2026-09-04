@@ -1,5 +1,13 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-09-04 16:30 执行记录
+- tdoc_init READY（方案A走通），get_content 成功，pipeline 全通。
+- 结果：8 只持仓 | 投入 238.6万 | 当前 239.2万 | 持仓收益 +0.6万 (+0.25%) | 总收益 -19.8万 (-7.66%) | 基数 258.3万（自算 total_pnl -197,864）。
+- 基准：沪深300 YTD -1.77% / CAGR -1.75%；纳斯达克 YTD +14.38% / CAGR 12.22%（纳指为 9/3 收盘）。
+- 行情要点：康方 +11.45%（101.2）、SMMT +17.33%、新氧持平、传奇 -0.64%。
+- 部署：仍无 workbuddy_cloudstudio_deploy，沿用 sites 部署（workbuddy_sites_deploy, directory=deploy, static, userAskedToPublish=true），链接复用不变：https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net（verified）。
+- git commit a87df72 推送成功（5f03782..a87df72）。本日第三次快照（12:13/16:16 后覆盖更新）。
+
 ## 2026-09-04 16:16 执行记录
 - MCP get_content 直接成功，pipeline 全通（同日上午 12:13 已跑过一版今日快照，本次覆盖更新）。
 - 结果：8 只持仓 | 投入 238.9万 | 当前 239.5万 | 持仓收益 +0.6万 (+0.25%) | 总收益 -19.5万 (-7.54%) | 基数 258.3万。

@@ -249,10 +249,10 @@ body{
 .table-box{border:1px solid var(--rule);padding:0;}
 .table-scroll{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
-thead th{text-align:right;padding:12px 20px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);border-bottom:2px solid var(--rule-strong);font-weight:600;white-space:nowrap;}
+thead th{text-align:center;padding:12px 20px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);border-bottom:2px solid var(--rule-strong);font-weight:600;white-space:nowrap;}
 thead th:first-child,tbody td:first-child{text-align:left;}
 thead th:nth-child(2),tbody td.name{text-align:left;}
-tbody td{padding:11px 16px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+tbody td{padding:11px 16px;border-bottom:1px solid var(--rule);text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap;}
 tbody tr:hover{background:#fafafa;}
 td.name{font-weight:500;text-align:left;}
 tbody tr.summary-row{font-weight:600;background:#fafafa;}
@@ -326,7 +326,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .chart-grid-2{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
   .chart-grid-2 .chart-card{padding:10px;}
   /* ai coding: 缩减移动端折线图和持仓收益排行高度 2026/08/30: 08:52 */
-  .chart-canvas-wrap{height:173px;}
+  .chart-canvas-wrap{height:230px;}
   .chart-canvas-wrap[style*="380px"],.chart-canvas-wrap[style*="340px"]{height:147px!important;}
   .chart-canvas-wrap[style*="height:420px"]{height:280px!important;}
   /* ai coding: 移动端统计摘要改为每行三列并校正分隔线 2026/08/30: 08:51 */
@@ -337,8 +337,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .stat .v{font-size:13px;white-space:nowrap;}
   .stat .l{font-size:8px;letter-spacing:.04em;}
   table{font-size:11px;}
-  thead th{padding:8px 10px;font-size:9px;}
-  tbody td{padding:8px 10px;}
+  thead th{padding:8px;font-size:9px;text-align:center;}
+  tbody td{padding:8px;text-align:center;}
   .notice{font-size:11px;padding:10px 12px;}
 }
 </style>
@@ -383,7 +383,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
     <h2>回撤分析</h2>
   </div>
   <div class="chart-card">
-    <div class="chart-canvas-wrap" style="height:340px;">
+    <div class="chart-canvas-wrap">
       <canvas id="chartDrawdown"></canvas>
     </div>
   </div>
@@ -396,7 +396,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
     <h2>仓位率</h2>
   </div>
   <div class="chart-card">
-    <div class="chart-canvas-wrap" style="height:340px;">
+    <div class="chart-canvas-wrap">
       <canvas id="chartPosition"></canvas>
     </div>
   </div>
@@ -432,7 +432,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   </div>
   <div class="chart-card">
     <div class="chart-title">各标的收益（万）</div>
-    <div class="chart-canvas-wrap" style="height:420px;">
+    <div class="chart-canvas-wrap" style="height:220px;">
       <canvas id="chartRanking"></canvas>
     </div>
   </div>
@@ -863,8 +863,11 @@ new Chart(document.getElementById('chartMarket'), {
 });
 
 // ── 04 Ranking (bar, red up / green down) ──
+// ai coding: 将持仓收益排行高度设为每个标的 28 像素 2026/09/04: 16:51
 const ranked = holdings.filter(h => h.pnl != null).sort((a, b) => b.pnl - a.pnl);
-new Chart(document.getElementById('chartRanking'), {
+const rankingCanvas = document.getElementById('chartRanking');
+rankingCanvas.parentElement.style.height = `${ranked.length * 30}px`;
+new Chart(rankingCanvas, {
   type: 'bar',
   data: {
     labels: ranked.map(h => h.name),
@@ -1301,17 +1304,17 @@ document.querySelectorAll('.section-head h2').forEach(title => {
     const color = d.return >= 0 ? PROFIT : LOSS;
     const yearLabel = d.type === 'current' ? d.year + ' (YTD)' : String(d.year);
     let html = '<td>' + yearLabel + '</td>'
-      + '<td style="text-align:right">' + nav.toFixed(4) + '</td>'
-      + '<td style="text-align:right;color:' + color + ';font-weight:600;">' + (d.return >= 0 ? '+' : '') + d.return.toFixed(2) + '%</td>';
+      + '<td style="text-align:center">' + nav.toFixed(4) + '</td>'
+      + '<td style="text-align:center;color:' + color + ';font-weight:600;">' + (d.return >= 0 ? '+' : '') + d.return.toFixed(2) + '%</td>';
     if (showBench) {
       benchNames.forEach(name => {
         const bench = benchmarks[name];
         const entry = bench.data.find(b => b.year === d.year);
         if (entry) {
           const c = entry.return >= 0 ? PROFIT : LOSS;
-          html += '<td style="text-align:right;color:' + c + ';">' + (entry.return >= 0 ? '+' : '') + entry.return.toFixed(2) + '%</td>';
+          html += '<td style="text-align:center;color:' + c + ';">' + (entry.return >= 0 ? '+' : '') + entry.return.toFixed(2) + '%</td>';
         } else {
-          html += '<td style="text-align:right;">—</td>';
+          html += '<td style="text-align:center;">—</td>';
         }
       });
     }
@@ -1323,17 +1326,17 @@ document.querySelectorAll('.section-head h2').forEach(title => {
   const cagr = stats.annual_cagr;
   if (cagr != null) {
     const color = cagr >= 0 ? PROFIT : LOSS;
-    let html = '<td style="font-weight:700;padding:4px 16px;">投资以来年化</td>'
-      + '<td style="text-align:right;font-weight:600;padding:8px 16px;">' + (stats.annual_cumulative_nav || 0).toFixed(4) + '</td>'
-      + '<td style="text-align:right;padding:8px 16px;color:' + color + ';font-weight:700;">' + (cagr >= 0 ? '+' : '') + cagr.toFixed(2) + '%</td>';
+    let html = '<td style="font-weight:700;padding:4px 12px 4px 8px;white-space:nowrap;">投资以来年化</td>'
+      + '<td style="text-align:center;font-weight:600;padding:8px;">' + (stats.annual_cumulative_nav || 0).toFixed(4) + '</td>'
+      + '<td style="text-align:center;padding:8px;color:' + color + ';font-weight:700;">' + (cagr >= 0 ? '+' : '') + cagr.toFixed(2) + '%</td>';
     if (showBench) {
       benchNames.forEach(name => {
         const b = benchmarks[name];
         if (b.cagr != null) {
           const c = b.cagr >= 0 ? PROFIT : LOSS;
-          html += '<td style="text-align:right;padding:8px 16px;color:' + c + ';font-weight:700;">' + (b.cagr >= 0 ? '+' : '') + b.cagr.toFixed(2) + '%</td>';
+          html += '<td style="text-align:center;padding:8px 16px;color:' + c + ';font-weight:700;">' + (b.cagr >= 0 ? '+' : '') + b.cagr.toFixed(2) + '%</td>';
         } else {
-          html += '<td style="text-align:right;padding:8px 16px;">—</td>';
+          html += '<td style="text-align:center;padding:8px 16px;">—</td>';
         }
       });
     }
