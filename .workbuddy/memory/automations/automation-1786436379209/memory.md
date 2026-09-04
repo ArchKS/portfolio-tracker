@@ -1,5 +1,14 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-09-04 16:16 执行记录
+- MCP get_content 直接成功，pipeline 全通（同日上午 12:13 已跑过一版今日快照，本次覆盖更新）。
+- 结果：8 只持仓 | 投入 238.9万 | 当前 239.5万 | 持仓收益 +0.6万 (+0.25%) | 总收益 -19.5万 (-7.54%) | 基数 258.3万。
+- 基准：沪深300 YTD -1.77% / 纳指 +14.38%（纳指为 9/3 收盘）。
+- 今日康方生物暴涨 +11.45%（→101.2）带动持仓收益转正；SMMT +17.33%、亚盛 +1.74%。
+- 部署工具：本会话无 workbuddy_cloudstudio_deploy，改用 sites 部署（workbuddy_sites_deploy, directory=deploy, static, userAskedToPublish=true），沙箱复用链接不变：https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net
+- git commit c746f42 推送成功（a95949f..c746f42）。
+- 注意：部署历史记录位于 ~/.workbuddy/cloudstudio-deploy-history/，deployTargetId=2c7a476ad93ea2f3。
+
 ## 2026-09-01 执行记录
 - tdoc_init 报 no_token（自动化会话未注入宿主票据），改走 MCP 工具 mcp__tencent-docs__get_content(file_id=fGemVXqsvRGM) 成功 → 无需方案B。
 - Pipeline 全通：CSV → 行情（8只，含 87001 汇贤）→ 基准（沪深300 -0.4% / 纳指 +13.46%）→ snapshot → report → deploy。

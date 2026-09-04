@@ -171,7 +171,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   --pad:28px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{background:var(--paper);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+html,body{background:var(--paper);}
+.chart-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 body{
   font-family:'Inter','Noto Sans SC',-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;
   color:var(--ink);
