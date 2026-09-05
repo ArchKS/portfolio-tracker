@@ -1,5 +1,15 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-09-05 16:33 执行记录
+- tdoc_call（方案A）READY，get_content 成功，pipeline 全通。
+- ⚠️ 文档新增 PDD.US（成本81.88/数量100），持仓由 8 只变 9 只（含 SMMT Call）。
+- 结果：9 只持仓 | 投入 241.0万 | 当前 241.8万 | 持仓收益 +0.73万 (+0.30%) | 总收益 -18.3万 (-7.10%) | 基数 258.3万（自算 total_pnl -183,426）。
+- 基准：沪深300 YTD -1.77% / CAGR -1.75%；纳斯达克 YTD +14.05%（9/4 收盘，纳指较昨日 14.38 略降）。
+- 行情要点：康方 +11.45% 维持 101.2、SMMT +2.77%（17.61）、亚盛 +1.74%（35）、PDD 82.21、传奇 -1.06%、新氧 -2.13%。
+- 部署：仍无 workbuddy_cloudstudio_deploy，沿用 workbuddy_sites_deploy（directory=deploy, static, userAskedToPublish=true），链接复用不变：https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net（verified）。
+- git commit 6040317 推送成功（376ac54..6040317）。
+- 注：git status 含 automation-1785914941450/memory.md 改动一并提交（4 files changed）。
+
 ## 2026-09-04 16:30 执行记录
 - tdoc_init READY（方案A走通），get_content 成功，pipeline 全通。
 - 结果：8 只持仓 | 投入 238.6万 | 当前 239.2万 | 持仓收益 +0.6万 (+0.25%) | 总收益 -19.8万 (-7.66%) | 基数 258.3万（自算 total_pnl -197,864）。
