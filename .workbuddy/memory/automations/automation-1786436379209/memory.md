@@ -1,5 +1,14 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-09-07 16:31 执行记录
+- tdoc_init READY（方案A）→ get_content 成功，pipeline 全通。
+- 结果：9 只持仓 | 投入 241.0万 | 当前 236.1万 | 持仓收益 -4.9万 (-2.04%) | 总收益 -23.99万 (-9.29%) | 基数 258.3万。
+- ⚠️ 港股大跌拖累：康方 101.2→96 (-5.14%)、亚盛 35→33.58 (-4.06%)；美股 9/4 收盘（SMMT 17.61、PDD 82.21）。较当日 06:00 档快照（-7.10%）恶化 2.19pct。
+- 基准：沪深300 YTD -1.19%（当日 +0.59%）；纳斯达克 YTD +14.05%。
+- 部署：仍无 workbuddy_cloudstudio_deploy，沿用 workbuddy_sites_deploy（directory=deploy, static, userAskedToPublish=true），链接复用：https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net（verified）。
+- git commit e158a17 推送成功（cbe0168..e158a17，一次成功）。
+- 注：本日早前已有 06:00 档快照提交 9188b5a + 日志 cbe0168。
+
 ## 2026-09-05 16:33 执行记录
 - tdoc_call（方案A）READY，get_content 成功，pipeline 全通。
 - ⚠️ 文档新增 PDD.US（成本81.88/数量100），持仓由 8 只变 9 只（含 SMMT Call）。
