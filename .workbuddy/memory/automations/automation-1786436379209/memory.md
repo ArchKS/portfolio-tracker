@@ -1,5 +1,15 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-09-08 16:33 执行记录
+- MCP get_content 直接成功，pipeline 全通（方案A）。
+- 结果：9 只持仓 | 投入 241.0万 | 当前 237.7万 | 持仓收益 -3.36万 (-1.39%) | 总收益 -22.43万 (-8.69%) | 基数 258.3万（自算 total_pnl -224,340，较 9/7 -9.29% 回升 0.60pct）。
+- 整体(含现金) region：投入 239.2万 / 当前 235.9万（固定现金差额 -18,000）。
+- 基准：沪深300 YTD -1.54%（当日 -0.36%）；纳斯达克 YTD +14.05%（9/4 收盘，9/7 劳动节休市）。
+- 行情要点：SMMT 17.61 (+2.77%)、PDD 82.21、LEGN 21.52 (-1.06%)、SY 2.76 (-2.13%)（美股为最近收盘）；港股：康方 96.2 (+0.21%)、亚盛 34.2 (+1.85%)、海螺 16.84 (+1.81%)、汇贤 0.335 (-1.47%)。汇率 US>RMB 6.7108 / HK>RMB 0.8556（已更新）。
+- 部署：仍无 workbuddy_cloudstudio_deploy，沿用 workbuddy_sites_deploy（directory=deploy, static, userAskedToPublish=true），链接复用不变：https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net（verified）。
+- git commit fac2c4b 推送成功（0a97e2b..fac2c4b，一次成功）。
+- 文档含 PDD 100 股持仓（9/5 新增），SMMT Call 短行解析正常（投入/当前 13421.6）。
+
 ## 2026-09-07 16:31 执行记录
 - tdoc_init READY（方案A）→ get_content 成功，pipeline 全通。
 - 结果：9 只持仓 | 投入 241.0万 | 当前 236.1万 | 持仓收益 -4.9万 (-2.04%) | 总收益 -23.99万 (-9.29%) | 基数 258.3万。
