@@ -1,5 +1,14 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-09-16 16:30 执行记录
+- 方案A 全通（mcp__tencent-docs__get_content 直接成功）。汇率 US>RMB 6.7112 / HK>RMB 0.8552。
+- ⚠️ 持仓变动：PDD.US 已清仓移除（昨 150 股/投入 83,514/roi -4.36%），持仓 9→8 只。
+- 结果：8 只持仓 | 投入 228.8万 | 当前 220.8万 | 持仓收益 -7.92万 (-3.46%) | 总收益 -38.85万 (-15.04%) | 基数 258.3万（自算 total_pnl -388,512，较 9/15 -11.24% 恶化 3.80pct）。
+- 基准：沪深300 YTD -3.23% / CAGR -2.05%；纳斯达克 YTD +11.79%（9/15收盘）/ CAGR +11.59%。组合 CAGR +25.85%。
+- 行情要点：康方 -5.09%、亚盛 -3.66%、SMMT -5.54%、传奇 -4.64%；新氧 +3.82%、海螺 +0.37% 逆势。全线承压。
+- 部署：workbuddy_sites_deploy 报"预留域名 portfolio-snapshot-51258 未绑定"错误，但 curl 验证稳定域名 https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net 已含 09-16 数据（snapshot_time 16:35:49 / holdings_count=8 / total_pnl -388512），部署实际生效。
+- git commit 573f072 推送成功（8ce651a..573f072，一次成功），4 files changed。
+
 ## 2026-09-15 16:30 执行记录
 - 方案A 全通（tdoc_init READY → get_content 成功）。汇率 US>RMB 6.708 / HK>RMB 0.855。
 - ⚠️ 持仓变动：MUZ.US 已清仓移除，9 只持仓（较 9/14 十只少 1）。
