@@ -113,7 +113,17 @@ CSV 必须包含以下汇总行（在"总计"行之后），供脚本提取：
 cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 ```
 
-调用 `workbuddy_cloudstudio_deploy`，directory = `{PROJECT}/deploy`。
+调用 `workbuddy_sites_deploy`（旧名 `workbuddy_cloudstudio_deploy` 已废弃），参数：
+`action="deploy"`、`directory="{PROJECT}/deploy"`、`language="static"`、`appName="持仓快照"`、`domainPrefix="portfolio-snapshot"`、`userAskedToPublish=true`。
+
+**该工具长期返回 "应用预留域名 portfolio-snapshot-*.app.workbuddy.host 未绑定到本次发布环境"**（域名前缀每次随机变化，属已知故障）。此时不要重试，改用 curl 验证旧公网链接是否已包含当日数据：
+
+```bash
+curl -s -o /tmp/pf_check.html -w "%{http_code}\n" --max-time 40 https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net
+grep -o "2026-09-1[0-9] [0-9:]*" /tmp/pf_check.html | head -3
+```
+
+若页面含当日 `snapshot_time` 与最新市值 → 上报"公网链接不变，内容已更新"；否则如实报告部署失败。
 
 ### 8. 报告结果
 
@@ -181,6 +191,7 @@ git push origin main
 | 结束行被年度收益表头覆盖 | 文档后部还有"收益率 2022 2023..."表头行也匹配"收益率"关键字，解析循环若取最后一个匹配会把 end_idx 覆盖成 269，段落过长 | 解析循环取**第一个**"收益率"匹配后立即 break；表头/结束行定位都用 `xxx is None` 守卫 |
 | SMMT Call 投入读成 0.01（2026-09-03） | 循环开头 `while len(row)<14` 先 pad 满 14 列，短行右对齐逻辑再用 `len(row)-1` 算偏移已失效，[名称,投入,当前] 或 [名称,权重,投入,当前] 短行的当前/投入被误放列；文档行无代码列时也会触发 | 记录 `orig_len`（pad 前长度），`pad_needed = 11 - (orig_len - 1)` 使末列对齐到"当前"(col11)，仅当 >0 时右移 |
 | 汇贤等低价股成本价精度丢失（2026-09-03） | `parse_amount` 默认 round 2 位，成本 0.4156→0.42，roi 偏差（-19.05% vs -19.39%） | `parse_amount(val, nd)` 增加精度参数，成本列用 `parse_amount(row[4], 4)` |
+| deploy 工具持续报"预留域名未绑定"（2026-09-14 起每日复现） | 沙箱复用旧 app，工具却为新域名前缀申请绑定 | 不重试；curl 旧链接 `https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net` 验证当日数据已上线，公网链接视为不变 |
 
 ## 关键文件
 
