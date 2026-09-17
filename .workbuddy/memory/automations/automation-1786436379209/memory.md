@@ -1,5 +1,13 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-09-17 16:10 执行记录
+- 方案A 全通（tdoc_init READY → tdoc_call get_content 成功）。汇率 US>RMB 6.7112 / HK>RMB 0.8552。
+- 结果：8 只持仓（无变动）| 投入 228.77万 | 当前 220.87万 | 持仓收益 -7.89万 (-3.45%) | 总收益 -38.83万 (-15.03%) | 基数 258.3万（自算 total_pnl -388,261.34）。
+- 基准：沪深300 YTD -3.67% / CAGR -2.15%；纳斯达克 YTD +11.77%（9/16 收盘）/ CAGR +11.58%。组合 CAGR +25.83%（cum_nav 2.953）。
+- 行情要点：亚盛 29.94(-0.13%，当日个股收益 -15.42%，52周新低 29.56) 最大拖累、传奇 17.00(-3.79%)、汇贤 -20.60%；新氧 2.81(+3.31%，个股 +56.11%) 领涨、SMMT 17.30(-0.57%)。
+- 部署：updateExistingApp 报"工作区无既有 app to update"，普通部署仍报"预留域名 portfolio-snapshot-63272 未绑定"（同 9/11-9/16），但 curl 验证稳定域名 https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net 已含 09-17 数据（snapshot_time 15:47:58 / holdings_count=8 / total_pnl -388261.34），部署实际生效。
+- git commit 518896c 推送成功（8a0b91f..518896c，一次成功），3 files changed。
+
 ## 2026-09-16 16:30 执行记录
 - 方案A 全通（mcp__tencent-docs__get_content 直接成功）。汇率 US>RMB 6.7112 / HK>RMB 0.8552。
 - ⚠️ 持仓变动：PDD.US 已清仓移除（昨 150 股/投入 83,514/roi -4.36%），持仓 9→8 只。
