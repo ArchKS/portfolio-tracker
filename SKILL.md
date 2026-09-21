@@ -27,16 +27,19 @@ agent_created: true
 
 ### 2. 读取腾讯文档
 
-**方案A（优先）**：用 tencent-docs skill 的 `tdoc_call` 入口（宿主注入票据，无需 Token）：
+**方案A（优先，2026-09-22 实测可用，无需宿主 token）**：用 tencent-docs skill 的 `tdoc_call` 入口：
 
 ```bash
-cd "{TDOC_SKILL}" && "{PYTHON}" tencentdocs.py tdoc_init  # 检查就绪
 cd "{TDOC_SKILL}" && "{PYTHON}" tencentdocs.py tdoc_call tencent-docs get_content '{"file_id":"fGemVXqsvRGM"}' > "{PROJECT}/.tmp_raw.json"
 ```
 
-从 `.tmp_raw.json` 提取 `result.structuredContent.content`（CSV 格式文本）。
+⚠️ **不需要先跑 `tdoc_init`**（该命令才是依赖宿主注入 token 的那一步，本环境报缺 token），`tdoc_call` 直接调用即可成功。
 
-**方案B（MCP 工具不可用时）**：用 Python urllib 直接调 API（需 Token）：
+从 `.tmp_raw.json` 提取 `structuredContent.content`（CSV 格式文本）；若层级不确定，用递归查找（先找 `structuredContent.content`，再回退到 `content[0].text` 解析出的 JSON 里的 `content`）。
+
+**方案A'**：MCP `mcp__tencent-docs__get_content`（连接器已连接时可用，返回 `content` 字段即 CSV）。
+
+**方案B（以上均不可用时）**：用 Python urllib 直接调 API（需 Token）：
 
 ```python
 import json, urllib.request
