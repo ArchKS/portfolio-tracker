@@ -2,6 +2,18 @@
 
 ## 执行记录
 
+### 2026-09-23 06:01（当日首次）
+- 数据源：腾讯文档 fGemVXqsvRGM（tencent-docs CLI `tdoc_call tencent-docs get_content` 落 .tmp_raw.json，成功，无需宿主 token）。8 只持仓无变动；汇率 US 6.7112 / HK 0.8552；文档整体 227.37万投入 / 225.70万当前
+- 行情：westock-mcp data_quote **一次批量取 9 码，只返回 8 个**（漏 sh000300）；sh000300 单码重试触发限频，改走 `data_minute` 读 `qt.sh000300[61]` 取 YTD=-1.84。行情 time=2026-09-22 收盘：康方 95.90 -3.42%、亚盛 31.42 -0.88%、海螺 15.85 -1.06%、传奇 18.64 +0.59%、新氧 2.80 +2.19%、汇贤 0.33 +1.54%、SMMT 17.12 +1.30%
+- 基准交叉验算通过：沪深300 -1.95%×(1+0.11%)=-1.84 ✓；纳斯达克 16.69%×(1+0.45%)=17.22 ✓（usIXIC YTD 直取 `chg_ytd` 字段即可）
+- 快照：portfolio_snapshots/2026-09-23.json（新增，第 60 份）；报告 report.html → deploy/index.html
+- 部署：workbuddy_sites_deploy 仍报"预留域名 portfolio-snapshot-71682.app.workbuddy.host 未绑定"；curl 验证旧链接 https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net 已含 2026-09-23 数据（snapshot_time 06:01:00，HTTP 200），公网链接不变
+- 关键数据：持仓投入 228.77万、持仓当前 227.27万、持仓收益 -1.50万(-0.66%)、总收益 -32.43万、总收益率 -12.56%（基数 258.30万；较 09-22 的 -11.17% 略扩大）
+- 基准：沪深300 YTD -1.84% / CAGR -1.66%；纳斯达克 YTD +17.22% / CAGR +11.93%
+- Git：commit 9bff75d；push 成功（1bdc210..9bff75d，一次成功）
+- 临时文件已清理
+- 备注：2026-09-22 与 09-23 的执行均落在美股 09-22 收盘；`data_quote` 批量漏码现象再次出现（本次漏且仅漏 sh000300），需逐码核对返回 keys
+
 ### 2026-09-22 06:01（当日首次）
 - 数据源：腾讯文档 fGemVXqsvRGM（改用 tencent-docs CLI `tdoc_call tencent-docs get_content` 落 .tmp_raw.json，成功；未走 MCP get_content，也未需 Token）。8 只持仓无变动；汇率 US 6.7112 / HK 0.8552；文档整体 227.37万投入 / 225.70万当前
 - 行情：westock-mcp data_quote **一次批量取全 9 码**（7 持仓 + 沪深300 + usIXIC），本档未遇限频。行情 time=2026-09-21 收盘：康方 99.30 +9.72%、亚盛 31.70 +7.24%、传奇 18.53 +5.22%、海螺 16.02 +0.38%、新氧 2.74 -0.36%、汇贤 0.325 -1.52%、SMMT 16.90 -5.32%
