@@ -1,5 +1,14 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-09-26 16:31 执行记录
+- 方案A 全通（tencentdocs.py tdoc_call get_content，无需 tdoc_init）。汇率 US 6.6958 / HK 0.8531。
+- `data_quote` 本场可用零限频（7 码批量 + sh000300/usIXIC 一次取全）。
+- ⚠️ 今日周六，港股/A股/美股全部休市（`qt.market` 全 close，A股标"中秋节休市"）→ 行情与晨间档相同，结果与 06:01 档一致：8 行、投入 228.21万、当前 219.24万、持仓收益 -8.97万(-3.93%)、总收益 -40.46万、总收益率 -15.66%。与本日 06:01 档（commit a8168ae）数值完全相同。
+- 基准：沪深300 YTD -4.12（09-24 收盘，休市沿用）/ 纳斯达克 YTD 16.46（09-25 周五收盘）；usIXIC 用 data_minute `qt[53]` 复核吻合。
+- 行情：康方 93.55、SMMT 15.61、海螺 15.69、亚盛 28.90、传奇 19.11、新氧 2.70、汇贤 0.325（均 09-25 收盘）。
+- 部署：workbuddy_sites_deploy 报"预留域名 portfolio-snapshot-59722 未绑定"（同每日复现，不重试）；curl 验证稳定链接已含 09-26 16:31:35 数据（HTTP 200 / total_pnl -404606.88 / total_roi -15.66 / holdings_count 8）。
+- git commit 8fa3c3d 推送成功（a8168ae..8fa3c3d，一次成功，5 files changed）。本日 06:01 档已提交 a8168ae，本次覆盖更新同一份 2026-09-26.json。
+
 ## 2026-09-25 16:31 执行记录
 - 方案A 全通（tencentdocs.py tdoc_call get_content，无需 tdoc_init）。汇率 US 6.6958 / HK 0.8531（与晨间档一致）。
 - `data_quote` **本场全程可用、零限频**（7 码批量 + sh000300/usIXIC 一次取全），连续第三日未限频。**限频已非常态，先正常走 data_quote 批量即可。**
