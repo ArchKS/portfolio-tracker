@@ -1,5 +1,13 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-01 16:30 执行记录
+- 方案A 全通（tencentdocs.py tdoc_call get_content）。注意返回体路径：CSV 在 `result.structuredContent.content`（`result.content[0].text` 是 JSON 字符串，需二次 parse）。汇率 US 6.6958 / HK 0.8531。header idx=2 / end idx=19，8 行持仓无变动。
+- `data_quote` **本场零限频**（7 只个股一次批量 + 2 指数一次取全）。**连续两日未限频 → 先正常走 data_quote 批量，别默认假设限频。** 指数直接读 `chg_ytd` 字段，已用「上一档 YTD × (1+当日涨跌幅)」验算：sh000300 -5.88、usIXIC 15.57。
+- ⚠️ **时区效应提醒**：16:30 档（美东 10-01 凌晨）美股 time 已滚动到 2026-10-01（实为 09-30 收盘）：SMMT 16.91 (+3.17%)、传奇 19.89 (+5.69%)、新氧 2.67 (-1.48%)。港股/A股 10-01 国庆休市，仍为 09-30 收盘。
+- 结果：8 只持仓 | 投入 228.21万 | 当前 239.11万 | 持仓收益 **+10.89万 (+4.77%)** | 总收益 **-20.59万 (-7.97%)** | 基数 258.3万。
+- 部署：workbuddy_sites_deploy 报"预留域名 portfolio-snapshot-52179 未绑定"（每日复现，不重试）；curl 验证稳定链接已含 10-01 16:31:29 数据（HTTP 200 / holdings_roi 4.77 / total_pnl -205942.37）。
+- git commit d8ca890 已落本地；**push 失败两次**（代理 7890 未运行 + 直连 SSL_ERROR_SYSCALL），本地 main **ahead 6**（借助 09-28 起累积，含 ed1f44f 本日 06:01 档），待网络/代理恢复后一次性补推。⚠️ ahead 已积压至 6 笔，代理恢复后需确认补齐。
+
 ## 2026-09-30 16:32 执行记录
 - 方案A 全通（tencentdocs.py tdoc_call get_content，无需 tdoc_init）。汇率 US 6.6958 / HK 0.8531（连续第三日不变）。文档 header idx=2 / end idx=19，8 行持仓无变动。
 - `data_quote` 本场全程限频（批量 2 次 + 指数 1 次全失败）→ 直接切 `data_minute`，7 只个股 + 2 指数共 9 次单码调用一次跑通。**再次确认：限频别重试，直接 data_minute。**
