@@ -1,5 +1,15 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-02 16:31 执行记录
+- 方案A 全通（tencentdocs.py tdoc_call get_content，路径 `result.structuredContent.content`）。汇率 US 6.6958 / HK 0.8531。header idx=2 / end idx=19，8 行持仓无变动。
+- `data_quote` **本场零限频，但批量返回不全**（连续第二日出现）：7 码批量只返 3 只美股，4 只港股缺失；指数批次只返 sh000300。**补调缺失批次后取全。教训：`ok:true` 不代表全齐，必须核对 `data` 里缺哪些 code 再补调。**
+- 指数 YTD 直读 `chg_ytd`：sh000300 **-5.88**（time 09-30，A 股国庆休市沿用）、usIXIC **+15.62**（+0.04%，对前档 15.57 验算通过）。
+- ⚠️ **休市节奏**：A 股 10-01~10-08 国庆休市；**港股 10-01 休一天、10-02 已复市**（勿把港股也当长假休市）；美股为 10-01 收盘。
+- 结果：8 只持仓 | 持仓投入 228.21万 | 持仓当前 234.01万 | 持仓收益 **+5.79万 (+2.54%)** | 总收益 **-25.69万 (-9.95%)** | 基数 258.3万。
+- 较本日 06:01 档（+4.55% / -8.17%）回落 2.01pct，港股复市齐跌所致（亚盛 -5.01% / 康方 -1.75% / 海螺 -1.61%）。
+- 部署：workbuddy_sites_deploy 报"预留域名 portfolio-snapshot-50175 未绑定"（每日复现，不重试）；curl 验证稳定链接已含 10-02 16:31:41 数据（HTTP 200 / total_pnl -256945.48 / total_roi -9.95 / holdings_count 8）。
+- git commit cb2593d 已落本地；**push 失败两次**（代理 7890 未运行 + 直连 SSL_ERROR_SYSCALL），本地 main **ahead 9**，待网络/代理恢复后一次性补推。⚠️ ahead 已积压 9 笔，恢复后务必确认补齐。
+
 ## 2026-10-01 16:30 执行记录
 - 方案A 全通（tencentdocs.py tdoc_call get_content）。注意返回体路径：CSV 在 `result.structuredContent.content`（`result.content[0].text` 是 JSON 字符串，需二次 parse）。汇率 US 6.6958 / HK 0.8531。header idx=2 / end idx=19，8 行持仓无变动。
 - `data_quote` **本场零限频**（7 只个股一次批量 + 2 指数一次取全）。**连续两日未限频 → 先正常走 data_quote 批量，别默认假设限频。** 指数直接读 `chg_ytd` 字段，已用「上一档 YTD × (1+当日涨跌幅)」验算：sh000300 -5.88、usIXIC 15.57。
