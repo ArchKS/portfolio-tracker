@@ -1,5 +1,14 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-08 16:30 执行记录 — ❌ 步骤 2 首环节失败中止
+- **失败点**：pipeline 第 2 步「读取腾讯文档持仓表 fGemVXqsvRGM」。`tencent-docs` / `westock-mcp` 两连接器本会话均未连接 → 无法取 CSV → 按指令「任何步骤失败则报告错误并停止」中止。**未生成快照、未部署、未 git 提交。**
+- **根因**：应用 11:04 重启后连接器 OAuth 运行时状态未恢复（宿主侧问题，非 skill 脚本）。主线程日志 `[10/8/2026, 4:31:19 PM] [McpConnectionGuidance] suspending ... on unauthorized "tencent-docs"` / `... "westock-mcp"`；凭据 provider → `personal:not_connected` / `enterprise:connector_disabled`；网关注册工具仅 23 个 builtin，无连接器工具。
+- ⚠️ **重要教训**：`connector-states.json` 与 `list_installed_plugins` 仍报 `bound:true enabled:true`，**状态文件不能作为可用性判据**——必须实测 provider 端点或工具是否注册。同日晨档（06:01）连接器尚可用（commit 1504610）。
+- **通道已穷尽（勿重复排查）**：方案A `tencentdocs.py` no_token；MCP 工具未注册；方案B 无 token；网关路由直连 401（per-route 内存态 token）；`.credentials.v3.json` 无该 OAuth；sheetagent 本地 `No workbook open` / 远程 `400006 Authorization invalid`；本地 39099 端口引擎为 editor-sdk（仅本地磁盘文件）；webview cookie 库为空。`workbuddy_request_mcp_connection` 返回 `skipped`（会话内不可自恢复）。
+- **✅ 替代行情源已验证可用**：`neodata-financial-search`（`query.py --query "..." --data-type api`，token 已缓存）。本次实测取全 7 只持仓 + 沪深300/纳指 + USDCNY/HKDCNY，含涨跌幅与交易状态。**下次 westock 失效可直接切此源。**
+- 参考数据（10-08 实时，晨档结构降级测算，未落库）：港股收盘 康方 105.70(-3.12%)、海螺 15.98(+1.14%)、亚盛 28.02(-2.98%)、汇贤 0.325(-1.52%)；美股 10-07 收盘 SMMT 17.95、LEGN 19.12、SY 2.55。持仓收益 +3.95万(+1.73%)，较晨档 -3.76万(-1.59%)；整体总收益 -27.54万(-10.66%)。基准 沪深300 YTD **-7.33%**（10-08 复市补跌，修正晨档 -5.88% 的 09-30 旧值）、纳指 **+17.59%**。
+- **遗留**：用户重连连接器后需重跑（将覆盖 2026-10-08.json）；main **ahead 23** 待补推。
+
 ## 2026-10-07 16:32 执行记录
 - 方案A 全通（tencentdocs.py tdoc_call get_content，路径 `result.structuredContent.content`）。汇率 US 6.6958 / HK 0.8531。header idx=2 / end idx=19，**8 行持仓无变动**（康方/亚盛/海螺/汇贤 + SMMT/SMMT Call/传奇/新氧）。
 - `data_quote` 首轮 7 码批量**只返 4 只港股，3 只美股缺失**（再次印证"ok:true 不代表全齐"）；美股补调第一次限频、第二次即成功。指数批次 sh000300 一次成功；usIXIC 连试 2 次限频 → 走 `data_minute` 取 `qt.usIXIC[54]` = **18.75**（与晨档 10-06 收盘值完全一致，互相印证；`market` 状态行显示 `US_close_未开盘` 属正常）。

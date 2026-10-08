@@ -153,8 +153,11 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 
 ```bash
 curl -s -o /tmp/pf_check.html -w "%{http_code}\n" --max-time 40 https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net
-grep -o "2026-09-1[0-9] [0-9:]*" /tmp/pf_check.html | head -3
+grep -o "$(date +%Y-%m-%d) [0-9:]*" /tmp/pf_check.html | head -3
+grep -o "$(grep -o '\"total_pnl\": [-0-9.]*' "{PROJECT}/portfolio_snapshots/$(date +%Y-%m-%d).json" | grep -o '[-0-9.]*')" /tmp/pf_check.html | head -3
 ```
+
+⚠️ **不要用硬编码日期正则**（如 `2026-09-1[0-9]`），过几天就匹配不到；用 `$(date +%Y-%m-%d)` 动态取当日，同时用当日快照的 `total_pnl` 值二次校验（两个值都命中才确认内容已更新）。
 
 若页面含当日 `snapshot_time` 与最新市值 → 上报"公网链接不变，内容已更新"；否则如实报告部署失败。
 
