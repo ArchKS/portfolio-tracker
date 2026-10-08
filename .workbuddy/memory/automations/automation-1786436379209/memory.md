@@ -1,5 +1,16 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-08 17:29 执行记录 — ✅ 重跑成功（补 16:30 档失败）
+- **16:30 档曾中止**（连接器运行时未注册，OAuth 未恢复）；本档 `tencent-docs` / `westock-mcp` 已恢复 connected，**pipeline 一次跑通**，遗留全部清偿。
+- 方案A 全通（`result.structuredContent.content`）。汇率 US 6.6958 / HK 0.8531。header idx=2 / end idx=19，8 行持仓无变动。
+- `data_quote` **全程限频**（批量 3 次 + 指数 1 次全失败）→ 直接切 `data_minute` 单码，7 持仓 + 2 指数共 9 次一次跑通。**美股 `qt` 下标结构与港股一致**（`[3]`最新价/`[4]`昨收）；`usIXIC` 虚价字段是字符串 `"27538.69"`，取 `[3]` 即得。
+- 指数 YTD 验算通过：沪深300 **-6.90**（A 股 10-08 复市补跌 -1.09%）、纳指 **18.49**（-0.22%，10-07 收盘）。纳指本档实测值比晨档降级估算 17.59 更准，**以后优先用 westock 实取，不用 neodata 估算**。
+- 结果：8 只 | 投入 228.21万 | 当前 232.16万 | 持仓收益 **+3.95万 (+1.73%)** | 总收益 **-27.54万 (-10.66%)** | 基数 258.3万。
+- 基准：沪深300 YTD -6.90%（CAGR -2.82%）/ 纳指 YTD +18.49%（CAGR +12.80%）；组合 CAGR +25.43%。
+- 部署：`workbuddy_sites_deploy` **直接成功（不再报域名未绑定）**，返回新链接 `https://5f53b3902cde47cf903e6c730374caa2.bj9.agentos-app.net`；新旧链接 curl 均验证含 10-08 数据。⚠️ **shareLink 变了，报告时用新链接。**
+- git：commit `d35c456`，**push 成功**（`a5c4f33..d35c456`）—— `nc -z 7890` 报 PROXY_DOWN 但直连 GitHub 成功，**别只凭代理探测预判 push 失败**。**09-29 起 ahead 积压已一次性推清，main 与 origin/main 完全同步。**
+- 遗留：无。
+
 ## 2026-10-08 16:30 执行记录 — ❌ 步骤 2 首环节失败中止
 - **失败点**：pipeline 第 2 步「读取腾讯文档持仓表 fGemVXqsvRGM」。`tencent-docs` / `westock-mcp` 两连接器本会话均未连接 → 无法取 CSV → 按指令「任何步骤失败则报告错误并停止」中止。**未生成快照、未部署、未 git 提交。**
 - **根因**：应用 11:04 重启后连接器 OAuth 运行时状态未恢复（宿主侧问题，非 skill 脚本）。主线程日志 `[10/8/2026, 4:31:19 PM] [McpConnectionGuidance] suspending ... on unauthorized "tencent-docs"` / `... "westock-mcp"`；凭据 provider → `personal:not_connected` / `enterprise:connector_disabled`；网关注册工具仅 23 个 builtin，无连接器工具。
