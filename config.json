@@ -2,7 +2,7 @@
   "_comment": "控制页面模块显隐，true=显示，false=隐藏",
   "sections": {
     "overview": true,
-    "stats": true,
+    "stats": false,
     "summary": true,
     "drawdown": true,
     "position": true,

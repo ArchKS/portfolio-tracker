@@ -188,18 +188,18 @@ body{
 .down{color:var(--loss);}
 
 /* ── Masthead ── */
-.masthead{border-bottom:3px solid var(--rule-strong);padding-bottom:18px;margin-bottom:36px;}
+/* ai coding: 页眉保留无边框留白并删除已移除的 meta 样式 2026/10/09: 16:03 */
+.masthead{padding-bottom:18px;margin-bottom:36px;}
 .masthead .kicker{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:700;}
 .masthead h1{font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1.04;margin-top:8px;}
-.masthead .meta{margin-top:12px;font-size:13px;color:var(--ink-2);display:flex;gap:24px;flex-wrap:wrap;letter-spacing:.02em;}
-.masthead .meta b{color:var(--ink);font-weight:600;}
 .save-btn{position:absolute;right:var(--pad);top:var(--pad);background:var(--ink);color:var(--paper);border:none;padding:10px 20px;font-size:12px;font-weight:600;font-family:inherit;letter-spacing:.04em;cursor:pointer;}
 .save-btn:hover{background:#333;}
 @media (max-width:600px){.save-btn{position:static;display:block;margin-top:12px;width:100%;}}
 
 /* ── Section ── */
 .section{margin-bottom:44px;}
-.section-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:20px;}
+/* ai coding: 移除章节标题下方的装饰分隔线 2026/10/09: 15:56 */
+.section-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;margin-bottom:20px;}
 .section-head .idx{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
 .section-head h2{font-size:21px;font-weight:700;letter-spacing:-.01em;}
 .section-download-btn{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;align-self:center;padding:0;border:0;border-radius:4px;background:transparent;color:var(--ink-3);cursor:pointer;}
@@ -218,57 +218,78 @@ body{
 .section.section-export-mode tbody td{padding:11px 16px;}
 .section.section-export-mode .chart-grid-2{grid-template-columns:1fr 1fr;}
 .section.section-export-mode .chart-card{padding:24px;}
-.report-timestamp{text-align:center;color:#b5b5b5;font-size:10px;letter-spacing:.04em;margin-top:8px;padding-top:12px;}
+/* ai coding: 顶部保留更新时间和无边框起止日期输入并隐藏空提示 2026/10/09: 16:03 */
+.report-timestamp{text-align:left;color:var(--ink-3);font-size:11px;letter-spacing:.04em;margin-bottom:14px;}
+.date-filter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;font-size:12px;color:var(--ink-2);}
+.date-filter label{display:flex;align-items:center;gap:6px;}
+.date-filter input{font:inherit;border:0;border-radius:4px;padding:7px 10px;background:#f5f5f5;color:var(--ink);min-width:0;}
+.date-filter input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.date-filter-status{width:100%;color:var(--loss);}
+.date-filter-status:empty{display:none;}
 
 /* ── Data strip (overview) ── */
-.strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);}
-.cell{padding:22px 24px;border-right:1px solid var(--rule);}
-.cell:last-child{border-right:none;}
+/* ai coding: 移除概览卡片外框和单元格分隔线 2026/10/09: 15:56 */
+.strip{display:grid;grid-template-columns:repeat(4,1fr);}
+.cell{padding:22px 24px;}
 .cell .num{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
 .cell .val{font-size:34px;font-weight:800;letter-spacing:-.02em;margin-top:12px;font-variant-numeric:tabular-nums;line-height:1;}
 .cell .sub{font-size:12px;color:var(--ink-2);margin-top:8px;letter-spacing:.02em;}
 
 /* ── Chart card ── */
-.chart-card{border:1px solid var(--rule);padding:24px;}
+/* ai coding: 仅移除图表容器边框而不修改图表内部线条 2026/10/09: 15:56 */
+.chart-card{padding:24px;}
+/* ai coding: 非饼图容器铺满内容区宽度并移除左右内边距，保留饼图和表格原布局 2026/10/09: 16:08 */
+.section[data-section="summary"] > .chart-card,
+.section[data-section="drawdown"] > .chart-card,
+.section[data-section="position"] > .chart-card,
+.section[data-section="ranking"] > .chart-card,
+.section[data-section="closed"] > .chart-card{width:100%;padding-left:0;padding-right:0;}
 .chart-card .chart-title{font-size:16px;font-weight:700;letter-spacing:-.01em;}
 .chart-card .chart-desc{font-size:12px;color:var(--ink-3);margin:6px 0 14px;letter-spacing:.02em;}
 .chart-canvas-wrap{position:relative;height:440px;}
 .chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
-.timeline-card{border:1px solid var(--rule);background:#fbfbf8;overflow-x:auto;overflow-y:hidden;}
+/* ai coding: 移除时间线容器外框并保留 SVG 原始绘制 2026/10/09: 15:56 */
+.timeline-card{background:#fbfbf8;overflow-x:auto;overflow-y:hidden;}
 .timeline-card svg{display:block;width:100%;height:auto;min-width:900px;}
 .timeline-empty{padding:32px;color:var(--ink-3);font-size:13px;}
 
 /* ── Stats grid ── */
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);border-bottom:none;}
-.stat{padding:16px 18px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);}
-.stat:nth-child(4n){border-right:none;}
+/* ai coding: 移除统计摘要外框和网格分隔线 2026/10/09: 15:56 */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);}
+.stat{padding:16px 18px;}
 .stat .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;}
 .stat .v{font-size:20px;font-weight:700;margin-top:8px;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
 
 /* ── Table ── */
+/* ai coding: 恢复原表格容器的浅灰细外框 2026/10/09: 16:07 */
 .table-box{border:1px solid var(--rule);padding:0;}
 .table-scroll{overflow-x:auto;}
+/* ai coding: 恢复原表格布局并移除单元格竖向网格线 2026/10/09: 16:07 */
 table{width:100%;border-collapse:collapse;font-size:13px;}
+/* ai coding: 恢复表头下方原有的两像素深色横线 2026/10/09: 16:07 */
 thead th{text-align:center;padding:12px 20px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);border-bottom:2px solid var(--rule-strong);font-weight:600;white-space:nowrap;}
 thead th:first-child,tbody td:first-child{text-align:left;}
 thead th:nth-child(2),tbody td.name{text-align:left;}
+/* ai coding: 恢复数据行之间原有的浅灰细横线 2026/10/09: 16:07 */
 tbody td{padding:11px 16px;border-bottom:1px solid var(--rule);text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap;}
 tbody tr:hover{background:#fafafa;}
 td.name{font-weight:500;text-align:left;}
 tbody tr.summary-row{font-weight:600;background:#fafafa;}
+/* ai coding: 恢复现金合计行上方原有的深色横线 2026/10/09: 16:07 */
 tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 
 /* ── Notice ── */
-.notice{border-left:3px solid var(--accent);background:#fafafa;padding:12px 16px;font-size:13px;color:var(--ink-2);letter-spacing:.02em;margin-bottom:36px;}
+/* ai coding: 提示信息仅保留浅色背景而不使用左侧边框 2026/10/09: 15:56 */
+.notice{background:#fafafa;padding:12px 16px;font-size:13px;color:var(--ink-2);letter-spacing:.02em;margin-bottom:36px;}
 
 /* ── P&L Calendar ── */
 .cal-toggles{display:flex;gap:0;margin-left:auto;}
-.cal-btn{background:transparent;border:1px solid var(--rule);padding:4px 14px;font-size:12px;font-family:inherit;cursor:pointer;color:var(--ink-2);}
-.cal-btn:first-child{border-right:none;}
-.cal-btn:last-child{border-left:none;}
-.cal-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+/* ai coding: 移除日历视图切换按钮边框并保留选中背景 2026/10/09: 15:56 */
+.cal-btn{background:transparent;border:0;padding:4px 14px;font-size:12px;font-family:inherit;cursor:pointer;color:var(--ink-2);}
+.cal-btn.active{background:var(--ink);color:var(--paper);}
 .cal-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px;}
-.cal-nav-btn{background:transparent;border:1px solid var(--rule);padding:6px 14px;font-size:14px;cursor:pointer;color:var(--ink);}
+/* ai coding: 移除日历翻页按钮外框 2026/10/09: 15:56 */
+.cal-nav-btn{background:transparent;border:0;padding:6px 14px;font-size:14px;cursor:pointer;color:var(--ink);}
 .cal-nav-btn:hover{background:var(--rule);}
 .cal-title{font-size:15px;font-weight:600;min-width:160px;text-align:center;}
 .cal-grid{display:grid;gap:3px;}
@@ -292,30 +313,24 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 
 @media (max-width:880px){
   .strip{grid-template-columns:repeat(2,1fr);}
-  .strip .cell:nth-child(2){border-right:none;}
-  .strip .cell:nth-child(1),.strip .cell:nth-child(2){border-bottom:1px solid var(--rule);}
   .chart-grid-2{grid-template-columns:1fr;}
   .stat-grid{grid-template-columns:repeat(2,1fr);}
-  .stat:nth-child(2n){border-right:none;}
   .chart-canvas-wrap{height:360px;}
   .masthead h1{font-size:32px;}
 }
 @media (max-width:600px){
-  :root{--pad:16px;}
+  :root{--pad:10px;}
   body{padding:14px;}
-  .masthead{border-bottom-width:2px;padding-bottom:12px;margin-bottom:24px;}
+  /* ai coding: 移动端页眉保持无边框布局 2026/10/09: 15:56 */
+  .masthead{padding-bottom:12px;margin-bottom:24px;}
   .masthead .kicker{font-size:10px;letter-spacing:.14em;}
   .masthead h1{font-size:24px;}
-  .masthead .meta{font-size:11px;gap:12px;}
   .section{margin-bottom:28px;}
   .section-head{gap:8px;padding-bottom:8px;margin-bottom:14px;flex-wrap:wrap;}
   .section-head h2{font-size:16px;}
   .section-head .note{font-size:10px;margin-left:0;width:100%;}
-  /* ai coding: 移动端概览改为每行三列并校正分隔线 2026/08/30: 08:51 */
+  /* ai coding: 移动端概览保留三列并移除全部分隔线 2026/10/09: 15:56 */
   .strip{grid-template-columns:repeat(3,minmax(0,1fr));}
-  .strip .cell:nth-child(1),.strip .cell:nth-child(2),.strip .cell:nth-child(3){border-bottom:1px solid var(--rule);}
-  .strip .cell:nth-child(2){border-right:1px solid var(--rule);}
-  .strip .cell:nth-child(3){border-right:none;}
   .cell{min-width:0;padding:9px 4px;}
   .cell .num{font-size:8px;letter-spacing:.04em;}
   .cell .val{font-size:15px;margin-top:6px;white-space:nowrap;}
@@ -329,10 +344,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .chart-canvas-wrap{height:230px;}
   .chart-canvas-wrap[style*="380px"],.chart-canvas-wrap[style*="340px"]{height:147px!important;}
   .chart-canvas-wrap[style*="height:420px"]{height:280px!important;}
-  /* ai coding: 移动端统计摘要改为每行三列并校正分隔线 2026/08/30: 08:51 */
+  /* ai coding: 移动端统计摘要保留三列并移除全部分隔线 2026/10/09: 15:56 */
   .stat-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
-  .stat:nth-child(2n){border-right:1px solid var(--rule);}
-  .stat:nth-child(3n){border-right:none;}
   .stat{min-width:0;padding:9px 4px;}
   .stat .v{font-size:13px;white-space:nowrap;}
   .stat .l{font-size:8px;letter-spacing:.04em;}
@@ -346,10 +359,17 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <body>
 
 <div id="page">
+<!-- ai coding: 将最近更新时间移至页面最上方并随页面自然滚动 2026/10/09: 15:56 -->
+<div class="report-timestamp">最近更新时间：__GENERATED_AT__（北京时间）</div>
 <div class="masthead">
   <div class="kicker">Portfolio Performance Report</div>
   <h1>持仓收益分析</h1>
-  <div class="meta" id="meta"></div>
+  <!-- ai coding: 删除 meta、区间预设和应用按钮，仅保留起止日期选择 2026/10/09: 16:03 -->
+  <div class="date-filter">
+    <label>开始 <input id="dateStart" type="date" required></label>
+    <label>结束 <input id="dateEnd" type="date" required></label>
+    <span class="date-filter-status" id="dateFilterStatus" role="status" aria-live="polite"></span>
+  </div>
   <button class="save-btn" onclick="saveAsImage()">SAVE AS PNG</button>
 </div>
 
@@ -549,17 +569,15 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
     </table>
   </div>
 </div>
-<div class="report-timestamp">生成于 __GENERATED_AT__</div>
 </div>
 <script>
 const rawData = __DATA__;
 const stats = __STATS__;
 const pageConfig = __CONFIG__;
 
-const snapshots = rawData.snapshots || [];
-const latest = snapshots[snapshots.length - 1] || {};
-const summary = latest.summary || {};
-const holdings = latest.holdings || [];
+// ai coding: 保留所有快照供日期筛选并共享当前区间末日供图片导出 2026/10/09: 15:56
+const allSnapshots = rawData.snapshots || [];
+let latest = allSnapshots[allSnapshots.length - 1] || {};
 
 // ── Swiss palette ──
 const INK   = '#111111';
@@ -593,13 +611,50 @@ const dateAxisTicks = {
   }
 };
 
-// ── Meta ──
-document.getElementById('meta').innerHTML =
-  snapshots.length > 1
-    ? '报告区间 <b>' + snapshots[0].date + ' → ' + latest.date + '</b>'
-    : '快照日期 <b>' + (latest.date || '—') + '</b>'
-  + '　·　样本 <b>' + snapshots.length + ' 天</b>'
-  + '　·　持仓 <b>' + holdings.length + ' 只</b>';
+// ai coding: 按所选快照重新计算持仓极值、最大回撤和日收益统计 2026/10/09: 15:58
+function calculateRangeStats(snapshots){
+  const current = snapshots[snapshots.length - 1] || {};
+  const currentHoldings = current.holdings || [];
+  const result = { holdings_count: currentHoldings.length };
+  ['roi', 'pnl'].forEach(metric => {
+    const values = currentHoldings.filter(holding => holding[metric] != null);
+    if (!values.length) return;
+    const highest = values.reduce((best, holding) => holding[metric] > best[metric] ? holding : best);
+    const lowest = values.reduce((worst, holding) => holding[metric] < worst[metric] ? holding : worst);
+    result['max_' + metric] = highest[metric];
+    result['max_' + metric + '_name'] = highest.name;
+    result['min_' + metric] = lowest[metric];
+    result['min_' + metric + '_name'] = lowest.name;
+  });
+  if (snapshots.length > 1) {
+    const values = snapshots.map(snapshot => snapshot.summary?.regions?.['整体']?.current || 0);
+    let peak = 0;
+    result.max_drawdown = 0;
+    const dailyReturns = [];
+    values.forEach((value, index) => {
+      peak = Math.max(peak, value);
+      if (peak > 0) result.max_drawdown = Math.min(result.max_drawdown, (value - peak) / peak * 100);
+      if (index > 0 && values[index - 1] > 0) dailyReturns.push((value - values[index - 1]) / values[index - 1] * 100);
+    });
+    if (dailyReturns.length) {
+      result.max_daily_return = Math.max(...dailyReturns);
+      result.min_daily_return = Math.min(...dailyReturns);
+    }
+  }
+  return result;
+}
+
+// ai coding: 重绘所选快照并移除不再展示的 meta 信息和开始日期参数 2026/10/09: 16:03
+function renderReport(snapshots, endDate){
+  document.querySelectorAll('#page canvas').forEach(canvas => {
+    const chart = Chart.getChart(canvas);
+    if (chart) chart.destroy();
+  });
+  document.querySelector('[data-range-notice]')?.remove();
+  latest = snapshots[snapshots.length - 1] || {};
+  const summary = latest.summary || {};
+  const holdings = latest.holdings || [];
+  const stats = calculateRangeStats(snapshots);
 
 // ── 01 Overview strip ──
 const stripEl = document.getElementById('strip');
@@ -863,10 +918,10 @@ new Chart(document.getElementById('chartMarket'), {
 });
 
 // ── 04 Ranking (bar, red up / green down) ──
-// ai coding: 将持仓收益排行高度设为每个标的 28 像素 2026/09/04: 16:51
+// ai coding: 根据筛选后的持仓数量设置排行高度并保留空画布最小高度 2026/10/09: 15:58
 const ranked = holdings.filter(h => h.pnl != null).sort((a, b) => b.pnl - a.pnl);
 const rankingCanvas = document.getElementById('chartRanking');
-rankingCanvas.parentElement.style.height = `${ranked.length * 30}px`;
+rankingCanvas.parentElement.style.height = `${Math.max(ranked.length, 1) * 30}px`;
 new Chart(rankingCanvas, {
   type: 'bar',
   data: {
@@ -958,7 +1013,8 @@ tbody.innerHTML = holdingsHtml;
   const calGrid = document.getElementById('calGrid');
   const calTitle = document.getElementById('calTitle');
   let view = 'day';
-  let cursor = new Date();
+  // ai coding: 日期筛选后将盈亏日历定位到区间内最后一个快照月份 2026/10/09: 15:58
+  let cursor = new Date((latest.date || endDate) + 'T12:00:00');
   const fmtCal = v => v == null ? '—' : (v/10000).toFixed(1);  // always 万, 1 decimal
 
   // compute daily stock P&L only when both today and the previous calendar day have snapshots
@@ -1106,10 +1162,11 @@ tbody.innerHTML = holdingsHtml;
   render();
 })();
 
-// ── Notice (single day) ──
-if (!multiDay) {
+// ai coding: 直接根据筛选后的快照数量更新单日提示并标记供重绘清理 2026/10/09: 15:59
+if (snapshots.length === 1) {
   const n = document.createElement('div');
   n.className = 'notice';
+  n.dataset.rangeNotice = 'true';
   n.textContent = '当前仅 1 天数据：综合图已展示各曲线当前取值，点击图例可单独查看；走势与回撤趋势需多日数据方能显现。每日 15:00 自动快照后逐步积累。';
   document.querySelector('.masthead').after(n);
 }
@@ -1139,10 +1196,9 @@ if (!multiDay) {
     c.roi = (c.first_cost && c.last_price) ? ((c.last_price - c.first_cost) / c.first_cost * 100) : (c.first_invested ? (c.pnl / c.first_invested * 100) : 0);
   });
   const closed = Object.values(closedMap).sort((a,b) => a.pnl - b.pnl);
-  if (closed.length === 0) {
-    document.getElementById('chartClosed').parentElement.parentElement.parentElement.style.display = 'none';
-    return;
-  }
+  // ai coding: 使用独立隐藏状态控制空清仓图表以兼容区间切换和模块配置 2026/10/09: 15:58
+  document.querySelector('[data-section="closed"]').hidden = closed.length === 0;
+  if (closed.length === 0) return;
   new Chart(document.getElementById('chartClosed'), {
     type: 'bar',
     data: {
@@ -1170,6 +1226,40 @@ if (!multiDay) {
     }
   });
 })();
+
+// ai coding: 起止日期默认今年年初至今天，完成任一日期选择后立即刷新 2026/10/09: 16:03
+}
+const todayParts = new Intl.DateTimeFormat('en', {
+  timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit'
+}).formatToParts(new Date());
+const todayValues = Object.fromEntries(todayParts.map(part => [part.type, part.value]));
+const reportToday = `${todayValues.year}-${todayValues.month}-${todayValues.day}`;
+const yearStart = todayValues.year + '-01-01';
+const dateStart = document.getElementById('dateStart');
+const dateEnd = document.getElementById('dateEnd');
+const dateFilterStatus = document.getElementById('dateFilterStatus');
+dateStart.max = reportToday;
+dateEnd.max = reportToday;
+dateStart.value = yearStart;
+dateEnd.value = reportToday;
+
+function applyDateRange(){
+  const startDate = dateStart.value;
+  const endDate = dateEnd.value;
+  if (!startDate || !endDate || startDate > endDate || endDate > reportToday) {
+    dateFilterStatus.textContent = '请选择有效日期：开始不得晚于结束，结束不得晚于今天。';
+    return;
+  }
+  const selectedSnapshots = allSnapshots.filter(snapshot => snapshot.date >= startDate && snapshot.date <= endDate);
+  if (!selectedSnapshots.length) {
+    dateFilterStatus.textContent = '所选区间没有快照，请调整日期；当前保留上次有效区间的报告。';
+    return;
+  }
+  dateFilterStatus.textContent = '';
+  renderReport(selectedSnapshots, endDate);
+}
+[dateStart, dateEnd].forEach(input => input.addEventListener('change', applyDateRange));
+applyDateRange();
 
 </script>
 <script>
@@ -1341,6 +1431,7 @@ document.querySelectorAll('.section-head h2').forEach(title => {
       });
     }
     const tr = document.createElement('tr');
+    // ai coding: 恢复年化收益率合计行原有的深色顶部横线 2026/10/09: 16:07
     tr.style.borderTop = '2px solid ' + INK;
     tr.innerHTML = html;
     if (tfoot) tfoot.appendChild(tr);
@@ -1348,10 +1439,10 @@ document.querySelectorAll('.section-head h2').forEach(title => {
 })();
 </script>
 <script>
+// ai coding: 按配置将章节追加到页眉之后而不再以顶部更新时间作为插入锚点 2026/10/09: 15:58
 // Apply config: order sections exactly as listed, then hide disabled sections.
 if (pageConfig && pageConfig.sections) {
   const page = document.getElementById('page');
-  const timestamp = page ? page.querySelector('.report-timestamp') : null;
   const allSections = Array.from(document.querySelectorAll('.section[data-section]'));
   const configuredSections = Object.keys(pageConfig.sections)
     .map(id => document.querySelector('[data-section="' + id + '"]'))
@@ -1362,7 +1453,7 @@ if (pageConfig && pageConfig.sections) {
   );
 
   if (page) {
-    orderedSections.forEach(section => page.insertBefore(section, timestamp));
+    orderedSections.forEach(section => page.appendChild(section));
   }
 
   orderedSections.forEach(section => {

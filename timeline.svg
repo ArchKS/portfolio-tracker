@@ -32,7 +32,7 @@
 <line x1="477.46" y1="300" x2="1100.44" y2="300" stroke="#d0605c" stroke-width="9" opacity=".95"/>
 <circle cx="1100.44" cy="300" r="8" fill="#d67b2c" stroke="#fff" stroke-width="2"/>
 <circle cx="477.46" cy="300" r="8" fill="#3976af" stroke="#fff" stroke-width="2"/>
-<text x="788.95" y="286" font-size="15" font-weight="700" fill="#252525" text-anchor="middle">中矿</text>
+<text x="788.95" y="286" font-size="15" font-weight="700" fill="#252525" text-anchor="middle">中矿资源</text>
 <text x="1118.44" y="305" font-size="14" fill="#626a73">2.03年｜利润112.1万｜年化54%</text>
 <line x1="1052.65" y1="355" x2="1108.83" y2="355" stroke="#c52f2f" stroke-width="9" opacity=".95"/>
 <circle cx="1108.83" cy="355" r="8" fill="#d67b2c" stroke="#fff" stroke-width="2"/>
@@ -48,7 +48,7 @@
 <polygon points="1229.57,457 1221.97,471 1237.17,471" fill="#8b9096" stroke="#fff" stroke-width="2"/>
 <circle cx="1120.57" cy="465" r="8" fill="#3976af" stroke="#fff" stroke-width="2"/>
 <text x="1175.07" y="451" font-size="15" font-weight="700" fill="#252525" text-anchor="middle">康方生物</text>
-<text x="1247.57" y="470" font-size="14" fill="#626a73">未清仓｜～</text>
+<text x="1247.57" y="470" font-size="14" fill="#626a73">未清仓｜-～</text>
 <line x1="1132.31" y1="520" x2="1229.57" y2="520" stroke="#8b9096" stroke-width="9" opacity=".9"/>
 <polygon points="1229.57,512 1221.97,526 1237.17,526" fill="#8b9096" stroke="#fff" stroke-width="2"/>
 <circle cx="1132.31" cy="520" r="8" fill="#3976af" stroke="#fff" stroke-width="2"/>
