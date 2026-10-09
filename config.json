@@ -84,7 +84,7 @@
         "annualized": null
       },
       {
-        "name": "中矿",
+        "name": "中矿资源",
         "buy_date": "2024-04-25",
         "sell_date": "2026-05-08",
         "buy_amount": 80,
@@ -111,7 +111,7 @@
         "buy_date": "2026-06-01",
         "sell_date": null,
         "buy_amount": 73.4,
-        "broke_even": true
+        "broke_even": false
       },
       {
         "name": "亚盛医药",

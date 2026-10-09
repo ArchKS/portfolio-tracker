@@ -14,7 +14,8 @@ CONFIG_PATH = os.path.join(PROJECT_DIR, "config.json")
 TITLE = "买入到清仓时间线"
 AS_OF_DATE = None
 COLOR_BY_RETURN = True
-NAME_POSITION = "left"
+# ai coding: 将股票名改为在线段中点上方居中显示 2026/10/09: 15:50
+NAME_POSITION = "bar_center"
 COLOR_SCALE_HALF = 0.6
 COLORS = {
     "background": "#fbfbf8",
