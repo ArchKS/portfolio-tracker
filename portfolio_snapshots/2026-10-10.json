@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-09",
-  "snapshot_time": "2026-10-09 16:32:38 +08:00",
+  "date": "2026-10-10",
+  "snapshot_time": "2026-10-10 06:00:43 +08:00",
   "source": "westock-mcp 实时行情",
   "file_id": "fGemVXqsvRGM",
   "doc_date": null,
@@ -11,21 +11,21 @@
   "summary": {
     "holdings_pos_cost_pct": 100.6174,
     "holdings_pos_curr_pct": 100.6,
-    "holdings_roi": 2.7306,
+    "holdings_roi": 2.89,
     "holdings_invested": 2282122.6,
-    "holdings_current": 2344437.3899999997,
-    "holdings_pnl": 62314.79,
+    "holdings_current": 2348076.5599999996,
+    "holdings_pnl": 65953.96,
     "holdings_dividends": 27754.0,
     "year_start": 2505000.0,
     "salary_surplus": 78000.0,
     "base": 2583000.0,
-    "total_pnl": -252562.61,
-    "total_roi": -9.78,
+    "total_pnl": -248923.44,
+    "total_roi": -9.64,
     "regions": {
       "整体": {
         "invested": 2268120.0,
-        "current": 2330437.39,
-        "pnl": 62317.39
+        "current": 2334076.56,
+        "pnl": 65956.56
       },
       "国内": {
         "invested": 0,
@@ -34,8 +34,8 @@
       },
       "境外": {
         "invested": 2282122.6,
-        "current": 2330437.39,
-        "pnl": 48314.79
+        "current": 2334076.56,
+        "pnl": 51953.96
       }
     }
   },
@@ -56,7 +56,7 @@
       "roi": 15.1694,
       "dividends": null,
       "pos_cost_pct": 39.1935,
-      "pos_curr_pct": 43.9319
+      "pos_curr_pct": 43.8634
     },
     {
       "market": "US",
@@ -64,17 +64,17 @@
       "name": "SMMT",
       "code": "SMMT.US",
       "cost_price_raw": "13.22",
-      "current_price_raw": "17.17",
+      "current_price_raw": "17.59",
       "cost_price": 13.22,
-      "current_price": 17.17,
+      "current_price": 17.59,
       "quantity": 1400,
       "invested": 123926.0,
-      "current": 160953.64,
-      "pnl": 37027.64,
-      "roi": 29.879,
+      "current": 164890.77,
+      "pnl": 40964.77,
+      "roi": 33.056,
       "dividends": null,
       "pos_cost_pct": 5.4638,
-      "pos_curr_pct": 6.9066
+      "pos_curr_pct": 7.0645
     },
     {
       "market": "US",
@@ -92,7 +92,7 @@
       "roi": null,
       "dividends": null,
       "pos_cost_pct": 0.5904,
-      "pos_curr_pct": 0.5746
+      "pos_curr_pct": 0.5737
     },
     {
       "market": "HK",
@@ -110,7 +110,7 @@
       "roi": -4.6227,
       "dividends": 27754.0,
       "pos_cost_pct": 24.5925,
-      "pos_curr_pct": 22.8284
+      "pos_curr_pct": 22.7928
     },
     {
       "market": "HK",
@@ -128,7 +128,7 @@
       "roi": -20.2825,
       "dividends": null,
       "pos_cost_pct": 20.2386,
-      "pos_curr_pct": 15.7023
+      "pos_curr_pct": 15.6778
     },
     {
       "market": "US",
@@ -136,17 +136,17 @@
       "name": "传奇生物",
       "code": "LEGN.US",
       "cost_price_raw": "19.375",
-      "current_price_raw": "18.71",
+      "current_price_raw": "18.62",
       "cost_price": 19.375,
-      "current_price": 18.71,
+      "current_price": 18.62,
       "quantity": 1050,
       "invested": 136218.0,
-      "current": 131542.34,
-      "pnl": -4675.66,
-      "roi": -3.4323,
+      "current": 130909.59,
+      "pnl": -5308.41,
+      "roi": -3.8968,
       "dividends": null,
       "pos_cost_pct": 6.0058,
-      "pos_curr_pct": 5.6445
+      "pos_curr_pct": 5.6086
     },
     {
       "market": "US",
@@ -154,17 +154,17 @@
       "name": "新氧",
       "code": "SY.US",
       "cost_price_raw": "1.8",
-      "current_price_raw": "2.48",
+      "current_price_raw": "2.49",
       "cost_price": 1.8,
-      "current_price": 2.48,
+      "current_price": 2.49,
       "quantity": 5000,
       "invested": 60262.2,
-      "current": 83027.92,
-      "pnl": 22765.72,
-      "roi": 37.7778,
+      "current": 83362.71,
+      "pnl": 23100.51,
+      "roi": 38.3333,
       "dividends": null,
       "pos_cost_pct": 2.6569,
-      "pos_curr_pct": 3.5628
+      "pos_curr_pct": 3.5715
     },
     {
       "market": "HK",
@@ -182,7 +182,7 @@
       "roi": -20.5967,
       "dividends": null,
       "pos_cost_pct": 1.8758,
-      "pos_curr_pct": 1.4496
+      "pos_curr_pct": 1.4474
     }
   ]
 }
