@@ -192,9 +192,7 @@ body{
 .masthead{padding-bottom:18px;margin-bottom:36px;}
 .masthead .kicker{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:700;}
 .masthead h1{font-size:42px;font-weight:800;letter-spacing:-.03em;line-height:1.04;margin-top:8px;}
-.save-btn{position:absolute;right:var(--pad);top:var(--pad);background:var(--ink);color:var(--paper);border:none;padding:10px 20px;font-size:12px;font-weight:600;font-family:inherit;letter-spacing:.04em;cursor:pointer;}
-.save-btn:hover{background:#333;}
-@media (max-width:600px){.save-btn{position:static;display:block;margin-top:12px;width:100%;}}
+.save-btn{border:none;padding:10px 4px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;}
 
 /* ── Section ── */
 .section{margin-bottom:44px;}
@@ -369,8 +367,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
     <label>开始 <input id="dateStart" type="date" required></label>
     <label>结束 <input id="dateEnd" type="date" required></label>
     <span class="date-filter-status" id="dateFilterStatus" role="status" aria-live="polite"></span>
-  </div>
   <button class="save-btn" onclick="saveAsImage()">SAVE AS PNG</button>
+  </div>
 </div>
 
 <!-- ai coding: 精简章节文案并删除全部英文副标题 2026/08/30: 08:53 -->
@@ -560,8 +558,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
       <thead>
         <tr>
           <th style="text-align:left">年份</th>
-          <th style="text-align:right">累计净值</th>
-          <th style="text-align:right">收益率</th>
+          <th style="text-align:center">累计净值</th>
+          <th style="text-align:center">收益率</th>
         </tr>
       </thead>
       <tbody id="annualReturnsBody"></tbody>
@@ -1382,7 +1380,7 @@ document.querySelectorAll('.section-head h2').forEach(title => {
   if (showBench && theadTr) {
     benchNames.forEach(name => {
       const th = document.createElement('th');
-      th.style.textAlign = 'right';
+      th.style.textAlign = 'center';
       th.textContent = name;
       theadTr.appendChild(th);
     });
