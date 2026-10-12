@@ -164,3 +164,20 @@
 - 备注1：`data_quote` 批量一次成功（连续第十四日）；文档"收益/收益率"行仍为陈旧值（-301383/-11.668%），脚本自算不受影响
 - 备注2：本档为周五收盘价（10-09），下档 10-11/10-12 为周末，预计行情取值不变属正常
 - 备注3：✅ 部署工具已连续两日（10-09、10-10）正常返回链接，长期故障似已修复
+
+### 2026-10-12 06:00（当日首次）❌ **中止**
+- **中止点：步骤 2（读取腾讯文档）**，流程在第一步即失败，未进入行情/快照/报告/部署/提交任何环节
+- **根因：腾讯文档连接器 token 失效**
+  - `tencentdocs.py tdoc_call tencent-docs get_content` → `ERROR:no_token - 未检测到腾讯文档登录票据（凭据获取失败：provider personal=not_connected enterprise=connector_disabled）`
+  - MCP 通道：本会话 **未注册任何 mcp__tencent-docs__* 工具**（连接器状态块仅列出 agent-mail、westock-mcp）
+  - 宿主网关凭据端点（`http://127.0.0.1:63783/mcp/internal/tencent-docs/tokens`，headers 取自 trace 中的 CODEBUDDY_MCP_CONFIG）实测返回 `personal={available:false, reason:not_connected}` / `enterprise={available:false, reason:connector_disabled}` → **服务端确认连接器未授权，非本地路径问题**
+  - 本地磁盘 `.credentials.v3.json` 中 tencent-docs 仅残留 `mcpClientInfo`（client_id），**无 mcpOAuth accessToken**；westock-mcp 的 token 仍在（行情侧不受影响）
+- **已排除的替代路径**（均不可用）：
+  - `tdoc_init` → 同样 `ERROR:no_token`
+  - 本地编辑器引擎（127.0.0.1:39099 `/mcp`，`editor-sdk`）→ 仅暴露 sheet/doc/slide 编辑类工具，**无 get_content**；`open_file` 要求本地 `file_path`，不接受 file_id、不接云文档（`get_pool_status` 显示 pool_size=0）
+  - 其他本地网关实例（60043/50046/63783）→ tools/list 均 401 Unauthorized
+  - trace 缓存检索 → 仅命中 SKILL.md 文本，**无当日文档 CSV 快照**，无法复用
+- **已请求重新授权**：`workbuddy_request_mcp_connection(servers=["tencent-docs"])` → `outcome=skipped`（用户未响应/拒绝），本轮不得重试
+- **未产生任何产物**：无当日快照 JSON、report.html 未更新、deploy/index.html 未更新、**未 git commit / 未 push**（本地工作区仅存 10-10 遗留的 2 个 memory 修改，与本次无关）
+- 临时文件已清理（.tmp_raw.json 等均不存在）
+- **待用户操作**：在客户端「连接器中心」重新授权/重新绑定**腾讯文档**连接器，之后重跑本自动化即可恢复正常（行情侧 westock-mcp 仍在线）

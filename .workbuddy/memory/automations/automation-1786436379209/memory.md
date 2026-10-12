@@ -1,5 +1,22 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-12 16:30 执行记录 — ❌ 步骤 2 首环节失败中止（连续第 3 档，同一根因）
+- **失败点**：pipeline 第 2 步「读取腾讯文档持仓表 fGemVXqsvRGM」。`tencentdocs.py tdoc_call` → `ERROR:no_token`；网关凭据端点 `127.0.0.1:63783/mcp/internal/tencent-docs/tokens` → `{"personal":{"available":false,"reason":"not_connected"},"enterprise":{"available":false,"reason":"connector_disabled"}}`（HTTP 200）→ 按指令中止。**未生成快照、未部署、未 git 提交。** 停跑 10-11 + 10-12 两日。
+- **本档新增排查（同样无效，勿重复）**：截面版 `tencent-saas-docs` → no_token；本地文档引擎 `127.0.0.1:39099/mcp`（editor-sdk 可连）仅编辑类工具、无云文档读取、`open_file` 需本地路径；桌面 cookie 库无 docs.qq.com 登录态；系统钥匙串无相关条目；网关管理端点全 404；`workbuddy_request_mcp_connection` → `skipped`（连续第 3 档 skipped）。
+- **根因确认（第三次）**：连接器 OAuth 运行时态与本地凭据双缺失——`.credentials.v3.json` 的 `mcpOAuth` 仅 agentkey/westock-mcp；`connector-states.json` 仍报 `bound:true enabled:true` 但**状态文件非可用性判据**。
+- ✅ **westock-mcp 本档完全正常**（批量一次取全 7 只 + 2 指数，零限频）。据此按 10-10 档结构做**参考性实时估值**（非正式快照，未落库）：8 只 | 投入 228.21万 | 参考当前 234.73万 | 持仓收益 +6.51万(+2.85%) | 总收益 -24.97万(-9.67%) | 基数 258.3万；沪深300 YTD -7.39%(CAGR -2.92%) / 纳指 YTD +17.74%(CAGR +12.62%)。当日港股康方 107.20(-1.74%)、亚盛 29.88(+5.88%)、海螺 15.87、汇贤 0.325；美股为 10-09 收盘。
+- **git**：无 commit（无文件变更），main 与 origin/main 同步（ahead 0）。
+- **遗留**：用户重新授权 tencent-docs 后需补跑 10-11 与 10-12 两档。
+
+## 2026-10-10 16:30 执行记录 — ❌ 步骤 2 首环节失败中止
+- **失败点**：pipeline 第 2 步「读取腾讯文档持仓表 fGemVXqsvRGM」。`tencentdocs.py tdoc_call` 返回 `ERROR:no_token`；腾讯文档 MCP 工具本会话未注册 → 无 CSV → 按指令「任何步骤失败则报告错误并停止」中止。**未生成快照、未部署、未 git 提交、无新链接。**
+- **根因（已实测定位）**：宿主凭据 provider `GET http://127.0.0.1:63783/mcp/internal/tencent-docs/tokens` 返回 **HTTP 200 + `{"personal":{"available":false,"reason":"not_connected"},"enterprise":{"available":false,"reason":"connector_disabled"}}`**。即连接器 OAuth 运行时态未生效（同 10-08 16:30 档同源）。同日 **10:19 档尚正常**，属应用重启后 OAuth 态丢失。
+- ⚠️ **重要教训（第二次验证）**：`connector-states.json` / `connector-states.v3.json` 仍报 `tencent-docs bound:true enabled:true`，**状态文件不能作为可用性判据**——必须实测 provider 端点或工具注册表。
+- **通道已穷尽（勿重复排查）**：① 方案A `tencentdocs.py` no_token；② MCP 工具未注册（网关 `tools/list` 仅 23 个 builtin，无 `get_content`）；③ 工作区路由 404（`/658309b7.../mcp`、`/mcp/tencent-docs`、`/tencent-docs/mcp`）；④ 无 token 直连 `https://docs.qq.com/openapi/mcp` → **401**；⑤ `.credentials.v3.json` 仅存 westock-mcp / agentkey 的 mcpOAuth，**无 tencent-docs accessToken**；⑥ 本机 8 个插件桥端口（50046/63039/18488/63720/18789/18791/18792/7331）无可用 MCP 端点；⑦ `workbuddy_request_mcp_connection` 返回 `skipped`。
+- **westock-mcp 本会话 connected 且可用**，但持仓表读不到，行情无意义。
+- **数据口径提示**：报告若需引数，只能用 10:19 档快照（8 只 | 投入 228.21万 | 当前 234.81万 | 持仓收益 +6.60万 +2.89% | 总收益 -24.89万 -9.64%），**已注明非最新**。
+- **遗留**：用户重连 tencent-docs 连接器后需重跑本档（将覆盖 `portfolio_snapshots/2026-10-10.json`）。今日 16:30 档数据缺失。
+
 ## 2026-10-10 10:19 执行记录 — ✅ 一次跑通
 - pipeline 全通。方案A（`result.structuredContent.content`，注意是 `result.result` 下再套 `result`：`raw['result']['structuredContent']['content']`）。汇率 US 6.6958 / HK 0.8531。header idx=2 / end idx=19，8 行持仓无变动。
 - ⚠️ **今日周六，港股/A股/美股全部休市**：行情均为最近收盘——港股 10-09 收盘、美股 10-09 收盘（较昨日档美股 10-08→10-09 更新，港股价与昨日档相同）。`data_quote` **批量一次全齐且零限频**（7 码个股 + sh000300/usIXIC 两批都一次成功）——近期限频趋缓。
