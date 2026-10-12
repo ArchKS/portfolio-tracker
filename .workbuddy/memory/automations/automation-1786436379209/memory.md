@@ -1,5 +1,15 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-12 17:05 执行记录 — ✅ 恢复，一次跑通（补 10-12 档）
+- **连接器已恢复**：`tencent-docs` 会话启动即 connected → 方案A（`tencentdocs.py tdoc_call get_content`，路径 `result.structuredContent.content`）**直接成功**，无需 tdoc_init / 方案B。`westock-mcp` 同样一次批量取全（7 个股 + 2 指数，**零限频、零缺码**），两指数 `chg_ytd` 直读即得，未走 data_minute。
+- CSV：header idx=2 / end idx=19，**8 行持仓无变动**；汇率 US 6.6958 / HK 0.8531。
+- 结果：8 只 | 投入 228.21万 | 当前 **234.73万** | 持仓收益 **+6.51万 (+2.85%)** | 总收益 **-24.97万 (-9.67%)** | 基数 258.3万。与本日 16:30 档的参考性估值（+2.85% / -9.67%）完全一致，互为独立验证。
+- 基准：沪深300 YTD **-7.39%**（CAGR -2.79%）/ 纳指 YTD **+17.74%**（CAGR +12.04%）；组合 CAGR **+25.71%**。当日港股：康方 107.20(-1.74%)、亚盛 29.88(+5.88%)、海螺 15.87(-0.75%)、汇贤 0.325(-1.52%)；美股 10-09 收盘（SMMT 17.59 +2.45% / LEGN 18.62 -0.48% / SY 2.49 +0.40%）。
+- 部署：`workbuddy_sites_deploy` **直接成功**（非"域名未绑定"），**shareLink 变化** → 新链接 `https://3787813dbb9b474eaa84cc3767661d88.bj9.agentos-app.net`（旧 167b54… 已被替换）；curl HTTP 200 含 10-12 17:06:39 / total_pnl -249732.18 / holdings_count 8。⚠️ **报告用新链接。**
+- git：commit `dd2f659`（5dd6e56..dd2f659），**push 一次成功**，main 与 origin/main 同步。
+- 遗留：仅 10-11 档（周六非交易日，行情同 10-10）可从简跳过；10-12 档已补齐。
+- 📌 **教训**：连接器可用性以**会话启动时 connector-status** 为准；显示 connected 时方案A 即通，恢复后无需任何 workaround。前 3 档失败纯属 OAuth 运行时态丢失，与脚本无关。
+
 ## 2026-10-12 16:30 执行记录 — ❌ 步骤 2 首环节失败中止（连续第 3 档，同一根因）
 - **失败点**：pipeline 第 2 步「读取腾讯文档持仓表 fGemVXqsvRGM」。`tencentdocs.py tdoc_call` → `ERROR:no_token`；网关凭据端点 `127.0.0.1:63783/mcp/internal/tencent-docs/tokens` → `{"personal":{"available":false,"reason":"not_connected"},"enterprise":{"available":false,"reason":"connector_disabled"}}`（HTTP 200）→ 按指令中止。**未生成快照、未部署、未 git 提交。** 停跑 10-11 + 10-12 两日。
 - **本档新增排查（同样无效，勿重复）**：截面版 `tencent-saas-docs` → no_token；本地文档引擎 `127.0.0.1:39099/mcp`（editor-sdk 可连）仅编辑类工具、无云文档读取、`open_file` 需本地路径；桌面 cookie 库无 docs.qq.com 登录态；系统钥匙串无相关条目；网关管理端点全 404；`workbuddy_request_mcp_connection` → `skipped`（连续第 3 档 skipped）。
