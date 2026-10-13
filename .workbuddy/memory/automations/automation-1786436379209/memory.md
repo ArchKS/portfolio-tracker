@@ -1,5 +1,16 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-13 16:30 执行记录 — ✅ 一次跑通（连接器全恢复）
+- **连接器全部正常**：`tencent-docs` 方案A（`tdoc_call get_content`，路径 `structuredContent.content`）一次成功；`westock-mcp` 的 **MCP 工具已在会话启动时注册**（ToolSearch 可查 `data_quote`），本档**未启用方案C**。晨档 06:00 的「方案C 解密直连」故障属会话级偶发，连接器可用时优先走原生 MCP 工具。
+- 行情：`data_quote` 个股 7 码 + 指数 2 码**两批均一次取全，零限频零漏码**，未走 data_minute。
+- CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US 6.6958 / HK 0.8531。
+- 结果：8 只 | 投入 228.21万 | 当前 **231.40万** | 持仓收益 **+3.19万 (+1.40%)** | 总收益 **-28.30万 (-282970.11)** | 总收益率 **-10.96%** | 基数 258.3万。较晨档 06:08（+2.52% / -9.97%）回落 1.12pct，港股当日走弱为主因。
+- 行情节奏：**港股 10-13 实时收盘**（康方 105.00 -2.05%、亚盛 29.30 -1.94%、海螺 15.95 +0.50%、汇贤 0.325）；**美股仍为 10-12 收盘**（10-13 未开盘）SMMT 17.13、LEGN 17.80、SY 2.56。
+- 基准：沪深300 YTD **-7.65%**（CAGR -2.98%）/ 纳指 YTD **+17.23%**（CAGR 12.51%）；组合 CAGR **25.35%**。两指数 YTD 均用「前档 × (1+当日涨跌幅)」验算通过。
+- 部署：`workbuddy_sites_deploy` **直接成功**，**shareLink 变化** → 新链接 `https://6a1d1fe47787495c9a5c2b905aac506f.bj9.agentos-app.net`（旧 c69ed47d… 被替换）；curl HTTP 200 含 2026-10-13 16:31:14 / total_pnl -282970.11。⚠️ **报告用新链接。**
+- git：commit `d39af00`，**push 一次成功**（ce985a1..d39af00），main 与 origin/main 同步（ahead 0）。
+- 遗留：无。今日两档均已产出快照（晨档 06:08、本档 16:31，后者覆盖前者）。
+
 ## 2026-10-12 17:05 执行记录 — ✅ 恢复，一次跑通（补 10-12 档）
 - **连接器已恢复**：`tencent-docs` 会话启动即 connected → 方案A（`tencentdocs.py tdoc_call get_content`，路径 `result.structuredContent.content`）**直接成功**，无需 tdoc_init / 方案B。`westock-mcp` 同样一次批量取全（7 个股 + 2 指数，**零限频、零缺码**），两指数 `chg_ytd` 直读即得，未走 data_minute。
 - CSV：header idx=2 / end idx=19，**8 行持仓无变动**；汇率 US 6.6958 / HK 0.8531。
