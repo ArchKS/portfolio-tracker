@@ -221,6 +221,7 @@ git push origin main
 | 收益/收益率用的是文档旧值 | total_pnl/total_roi 直接读文档"收益"/"收益率"行 | 改为自算：`整体当前 - 基数`、`收益/基数×100`，保留两位小数 |
 | 整体当前不随行情更新 | overall_cur 直接取文档固定值 | 改为 `实时持仓当前 + 固定现金差额`（差额=文档整体当前-文档持仓当前） |
 | 总计行 doc_invested/current 为 null | 总计行数据左对齐（col5/6/7），代码读 col11/12/13 | 总计行列索引改为 col5/6/7 |
+| **总计行解析偶发失效导致总收益退化为文档旧值**（2026-10-16） | 文档导出的「总计」行列位会漂移：本次为短行、数据落在 **col2/3/4**，而代码硬编码读 col5/6/7 → `doc_current=None` → `cash_diff` 误算成「文档整体当前 − **实时持仓**当前」→ `regions.整体.current` 退化为文档固定值，总收益被静默拉回文档"收益"行 | 总计行解析改为**格式无关**：优先 col5/6/7，任一为空则回退取该行**前三个可解析数值**。修复后 `cash_diff` 恢复为文档固定差额。**自检**：若 `regions.整体.current` 恰等于文档整体当前值，即实时自算失效 |
 | 个股股息全为 None | 股息在 col12，代码读 col13 | 股息列改为 col12；holdings_dividends 改为个股合计 |
 | 美股/港股收益率虚高 | `__main__` 中 `meta["exchange_rates"]=summary.pop("exchange_rates",None)` 把 parse_holdings 提取到的汇率覆盖为 None，build_snapshot 永远用默认 US=6.78/HK=0.86 | 改为 `summary["exchange_rates"]=meta.get("exchange_rates") or summary.pop(...)`，让 build_snapshot 读到文档真实汇率（US>RMB 6.7505） |
 | CSV 列偏移/短行需手动修复 | 旧流程在步骤3手动修复 | snapshot_live.py 内部已处理，步骤3只需提取原始段 |
