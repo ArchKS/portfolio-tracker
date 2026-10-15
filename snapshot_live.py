@@ -76,11 +76,21 @@ def parse_holdings(csv_text):
         code = row[3].strip() if len(row) > 3 else ""
         col8 = row[8].strip() if len(row) > 8 else ""
 
-        # Totals row — data is left-aligned: col5=投入, col6=当前, col7=股息
+        # Totals row — column alignment varies with doc export: long rows left-align at
+        # col5/6/7, short rows put data at col2/3/4. Prefer col5/6/7; fall back to the
+        # first three numeric cells so the mapping is format-agnostic.
         if not past_total and ("总计" in name or "总计" in market):
-            summary["doc_invested"] = parse_amount(row[5])
-            summary["doc_current"] = parse_amount(row[6])
-            summary["doc_dividends"] = parse_amount(row[7]) if len(row) > 7 else None
+            d_inv = parse_amount(row[5])
+            d_cur = parse_amount(row[6])
+            d_div = parse_amount(row[7]) if len(row) > 7 else None
+            if d_inv is None or d_cur is None:
+                nums = [v for v in (parse_amount(c) for c in row) if v is not None]
+                d_inv = nums[0] if len(nums) > 0 else None
+                d_cur = nums[1] if len(nums) > 1 else None
+                d_div = nums[2] if len(nums) > 2 else None
+            summary["doc_invested"] = d_inv
+            summary["doc_current"] = d_cur
+            summary["doc_dividends"] = d_div
             past_total = True
             continue
 
