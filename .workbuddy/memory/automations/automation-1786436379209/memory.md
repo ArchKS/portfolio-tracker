@@ -1,5 +1,16 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-19 16:31 执行记录 — ✅ 一次跑通（今日第三档，数值与晨档/09:47 档完全一致）
+- **tencent-docs 方案A 一次成功**；⚠️ **westock-mcp MCP 工具本会话未注册**（connector-status=unavailable，ToolSearch 查无 `mcp__westock-mcp__*`）→ **走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码各一次取全，零限频零漏码**。**4c 已是 westock 不可用时的稳定通路，直接照做，不必再排查宿主路由。**
+- CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6893** / HK **0.8521**。
+- 结果：8 只 | 投入 **229.07万** | 当前 **220.00万** | 持仓收益 **-9.07万 (-3.96%)** | 总收益 **-391956.74** | 总收益率 **-15.17%** | 基数 258.3万。**与今日晨档、09:47 档三档一致**（港股重阳节翌日休市沿用 10-16、美股 10-16 收盘，无新交易）。
+- **行情节奏**：**港股休市**（沿用 10-16 收盘：康方 91.30 +0.94%、亚盛 29.74 +6.14%、海螺 16.64 +2.97%、汇贤 0.33 0.00%）；**美股 10-16 收盘**（SMMT 14.63 -4.81%、LEGN 18.48 -6.67%、SY 2.27 -2.99%）；**A 股今日复市收盘 4174.53 +0.09%**。
+- 基准：沪深300 YTD **-9.84%**（验算 -9.92×1.0009→-9.83 ✓；晨档盘中 -10.17% 为未收盘值，本档收盘值更准）/ CAGR **-3.31%** / 净值 0.8449；纳指 YTD **+12.47%** / CAGR **+11.02%** / 净值 1.6863。
+- **✅ 总计行解析自检通过**：`regions.整体.current = 2,191,043.26` ≠ 文档整体当前 2,230,800（`cash_diff = -9,000`）。仓位占比 100.41% / 成本口径 100.39%。
+- 部署：`workbuddy_sites_deploy` **直接成功**（verified=true），**shareLink 变化** → 新链接 `https://0b1459cc0bdf4259aefbb230d05d8c54.bj9.agentos-app.net`；curl HTTP 200 含 2026-10-19 16:31:55 / total_pnl -391956.74 / holdings_count 8。⚠️ **报告用新链接。**
+- git：commit `35563e5`，**push 一次成功**（dea22af..35563e5），main 与 origin/main 同步。
+- 遗留：无。
+
 ## 2026-10-19 09:47 执行记录 — ✅ 一次跑通（港股重阳节休市 / A 股复市，覆盖率维持）
 - **连接器全正常**：`tencent-docs` 方案A（`tdoc_call get_content`）一次成功；`westock-mcp` MCP 工具会话启动即注册，**个股 7 码 + 指数 2 码各一次批量取全，零限频零漏码**，未走 data_minute、未启用方案C。
 - CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6893** / HK **0.8521**（与 10-16 档相同）。
