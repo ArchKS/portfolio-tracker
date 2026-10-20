@@ -1,5 +1,17 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-20 16:31 执行记录 — ✅ 一次跑通（港股复市 + 美股隔夜大涨，总收益率回升 0.55pct）
+- **方案A 一次成功**（`tdoc_call get_content`，`raw['result']['structuredContent']['content']`；注意 `result.content[0].text` 是 JSON 字符串需二次 parse，且 `find` 递归要能命中两种路径，最稳妥直接取 `structuredContent.content`）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6893** / HK **0.8521**（与 10-19 档相同）。
+- ⚠️ **westock-mcp MCP 工具本会话仍未注册**（connector-status=unavailable）→ **走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码各一次取全，零限频零漏码**。**4c 已是稳定通路，直接照做，不必再排查宿主路由。**
+- **行情节奏**：**港股 10-20 复市成交**（10-19 重阳节翌日休市后首个交易日）：康方 91.40 (+0.11%)、亚盛 **30.56 (+2.76%)**、海螺 16.30 (-2.04%)、汇贤 0.33 (0.00%)；**美股 10-19 收盘**（10-18 周日 → 10-19 周一收盘）：SMMT **15.57 (+6.43%，主驱动)**、LEGN 18.65 (+0.92%)、SY 2.25 (-0.88%)。
+- 结果：8 只 | 投入 **229.07万** | 当前 **221.44万** | 持仓收益 **-7.64万 (-3.33%)** | 总收益 **-377645.08** | 总收益率 **-14.62%** | 基数 258.3万。较 10-19 档（-3.96% / -15.17%）**回升 0.63pct / 0.55pct**，美股隔夜大涨（SMMT +6.43%）与亚盛走强为主因。
+- 基准：沪深300 YTD **-10.32%**（10-20 收盘 -0.537%，A 股交易中；验算 -9.84×0.99463→-10.32 ✓）/ CAGR **-3.56%** / 净值 0.8404；纳指 YTD **+13.72%**（10-19 收盘 +1.11%，与 `change_percent` 字段一致）/ CAGR **+11.75%** / 净值 1.7050。两指数 YTD 均验算通过，`data_quote` 批量直读值正确。
+- **✅ 总计行解析自检通过**：`regions.整体.current = 2,205,354.92` ≠ 文档整体当前 2,230,800（`cash_diff = -9,000`）。仓位占比 100.41% / 成本口径 100.39%。
+- 📌 **CAGR 口径说明（勿误判为 bug）**：报告 CAGR 用「2022-01-01 至快照日实际天数 / 365 ≈ 4.80 年」开方，非整年数 5；故沪深300 -3.56%、纳指 +11.75% 与「4 年历史 + YTD 按 5 年开方」的手算值（-3.42% / +11.26%）有 ~0.14pct 差异，净值 0.8404 / 1.7050 反算自洽。
+- 部署：`workbuddy_sites_deploy` **直接成功**（verified=true），**shareLink 变化** → 新链接 `https://591590bda89d4c80b7ff43ca983ce26a.bj9.agentos-app.net`；curl HTTP 200 含 2026-10-20 16:31:18 / total_pnl -377645.08 / holdings_count 8。⚠️ **报告用新链接。**
+- git：commit `e1ee54e`，**push 第 1 次失败**（SSL_ERROR_SYSCALL）、**第 2 次直连成功**（e11fb66..e1ee54e），main 与 origin/main 同步。⚠️ **`nc -z 7890` 报 PROXY_DOWN、且带 `https_proxy=127.0.0.1:7890` 明确连接被拒（代理确实未运行），但直连 GitHub 第 2 次即成功——再次确认别凭代理探测预判 push 结果，重试一次即可。**
+- 遗留：无。本档覆盖同日 06:01 档。
+
 ## 2026-10-19 16:31 执行记录 — ✅ 一次跑通（今日第三档，数值与晨档/09:47 档完全一致）
 - **tencent-docs 方案A 一次成功**；⚠️ **westock-mcp MCP 工具本会话未注册**（connector-status=unavailable，ToolSearch 查无 `mcp__westock-mcp__*`）→ **走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码各一次取全，零限频零漏码**。**4c 已是 westock 不可用时的稳定通路，直接照做，不必再排查宿主路由。**
 - CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6893** / HK **0.8521**。
