@@ -1,5 +1,16 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-21 16:31 执行记录 — ✅ 一次跑通（本档覆盖同日 06:01 档，总收益率回升 1.25pct；git push 两次全失败）
+- **方案A 一次成功**（`tdoc_call get_content`，取 `raw['result']['structuredContent']['content']`；⚠️ `result.content[0].text` 亦含同样 CSV，但**递归 find 会先命中 `/result/content/0/text`**，直接按固定路径取 `structuredContent.content` 更稳）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6781** / HK **0.8506**（较 10-20 档 6.6893/0.8521 双降）。
+- ⚠️ **westock-mcp MCP 工具本会话仍未注册**（connector-status=unavailable）→ **走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码各一次取全，零限频零漏码**。**4c 已是稳定通路，直接照做，不必再排查宿主路由。**
+- **行情节奏**：**港股 10-21 实时收盘走强**：康方 92.80 (+1.53%)、亚盛 **31.26 (+2.29%，近期新高)**、海螺 16.61 (+1.90%)、汇贤 0.325 (-1.52%)；**美股 10-20 收盘**：SMMT **16.09 (+3.34%，主驱动)**、LEGN 19.01 (+1.93%)、SY 2.26 (+0.44%)。
+- 结果：8 只 | 投入 **228.50万** | 当前 **224.54万** | 持仓收益 **-3.96万 (-1.73%)** | 总收益 **-340194.01** | 总收益率 **-13.17%** | 基数 258.3万。较晨档 06:01（-3.15% / -14.42%）持仓口径略降 1.42pct、总收益率回升 1.25pct。
+- 基准：沪深300 YTD **-11.19%**（10-21 收盘 -0.97%；验算 -10.32×0.9903→-11.19 ✓，10-20 收盘值更准）/ CAGR **-3.75%** / 净值 0.8323；纳指 YTD **+13.69%**（10-20 收盘 -0.02%）/ CAGR **+11.74%** / 净值 1.7046；组合 CAGR **+25.84%**（cum_nav 3.0176）。两指数 YTD 均验算通过。
+- **✅ 总计行解析自检通过**：`regions.整体.current = 2,242,805.99` ≠ 文档整体当前 2,206,710（`cash_diff = -2,600`）。仓位占比 100.11% / 成本口径 100.11%。
+- 部署：`workbuddy_sites_deploy` **直接成功**（verified=true），**shareLink 变化** → 新链接 `https://dacda928af7548aa9ea0ba67b2863eb1.bj9.agentos-app.net`；curl HTTP 200 含 2026-10-21 16:31:41 / total_pnl -340194.01 / holdings_count 8。⚠️ **报告用新链接。**
+- git：commit `5c7a3f6`，**push 两次均失败**（LibreSSL SSL_ERROR_SYSCALL；`nc -z 7890` 报 PROXY_DOWN），本地 main **ahead 1** 待补推。⚠️ **本档第 2 次重试未成功，与 10-20 档"第 2 次成功"不同——重试一次后仍失败即如实报告并保留本地提交，不要反复重试。**
+- 遗留：git push 待网络恢复后补推（ahead 1：`5c7a3f6`）。
+
 ## 2026-10-20 16:31 执行记录 — ✅ 一次跑通（港股复市 + 美股隔夜大涨，总收益率回升 0.55pct）
 - **方案A 一次成功**（`tdoc_call get_content`，`raw['result']['structuredContent']['content']`；注意 `result.content[0].text` 是 JSON 字符串需二次 parse，且 `find` 递归要能命中两种路径，最稳妥直接取 `structuredContent.content`）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6893** / HK **0.8521**（与 10-19 档相同）。
 - ⚠️ **westock-mcp MCP 工具本会话仍未注册**（connector-status=unavailable）→ **走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码各一次取全，零限频零漏码**。**4c 已是稳定通路，直接照做，不必再排查宿主路由。**
