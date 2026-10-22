@@ -1,5 +1,16 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-22 16:31 执行记录 — ✅ 一次跑通（港股康方/亚盛双双跌近 10%，总收益率跌至 -18.40%）
+- **方案A 一次成功**（`tdoc_call get_content`，固定路径取 `raw['result']['structuredContent']['content']`）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6781** / HK **0.8506**（同晨档）。
+- ⚠️ **westock-mcp MCP 工具本会话仍未注册**（connector-status=unavailable）→ **走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码各一次取全，零限频零漏码**。**4c 已是稳定通路，直接照做，不必再排查宿主路由。**
+- **行情节奏**：**港股 10-22 大幅走弱（本档主因）**：康方 **83.90 (-9.59%，最大拖累)**、亚盛 **28.50 (-8.83%)**、海螺 16.41 (-1.20%)、汇贤 0.32 (-1.54%)；**美股 10-21 收盘**（10-22 未开盘）：SMMT 15.83 (-1.62%)、LEGN 18.63 (-2.00%)、SY 2.19 (-3.10%)。
+- 结果：8 只 | 投入 **228.50万** | 当前 **211.04万** | 持仓收益 **-17.46万 (-7.64%)** | 总收益 **-475185.97** | 总收益率 **-18.40%** | 基数 258.3万。较晨档 06:00（-2.04% / -13.44%）大幅恶化 5.60pct / 4.96pct，为近期单日最大回撤。
+- 基准：沪深300 YTD **-12.82%**（10-22 收盘 -1.84%）/ CAGR **-4.12%** / 净值 0.817；纳指 YTD **+14.89%**（10-21 收盘，与晨档同值）/ CAGR **+11.97%** / 净值 1.7226；组合 CAGR **+25.74%**。两指数 YTD 均验算通过。
+- ✅ 总计行解析自检通过：`regions.整体.current = 2,107,814.03` ≠ 文档整体当前 2,206,710（`cash_diff = -2,600`）。仓位占比 100.11% / 成本口径 100.11%。
+- 部署：`workbuddy_sites_deploy` **直接成功**（verified=true），**shareLink 变化** → 新链接 `https://2802c987041744d4a04baca68c61590b.bj9.agentos-app.net`；curl HTTP 200 含 2026-10-22 16:31:16 / total_pnl -475185.97 / total_roi -18.4 / holdings_count 8。⚠️ **报告用新链接。**
+- git：commit `ace3259`，**push 一次成功**（a715d54..ace3259），**并一次性补推清 10-21 积压提交 `5c7a3f6`**，main 与 origin/main 完全同步（ahead 0）。**10-21 档遗留已全部清偿。**
+- 遗留：无。
+
 ## 2026-10-21 16:31 执行记录 — ✅ 一次跑通（本档覆盖同日 06:01 档，总收益率回升 1.25pct；git push 两次全失败）
 - **方案A 一次成功**（`tdoc_call get_content`，取 `raw['result']['structuredContent']['content']`；⚠️ `result.content[0].text` 亦含同样 CSV，但**递归 find 会先命中 `/result/content/0/text`**，直接按固定路径取 `structuredContent.content` 更稳）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6781** / HK **0.8506**（较 10-20 档 6.6893/0.8521 双降）。
 - ⚠️ **westock-mcp MCP 工具本会话仍未注册**（connector-status=unavailable）→ **走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码各一次取全，零限频零漏码**。**4c 已是稳定通路，直接照做，不必再排查宿主路由。**
