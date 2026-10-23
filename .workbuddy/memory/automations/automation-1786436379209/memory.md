@@ -1,5 +1,16 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-23 16:32 执行记录 — ✅ 一次跑通（港股全线反弹，总收益率回升 2.01pct）
+- **方案A 一次成功**（`tdoc_call get_content`，固定路径取 `raw['result']['structuredContent']['content']`）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6781** / HK **0.8506**（同前档）。
+- ⚠️ **westock-mcp connector-status=auth-required，MCP 工具仍未注册** → **直接走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码一次取全，零限频零漏码**。4c 照做即可。
+- **行情节奏**：**港股 10-23 全线反弹（本档主因）**：亚盛 **30.36 (+6.53%，最大驱动)**、康方 86.60 (+3.22%)、汇贤 0.33 (+3.13%)、海螺 16.58 (+1.04%)；**美股 10-22 收盘**：LEGN 18.90 (+1.45%)、SMMT 15.55 (-1.77%)、SY 2.13 (-2.74%)。
+- 结果：8 只 | 投入 **228.50万** | 当前 **216.22万** | 持仓收益 **-12.28万 (-5.37%)** | 总收益 **-423397.75** | 总收益率 **-16.39%** | 基数 258.3万。较 10-22 档（-7.64% / -18.40%）回升 2.27pct / 2.01pct。
+- 基准：沪深300 YTD **-11.33%**（10-23 收盘 +1.71%；验算 -12.82×1.0171→-11.33 ✓）/ CAGR **-3.78%**；纳指 YTD **+11.90%**（10-22 收盘 -2.60%；验算 14.89×0.974→11.90 ✓）/ CAGR **+11.36%**；组合 CAGR **+24.82%**（cum_nav 2.9057）。两指数 YTD 均验算通过。
+- ✅ 总计行解析自检通过：`regions.整体.current = 2,159,602.25` ≠ 文档整体当前 2,206,710（`cash_diff = -2,600`）。仓位占比 100.11% / 成本口径 100.11%。
+- 部署：`workbuddy_sites_deploy` **直接成功**（verified=true），**shareLink 变化** → 新链接 `https://ed15796c57e14558843424fd58f59b91.bj9.agentos-app.net`；curl HTTP 200 含 2026-10-23 16:31:45 / total_pnl -423397.75 / holdings_count 8。⚠️ **报告用新链接。**
+- git：commit `73d9bff`，**push 一次成功**（8679931..73d9bff），main 与 origin/main 完全同步（ahead 0）。
+- 遗留：无。
+
 ## 2026-10-22 16:31 执行记录 — ✅ 一次跑通（港股康方/亚盛双双跌近 10%，总收益率跌至 -18.40%）
 - **方案A 一次成功**（`tdoc_call get_content`，固定路径取 `raw['result']['structuredContent']['content']`）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6781** / HK **0.8506**（同晨档）。
 - ⚠️ **westock-mcp MCP 工具本会话仍未注册**（connector-status=unavailable）→ **走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码各一次取全，零限频零漏码**。**4c 已是稳定通路，直接照做，不必再排查宿主路由。**
