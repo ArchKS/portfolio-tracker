@@ -1,5 +1,16 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-24 16:31 执行记录 — ✅ 一次跑通（周六三市场休市，数值与晨档完全一致）
+- **方案A 一次成功**（`tdoc_call get_content`，固定路径 `raw['result']['structuredContent']['content']`；本档 tencent-docs connector-status=unavailable 但 CLI 通道照常可用）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6781** / HK **0.8506**（同前档）。
+- ⚠️ **westock-mcp connector-status=auth-required，MCP 工具仍未注册** → **直接走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码一次取全，零限频零漏码**。4c 照做即可。
+- **行情节奏**：**今日周六，港股/A股/美股全部休市** → 个股行情全部沿用 **10-23 收盘**（康方 86.60、SMMT 15.47、海螺 16.58、亚盛 30.36、LEGN 19.27、新氧 2.11、汇贤 0.33）；沪深300 沿用 10-23（YTD -11.33%），**纳指已滚动到 10-23 收盘 -0.21%（YTD 11.90→11.67）**。
+- 结果：8 只 | 投入 **228.50万** | 当前 **216.12万** | 持仓收益 **-12.37万 (-5.42%)** | 总收益 **-424365.39** | 总收益率 **-16.43%** | 基数 258.3万。**与今日 06:01 档（automation-1785914941450）数值完全一致**，属休市正常（互为独立验证）。
+- 基准：沪深300 YTD **-11.33%** / CAGR **-3.77%**；纳指 YTD **+11.67%**（验算 11.90×0.9979→11.67 ✓）/ CAGR **+11.30%**；组合 CAGR **+24.79%**（cum_nav 2.9043）。两指数 YTD 均验算通过。
+- ✅ 总计行解析自检通过：`regions.整体.current = 2,158,634.61` ≠ 文档整体当前 2,206,710（`cash_diff = -2,600`）。仓位占比 100.12%。
+- 部署：`workbuddy_sites_deploy` **直接成功**（verified=true），**shareLink 变化** → 新链接 `https://5147d0b61f39407eabef98fbed7c3f50.bj9.agentos-app.net`；curl HTTP 200 含 2026-10-24 16:31:50 / total_pnl -424365.39 / total_roi -16.43 / holdings_count 8。⚠️ **报告用新链接**（06:01 档 cb3ae33b… 已被替换）。
+- git：commit `41d6729`，**push 一次成功**（51ba1e9..41d6729），main 与 origin/main 完全同步（ahead 0）。
+- 遗留：无。
+
 ## 2026-10-23 16:32 执行记录 — ✅ 一次跑通（港股全线反弹，总收益率回升 2.01pct）
 - **方案A 一次成功**（`tdoc_call get_content`，固定路径取 `raw['result']['structuredContent']['content']`）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6781** / HK **0.8506**（同前档）。
 - ⚠️ **westock-mcp connector-status=auth-required，MCP 工具仍未注册** → **直接走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码一次取全，零限频零漏码**。4c 照做即可。
