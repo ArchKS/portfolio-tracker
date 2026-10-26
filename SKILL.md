@@ -149,17 +149,22 @@ cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
 调用 `workbuddy_sites_deploy`（旧名 `workbuddy_cloudstudio_deploy` 已废弃），参数：
 `action="deploy"`、`directory="{PROJECT}/deploy"`、`language="static"`、`appName="持仓快照"`、`domainPrefix="portfolio-snapshot"`、`userAskedToPublish=true`。
 
-**该工具长期返回 "应用预留域名 portfolio-snapshot-*.app.workbuddy.host 未绑定到本次发布环境"**（域名前缀每次随机变化，属已知故障）。此时不要重试，改用 curl 验证旧公网链接是否已包含当日数据：
+**当前行为（2026-10-20 起，连续 14+ 日实测）：部署一次成功，`verified=true`，返回全新随机域名。** 沙箱 `sandboxId` 固定（`167b54fec43844e3986f9ea901a55bff`），但**对外 shareLink 的 32 位域名前缀每次部署都重新分配** → **旧链接随即失效（HTTP 400）**。
+
+⚠️ **必须以本次 deploy 返回的 `shareLink` 为准上报**。历史链接（如 `167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net`）**已全部失效，不要在报告中引用**。本地部署历史可查：`~/.workbuddy/cloudstudio-deploy-history/<deployTargetId>_<ts>.json` 的 `shareLink` 字段。
+
+部署后用 curl 验证新链接（`$(date +%Y-%m-%d)` 动态取当日，同时用当日快照 `total_pnl` 二次校验，两个值都命中才确认内容已上线）：
 
 ```bash
-curl -s -o /tmp/pf_check.html -w "%{http_code}\n" --max-time 40 https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net
+NEW="{{shareLink}}"
+curl -s -o /tmp/pf_check.html -w "%{http_code}\n" --max-time 40 "$NEW"
 grep -o "$(date +%Y-%m-%d) [0-9:]*" /tmp/pf_check.html | head -3
 grep -o "$(grep -o '\"total_pnl\": [-0-9.]*' "{PROJECT}/portfolio_snapshots/$(date +%Y-%m-%d).json" | grep -o '[-0-9.]*')" /tmp/pf_check.html | head -3
 ```
 
-⚠️ **不要用硬编码日期正则**（如 `2026-09-1[0-9]`），过几天就匹配不到；用 `$(date +%Y-%m-%d)` 动态取当日，同时用当日快照的 `total_pnl` 值二次校验（两个值都命中才确认内容已更新）。
+⚠️ **不要用硬编码日期正则**（如 `2026-09-1[0-9]`），过几天就匹配不到。
 
-若页面含当日 `snapshot_time` 与最新市值 → 上报"公网链接不变，内容已更新"；否则如实报告部署失败。
+历史故障（**已恢复，仅留档**）：2026-09-14 起该工具曾长期返回"应用预留域名 portfolio-snapshot-*.app.workbuddy.host 未绑定到本次发布环境"，当时应对方式是 curl 验证旧链接、链接视为不变。此阶段已于 2026-10-20 结束，勿再套用。
 
 ### 8. 报告结果
 
@@ -228,8 +233,8 @@ git push origin main
 | 结束行被年度收益表头覆盖 | 文档后部还有"收益率 2022 2023..."表头行也匹配"收益率"关键字，解析循环若取最后一个匹配会把 end_idx 覆盖成 269，段落过长 | 解析循环取**第一个**"收益率"匹配后立即 break；表头/结束行定位都用 `xxx is None` 守卫 |
 | SMMT Call 投入读成 0.01（2026-09-03） | 循环开头 `while len(row)<14` 先 pad 满 14 列，短行右对齐逻辑再用 `len(row)-1` 算偏移已失效，[名称,投入,当前] 或 [名称,权重,投入,当前] 短行的当前/投入被误放列；文档行无代码列时也会触发 | 记录 `orig_len`（pad 前长度），`pad_needed = 11 - (orig_len - 1)` 使末列对齐到"当前"(col11)，仅当 >0 时右移 |
 | 汇贤等低价股成本价精度丢失（2026-09-03） | `parse_amount` 默认 round 2 位，成本 0.4156→0.42，roi 偏差（-19.05% vs -19.39%） | `parse_amount(val, nd)` 增加精度参数，成本列用 `parse_amount(row[4], 4)` |
-| deploy 工具持续报"预留域名未绑定"（2026-09-14 起每日复现） | 沙箱复用旧 app，工具却为新域名前缀申请绑定 | 不重试；curl 旧链接 `https://167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net` 验证当日数据已上线，公网链接视为不变 |
-| 加 `updateExistingApp:true` 报"本工作区无已有 app"（2026-09-19） | 该工作区未记录 app，无法走"更新已有 app"分支 | **不要传 `updateExistingApp`**，直接用默认 deploy 调用；随后按上一行的"域名未绑定 → curl 验证旧链接"流程处理即可 |
+| ~~deploy 工具持续报"预留域名未绑定"（2026-09-14 ~ 10-19）~~ | ~~沙箱复用旧 app，工具却为新域名前缀申请绑定~~ | **已恢复**（2026-10-20 起 deploy 一次成功、verified=true）。当前行为是：每次部署分配**全新随机 shareLink**，旧链接失效 HTTP 400 → **以本次返回的 shareLink 为准**。历史硬编码链接 `167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net` 已失效，勿引用 |
+| 加 `updateExistingApp:true` 报"本工作区无已有 app"（2026-09-19） | 该工作区未记录 app，无法走"更新已有 app"分支 | **不要传 `updateExistingApp`**，直接用默认 deploy 调用（当前会返回新 shareLink） |
 | `data_quote`/`data_kline` 全程服务限频（2026-09-18 实测） | westock 行情快照接口限流，非本流程问题；长等待无效 | 重试 2~3 次后改走 `data_minute`，读 `qt.<code>[3]` 取最新价、指数读 `[61]` 取 YTD（见步骤 4a-兜底） |
 | `data_quote` 批量调用只返回部分代码（2026-09-19、2026-10-02、2026-10-05 实测） | 接口只吐出了部分结果（如 7 码批次仅返 3 只美股、4 只港股缺失；指数批次仅返 sh000300），**与是否限频无关**（10-02 零限频时同样发生） | **每次收到 `ok:true` 后都要核对 `data` 里缺了哪些 code，缺的那批单独再调一次**（港股与美股可分开发）。不要因为 `ok:true` 就认为全齐 |
 | 个股批次成功但**指数批次**单独限频（2026-10-05） | 指数与个股走的是不同限频配额，同一会话内个股批次成功不代表指数批次也能成功 | 指数批次失败后**隔几秒重试一次**通常即恢复（10-05 实测 5s 后重试取全 sh000300+usIXIC）；仍失败才按步骤 4b 跳过 |

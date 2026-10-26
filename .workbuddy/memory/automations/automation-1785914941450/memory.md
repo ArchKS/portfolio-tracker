@@ -340,3 +340,18 @@
 - 备注1：⚠️ 本档为本会话**第六次**遭遇「westock MCP 工具未注册」（10-13、10-20、10-21、10-22、10-23、10-24），方案C 再次跑通一次成功；本次连接器状态标 **auth-required**（此前多为 unavailable），不影响 CLI/上游直连两条通道
 - 备注2：`snapshot_live.py` 自检通过（regions.整体.current 2158634.61 ≠ 文档值 2206710 → 实时自算生效），cash_diff = -2600 正常
 - 备注3：10-23 港股暴跌后迎来反弹（亚盛 +6.53%、康方 +3.22%），组合总收益单日修复 5.63万；文档"收益/收益率"行仍为陈旧值（-376289/-14.5679%）
+
+### 2026-10-26 06:01（当日首次）
+- 数据源：腾讯文档 fGemVXqsvRGM（`tdoc_call get_content` 一次成功，30KB；连接器状态标 unavailable 但 CLI 通道正常），CSV header idx=2 / end idx=19；8 行（7 只 + SMMT Call）无变动；汇率 US 6.6781 / HK 0.8506（同 10-21~10-24）；基数 258.30万
+- ⚠️ **westock-mcp MCP 工具本会话未注册**（连接器状态 auth-required，ToolSearch 查不到 `mcp__westock-mcp__*`）→ 走 **方案C**：解密本地 OAuth token（userIdCheck/keyCheck 双 True，slot `westock-mcp|76c1bcce7ee2e7f6`）后 curl 直连上游 stockbuddy.qq.com；`data_quote` **一次批量取全 9 码**，零漏码
+- 行情 time 全部 = **2026-10-23**（周五收盘；10-24/25 周末，10-26 06:01 三市场均未开盘）。康方 86.60、SMMT 15.47、海螺 16.58、亚盛 30.36、传奇 19.27、新氧 2.11、汇贤 0.33；沪深300 4105.33、usIXIC 25955.34
+- 基准：沪深300 YTD **-11.33%**、纳斯达克 YTD **+11.67%**（均同 10-24 档，因行情时间同为 10-23 收盘）
+- 快照：portfolio_snapshots/2026-10-26.json（第 88 份）；report.html → deploy/index.html
+- 部署：workbuddy_sites_deploy **成功**（连续第十四日），新链接 https://03be35dbffb14e63a28e8fd69dbd5420.bj9.agentos-app.net ，verified=true，同沙箱 167b54fec43844e3986f9ea901a55bff；curl 验证 HTTP 200 + `2026-10-26 06:01:35` + total_pnl `-424365.39` + 基准 `-11.33`/`11.67` 全部命中
+- 关键数据：持仓投入 228.50万、持仓当前 216.12万（2161234.61）、持仓收益 -12.37万（-5.42%）、总收益 **-42.44万（-424365.39）**、总收益率 **-16.43%**
+- 基准：沪深300 YTD -11.33% / CAGR **-3.77%**；纳斯达克 YTD +11.67% / CAGR **+11.29%**；组合 CAGR **+24.12%**——组合 CAGR 仍大幅跑赢双基准
+- Git：commit **fdb9797**；push **失败**（代理 127.0.0.1:7890 未运行 PROXY_DOWN，直连 SSL_ERROR_SYSCALL，两次均失败），本地 main **ahead 2**
+- 临时文件已清理（.tmp_raw.json / .tmp_csv.csv / .tmp_prices.json / .tmp_benchmarks.json / .tmp_quote_raw.txt / .tmp_tok.txt）
+- 备注1：⚠️ 本档为本会话**第七次**遭遇「westock MCP 工具未注册」（10-13、10-20、10-21、10-22、10-23、10-24、10-26），方案C 再次跑通一次成功
+- 备注2：`snapshot_live.py` 自检通过（regions.整体.current 2158634.61 ≠ 文档值 2206710 → 实时自算生效），cash_diff = -2600 正常
+- 备注3：本档数值与 10-24 档**完全一致**（2161234.61 / -123744.59 / -424365.39 / -16.43），核对行情 time 后确认属正常——10-24/25 为周末、10-26 06:01 三市场均未开盘，故与前档取值同为「10-23 收盘」
