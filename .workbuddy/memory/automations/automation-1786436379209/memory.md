@@ -1,5 +1,16 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-10-26 13:02 执行记录 — ✅ 一次跑通（周一盘中档，康方 -3% 拖累，总收益率回落）
+- **方案A 一次成功**（`tdoc_call get_content`，固定路径 `raw['result']['structuredContent']['content']`）。CSV：header idx=2 / end idx=19，8 行持仓无变动（康方/亚盛/海螺/汇贤 + SMMT/SMMT Call/传奇/新氧）；汇率 US **6.6781** / HK **0.8506**（同前档）。
+- ✅ **本档 westock-mcp MCP 工具已在会话启动时注册**（ToolSearch 可查 `data_quote`/`data_minute`），**未走 4c 兜底**：个股 7 码 + 指数 2 码**两次 `data_quote` 批量各一次取全，零限频零漏码**。→ **连接器可用时优先走原生 MCP，不必预设 4c。**
+- **行情节奏（周一盘中，13:02 档）**：**港股交易中**（10-26）康方 **84.00 (-3.00%，最大拖累)**、海螺 **17.01 (+2.59%)**、亚盛 30.34 (-0.07%)、汇贤 0.325 (-1.52%)；**美股为 10-23 收盘**（10-24/25 周末）SMMT 15.47 (-0.51%)、LEGN 19.27 (+1.96%)、SY 2.11 (-0.94%)。
+- 结果：8 只 | 投入 **228.50万** | 当前 **215.04万** | 持仓收益 **-13.46万 (-5.89%)** | 总收益 **-435210.55** | 总收益率 **-16.85%** | 基数 258.3万。
+- 基准：沪深300 YTD **-11.79%**（10-26 盘中 -0.52%；验算 -11.33×0.9948→-11.79 ✓）/ CAGR **-3.87%** / 净值 0.8266；纳指 YTD **+11.67%**（10-23 收盘，与前档同值）/ CAGR **+11.29%** / 净值 1.6743；组合 CAGR **+24.63%**（cum_nav 2.8897）。两指数 YTD 均验算通过。
+- ✅ 总计行解析自检通过：`summary.regions.整体.current = 2,147,789.45` ≠ 文档整体当前 2,206,710（`cash_diff = -2,600`）。仓位占比 100.12%。
+- 部署：`workbuddy_sites_deploy` **直接成功**（verified=true），**shareLink 变化** → 新链接 `https://87e583baf10e4fa988861ebc560027ad.bj9.agentos-app.net`；curl HTTP 200 含 2026-10-26 13:02:15 / total_pnl -435210.55 / total_roi -16.85 / holdings_count 8。⚠️ **报告用新链接**（10-24 档 5147d0b6… 已被替换）。
+- git：commit `3aa9abb`，**push 一次成功**（41d6729..3aa9abb），main 与 origin/main 完全同步（ahead 0）。
+- 遗留：无。
+
 ## 2026-10-24 16:31 执行记录 — ✅ 一次跑通（周六三市场休市，数值与晨档完全一致）
 - **方案A 一次成功**（`tdoc_call get_content`，固定路径 `raw['result']['structuredContent']['content']`；本档 tencent-docs connector-status=unavailable 但 CLI 通道照常可用）。CSV：header idx=2 / end idx=19，8 行持仓无变动；汇率 US **6.6781** / HK **0.8506**（同前档）。
 - ⚠️ **westock-mcp connector-status=auth-required，MCP 工具仍未注册** → **直接走 4c 兜底**（解密 `.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken，userIdCheck/keyCheck 双 True，直连 `stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`），**个股 7 码 + 指数 2 码一次取全，零限频零漏码**。4c 照做即可。
