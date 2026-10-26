@@ -12,7 +12,7 @@ agent_created: true
 
 - tencent-docs 连接器已连接（或腾讯文档 Token）
 - westock-mcp 连接器已连接
-- `snapshot_live.py`、`generate_report.py`、`config.json`、`deploy/` 在 skill 目录中
+- `snapshot_live.py`、`generate_report.py`、`config.json`、`public/` 在 skill 目录中（`deploy/` 为旧目录，2026-10-26 起已弃用）
 - 腾讯文档 file_id: `fGemVXqsvRGM`
 
 ## 执行步骤
@@ -142,29 +142,49 @@ mcp__westock-mcp__data_minute  {code: "hk09926", days: 1}
 
 ### 7. 部署
 
+⚠️ **部署目录已切换为 `{PROJECT}/public`**（2026-10-26 迁移，为拿到可读固定域名；旧目录 `{PROJECT}/deploy` 已废弃，勿再用）：
+
 ```bash
-cp "{PROJECT}/report.html" "{PROJECT}/deploy/index.html"
+cp "{PROJECT}/report.html" "{PROJECT}/public/index.html"
 ```
 
 调用 `workbuddy_sites_deploy`（旧名 `workbuddy_cloudstudio_deploy` 已废弃），参数：
-`action="deploy"`、`directory="{PROJECT}/deploy"`、`language="static"`、`appName="持仓快照"`、`domainPrefix="portfolio-snapshot"`、`userAskedToPublish=true`。
+`action="deploy"`、`directory="{PROJECT}/public"`、`language="static"`、`appName="持仓快照"`、`domainPrefix="portfolio-snapshot"`、`userAskedToPublish=true`。
 
-**当前行为（2026-10-20 起，连续 14+ 日实测）：部署一次成功，`verified=true`，返回全新随机域名。** 沙箱 `sandboxId` 固定（`167b54fec43844e3986f9ea901a55bff`），但**对外 shareLink 的 32 位域名前缀每次部署都重新分配** → **旧链接随即失效（HTTP 400）**。
+**✅ 正式固定域名（长期唯一入口，勿再变更此目录）**：
 
-⚠️ **必须以本次 deploy 返回的 `shareLink` 为准上报**。历史链接（如 `167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net`）**已全部失效，不要在报告中引用**。本地部署历史可查：`~/.workbuddy/cloudstudio-deploy-history/<deployTargetId>_<ts>.json` 的 `shareLink` 字段。
+```
+https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH
+```
 
-部署后用 curl 验证新链接（`$(date +%Y-%m-%d)` 动态取当日，同时用当日快照 `total_pnl` 二次校验，两个值都命中才确认内容已上线）：
+- appId `wbapp_geOJMx8BzhjttfuGNNM9s7`；sandboxId `7b943eac6839457fa3ffc85b65107de4`；部署记录 `deployTargetId=213cad247a9a14cd`（= `sha256("/Users/zendu/.workbuddy/skills/portfolio-snapshot/public")[:16]`）。
+- **2026-10-26 实测：连续两次部署，域名与 sharecode 完全不变** → 可作长期固定链接。每次部署自动覆盖为最新内容。
+- ⚠️ **访问必须带 `?sharecode=VN543KH6HH`**：裸域名 `https://portfolio-snapshot-31273.app.workbuddy.host/` 返回 **403**；sharecode 错误同样 403。分享时必须连 sharecode 一起给。
+- ⚠️ **不要改 `public` 目录名、不要改 workspace 根目录**，否则 app 归属（由目录路径哈希决定）会变、域名跟着变。
+
+**域名两种形态（原理，2026-10-26 从 `~/.workbuddy/logs/sites/` 的 `artifactRelease.response` 解析确认）**：
+
+| 部署路径 | 触发条件 | 分到的域名 | 形式 | 裸域名 |
+|---|---|---|---|---|
+| `legacy-sandbox` | 部署目录**已有历史沙箱记录** | `https://<sandboxId 32位hex>.bj9.agentos-app.net` | 乱码 | **免 sharecode，200** |
+| `new-application` | 部署目录**全新**（无 `.genie`、首次部署） | `https://<domainPrefix>-<5位随机>.app.workbuddy.host` | **可读** | **需 sharecode，否则 403** |
+
+- 走哪条路由由「workspace 根目录下是否存在 `.<appId>.genie` 清单」+ 该目录是否有历史记录决定。`.genie` 文件由部署器在 **workspace 根目录**自动生成（`appId` / `name` / `localDir` / `appType` / `entryHtml`），**不要删**。
+- 工具返回的 `shareLink`：`new-application` 路径下**就是可读固定域名本身**（含 sharecode），稳定不变；`legacy-sandbox` 路径下是 uuid 随机域名（下次部署即失效）。
+- 旧 legacy 应用（`167b54fe….bj9.agentos-app.net`，免 sharecode）**仍然有效**，作为备用保留；但因目录 `deploy/` 已停用，它将不再随日常部署更新，内容会逐渐过期。
+
+部署后 curl 验证固定域名（`$(date +%Y-%m-%d)` 动态取当日，同时用当日快照 `total_pnl` 二次校验，两个值都命中才确认内容已上线）。⚠️ **必须带 `?sharecode=`**，否则 403：
 
 ```bash
-NEW="{{shareLink}}"
-curl -s -o /tmp/pf_check.html -w "%{http_code}\n" --max-time 40 "$NEW"
-grep -o "$(date +%Y-%m-%d) [0-9:]*" /tmp/pf_check.html | head -3
-grep -o "$(grep -o '\"total_pnl\": [-0-9.]*' "{PROJECT}/portfolio_snapshots/$(date +%Y-%m-%d).json" | grep -o '[-0-9.]*')" /tmp/pf_check.html | head -3
+FIXED="https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH"   # 可读固定域名
+curl -s -o /tmp/pf_check.html -w "%{http_code} $FIXED\n" --max-time 40 "$FIXED"
+grep -o "$(date +%Y-%m-%d) [0-9:]*" /tmp/pf_check.html | head -1
+grep -o "$(grep -o '\"total_pnl\": [-0-9.]*' "{PROJECT}/portfolio_snapshots/$(date +%Y-%m-%d).json" | grep -o '[-0-9.]*')" /tmp/pf_check.html | head -1
 ```
 
 ⚠️ **不要用硬编码日期正则**（如 `2026-09-1[0-9]`），过几天就匹配不到。
 
-历史故障（**已恢复，仅留档**）：2026-09-14 起该工具曾长期返回"应用预留域名 portfolio-snapshot-*.app.workbuddy.host 未绑定到本次发布环境"，当时应对方式是 curl 验证旧链接、链接视为不变。此阶段已于 2026-10-20 结束，勿再套用。
+历史故障（**已恢复，仅留档**）：2026-09-14 起该工具曾长期返回"应用预留域名 portfolio-snapshot-*.app.workbuddy.host 未绑定到本次发布环境"。该故障已结束，且 2026-10-26 起改用全新目录走 `new-application` 路径，已稳定拿到可读固定域名，勿再套用旧流程。
 
 ### 8. 报告结果
 
@@ -172,7 +192,7 @@ grep -o "$(grep -o '\"total_pnl\": [-0-9.]*' "{PROJECT}/portfolio_snapshots/$(da
 - 持仓收益（金额+百分比）
 - 总收益（total_pnl，自算）、总收益率（total_roi，自算，两位小数）
 - 基准对比（沪深300/纳斯达克 YTD + CAGR，若 config 中 show=true）
-- 公网链接（deploy 返回的 shareLink）
+- 公网链接（固定域名 `https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH`，含 sharecode）
 - Git commit hash（步骤 10）
 
 **计算公式**（snapshot_live.py 内部）：
@@ -233,8 +253,10 @@ git push origin main
 | 结束行被年度收益表头覆盖 | 文档后部还有"收益率 2022 2023..."表头行也匹配"收益率"关键字，解析循环若取最后一个匹配会把 end_idx 覆盖成 269，段落过长 | 解析循环取**第一个**"收益率"匹配后立即 break；表头/结束行定位都用 `xxx is None` 守卫 |
 | SMMT Call 投入读成 0.01（2026-09-03） | 循环开头 `while len(row)<14` 先 pad 满 14 列，短行右对齐逻辑再用 `len(row)-1` 算偏移已失效，[名称,投入,当前] 或 [名称,权重,投入,当前] 短行的当前/投入被误放列；文档行无代码列时也会触发 | 记录 `orig_len`（pad 前长度），`pad_needed = 11 - (orig_len - 1)` 使末列对齐到"当前"(col11)，仅当 >0 时右移 |
 | 汇贤等低价股成本价精度丢失（2026-09-03） | `parse_amount` 默认 round 2 位，成本 0.4156→0.42，roi 偏差（-19.05% vs -19.39%） | `parse_amount(val, nd)` 增加精度参数，成本列用 `parse_amount(row[4], 4)` |
-| ~~deploy 工具持续报"预留域名未绑定"（2026-09-14 ~ 10-19）~~ | ~~沙箱复用旧 app，工具却为新域名前缀申请绑定~~ | **已恢复**（2026-10-20 起 deploy 一次成功、verified=true）。当前行为是：每次部署分配**全新随机 shareLink**，旧链接失效 HTTP 400 → **以本次返回的 shareLink 为准**。历史硬编码链接 `167b54fec43844e3986f9ea901a55bff.bj9.agentos-app.net` 已失效，勿引用 |
-| 加 `updateExistingApp:true` 报"本工作区无已有 app"（2026-09-19） | 该工作区未记录 app，无法走"更新已有 app"分支 | **不要传 `updateExistingApp`**，直接用默认 deploy 调用（当前会返回新 shareLink） |
+| ~~deploy 工具持续报"预留域名未绑定"（2026-09-14 ~ 10-19）~~ | ~~沙箱复用旧 app，工具却为新域名前缀申请绑定~~ | **已结束**。2026-10-26 起改用全新部署目录 `public/` 走 `new-application` 路径，稳定获得**可读固定域名**（含 sharecode），连续两次部署域名/sharecode 不变 |
+| 误判「固定域名 `167b54fe…` 已失效」（2026-10-26） | 只看了 `shareLink`（uuid 随机域名）的失效现象，未解析 `artifactRelease.response` 里的 `friendlyDomains` | 该 legacy 固定域名**从未失效**（实测 HTTP 200 且为最新）。原理：**随机域名封 32 位才是短命的**，固定域名才是长期入口 |
+| **想要换掉 legacy 乱码域名 `167b54fe….bj9.agentos-app.net`**（2026-10-26） | 域名与 `sandboxId` 绑定，而 `sandboxId`/`deployTargetId` 由**部署目录路径的 sha256** 决定 → 同一目录永远只得到同一个域名，**改不了** | **解决方案：新建一个全新部署目录 `public/`**（无历史记录 → 走 `new-application` 路由）→ 分到**可读域名** `https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH`。⚠️ 代价：**裸域名 403，必须带 `?sharecode=`**。两路径对照见步骤 7 |
+| 加 `updateExistingApp:true` 报"本工作区无已有 app"（2026-09-19） | 该工作区未记录 app，无法走"更新已有 app"分支 | **不要传 `updateExistingApp`**，直接用默认 deploy 调用 |
 | `data_quote`/`data_kline` 全程服务限频（2026-09-18 实测） | westock 行情快照接口限流，非本流程问题；长等待无效 | 重试 2~3 次后改走 `data_minute`，读 `qt.<code>[3]` 取最新价、指数读 `[61]` 取 YTD（见步骤 4a-兜底） |
 | `data_quote` 批量调用只返回部分代码（2026-09-19、2026-10-02、2026-10-05 实测） | 接口只吐出了部分结果（如 7 码批次仅返 3 只美股、4 只港股缺失；指数批次仅返 sh000300），**与是否限频无关**（10-02 零限频时同样发生） | **每次收到 `ok:true` 后都要核对 `data` 里缺了哪些 code，缺的那批单独再调一次**（港股与美股可分开发）。不要因为 `ok:true` 就认为全齐 |
 | 个股批次成功但**指数批次**单独限频（2026-10-05） | 指数与个股走的是不同限频配额，同一会话内个股批次成功不代表指数批次也能成功 | 指数批次失败后**隔几秒重试一次**通常即恢复（10-05 实测 5s 后重试取全 sh000300+usIXIC）；仍失败才按步骤 4b 跳过 |
@@ -313,7 +335,8 @@ SSE 包一层：先 `re.search(r'data: (\{.*\})', text, re.S)` 取 JSON-RPC 信�
 | `generate_report.py` | 快照JSON → HTML报告（isNote处理无成本价持仓；持仓明细末尾追加"现金"行，显示投入/当前/仓位占比，收益和收益率为"—"；仓位占比负数正常显示） |
 | `config.json` | 控制页面模块显隐；annual_returns_history 历史收益；annual_returns_benchmarks 基准对比(沪深300/纳斯达克) |
 | `portfolio_snapshots/*.json` | 每日快照存档 |
-| `deploy/index.html` | 部署用 HTML |
+| `public/index.html` | 部署用 HTML（`public/` = 当前部署目录，绑定可读固定域名） |
+| ~~`deploy/index.html`~~ | ~~旧部署目录~~ **2026-10-26 起已弃用**，勿再向其部署 |
 
 ## 异常处理
 
