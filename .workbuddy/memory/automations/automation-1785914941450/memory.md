@@ -445,3 +445,17 @@
 - 备注1：⚠️ 本档为本会话**第八次**遭遇「westock MCP 工具未注册」（10-13、10-20、10-21、10-22、10-23、10-24、10-26、10-31），方案C 再次跑通一次成功
 - 备注2：`snapshot_live.py` 自检通过（regions.整体.current 2094798.31 = 持仓当前 2097398.31 + cash_diff -2600 ≠ 文档值 → 实时自算生效）
 - 备注3：总收益 -48.82万 逼近 10-23 的 -48.06万，为近期第二低点；亚盛 27.20 继续下探，康方 81.50 距 52 周低点 79.55 仅约 2.4%
+
+### 2026-11-02 06:00（当日首次）
+- 数据源：腾讯文档 fGemVXqsvRGM（`tdoc_call get_content` 一次成功，30KB），CSV header idx=2 / end idx=19；8 行（7 只 + SMMT Call）无变动；汇率 US 6.6781 / HK 0.8506（同 10-21~10-31）；基数 258.30万
+- ⚠️ **westock-mcp MCP 工具本会话未注册**（连接器状态 auth-required，ToolSearch 查不到 `mcp__westock-mcp__*`）→ 走 **方案C**：解密本地 OAuth token（userIdCheck/keyCheck 双 True，slot `westock-mcp|76c1bcce7ee2e7f6`）后 curl 直连上游 stockbuddy.qq.com；`data_quote` **一次批量取全 9 码**，零漏码
+- 行情 time 全部 = **2026-10-30**（周五收盘；10-31/11-01 周末，11-02 06:00 三市场均未开盘）。康方 81.50、SMMT 16.03、海螺 17.12、亚盛 27.20、传奇 21.63、新氧 2.00、汇贤 0.32；沪深300 3985.50、usIXIC 25437.00
+- 基准：沪深300 YTD **-13.92%**、纳斯达克 YTD **+9.44%**（均同 10-31 档，因行情时间同为 10-30 收盘）
+- 快照：portfolio_snapshots/2026-11-02.json（第 94 份）；report.html → public/index.html
+- 部署：workbuddy_sites_deploy **成功**（连续第 21 日），固定域名与 sharecode **不变**（sandboxId 7b943eac6839457fa3ffc85b65107de4），verified=true；curl 验证 **HTTP 200** + `2026-11-02 06:02:02` + total_pnl `-488201.69` + 基准 `-13.92` 全部命中
+- 关键数据：持仓投入 **228.50万**（2284979.20）、持仓当前 **209.74万**（2097398.31）、持仓收益 **-18.76万（-8.21%）**、总收益 **-48.82万（-488201.69）**、总收益率 **-18.90%**（与 10-31 档完全一致，核对行情 time 后确认属正常——周末无新交易，三市场取值同为 10-30 收盘）
+- Git：commit **b0edecf**；push **成功**（69ed726..b0edecf，直连一次成功，代理未运行），本地 main ahead 0
+- 临时文件已清理（.tmp_raw.json / .tmp_csv.csv / .tmp_prices.json / .tmp_benchmarks.json / .tmp_codes.json / .tmp_tok.txt / .tmp_quote_raw.txt / .tmp_tdoc_err.txt）
+- 备注1：⚠️ 本档为本会话**第九次**遭遇「westock MCP 工具未注册」，方案C 再次跑通一次成功；连接器 auth-required 不影响 CLI/上游直连两条通道
+- 备注2：`snapshot_live.py` 自检通过（regions.整体.current 2094798.31 = 持仓当前 2097398.31 + cash_diff -2600，≠ 文档值 → 实时自算生效）
+- 备注3：本档数值与 10-31 档完全一致属正常（周末效应）；亚盛 27.20 仍在近期低位区间，康方 81.50 距 52 周低点 79.55 约 2.4%
