@@ -245,6 +245,8 @@ body{
 .chart-card .chart-title{font-size:16px;font-weight:700;letter-spacing:-.01em;}
 .chart-card .chart-desc{font-size:12px;color:var(--ink-3);margin:6px 0 14px;letter-spacing:.02em;}
 .chart-canvas-wrap{position:relative;height:440px;}
+/* ai coding: 折线图画布保留竖向滚动，横向拖动留给按住标注线 2026/11/05: 16:27 */
+#chartMaster,#chartDrawdown,#chartPosition{touch-action:pan-y;}
 .chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
 /* ai coding: 移除时间线容器外框并保留 SVG 原始绘制 2026/10/09: 15:56 */
 .timeline-card{background:#fbfbf8;overflow-x:auto;overflow-y:hidden;}
@@ -642,6 +644,127 @@ function calculateRangeStats(snapshots){
   return result;
 }
 
+// ai coding: 新增按住拖动标注线插件——触屏按住稍作停留或鼠标按下后出现竖向标注线，手指/鼠标拖动可来回滑动并联动 tooltip，松开即消失 2026/11/05: 16:27
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterInit(chart) {
+    const canvas = chart.canvas;
+    const state = chart.$crosshair = { active: false, index: null, cleanup: null };
+    let pressing = false, pressTimer = null, startX = 0, startY = 0;
+
+    const inChartArea = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const area = chart.chartArea;
+      if (!area) return false;
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      return x >= area.left && x <= area.right && y >= area.top && y <= area.bottom;
+    };
+    const indexFromEvent = (e) => {
+      const xScale = chart.scales.x;
+      if (!xScale) return null;
+      const rect = canvas.getBoundingClientRect();
+      const idx = Math.round(xScale.getValueForPixel(e.clientX - rect.left));
+      if (!isFinite(idx)) return null;
+      return Math.max(0, Math.min(chart.data.labels.length - 1, idx));
+    };
+    const moveTo = (idx) => {
+      if (idx == null || idx === state.index) return;
+      state.index = idx;
+      const points = [];
+      chart.data.datasets.forEach((ds, di) => {
+        if (chart.isDatasetVisible(di) && ds.data[idx] != null) points.push({ datasetIndex: di, index: idx });
+      });
+      chart.setActiveElements(points);
+      if (chart.tooltip) chart.tooltip.setActiveElements(points, { x: chart.scales.x.getPixelForValue(idx), y: chart.chartArea.top });
+      chart.update('none');
+    };
+    const endPress = () => {
+      pressing = false;
+      clearTimeout(pressTimer);
+      if (!state.active) return;
+      state.active = false;
+      state.index = null;
+      chart.setActiveElements([]);
+      if (chart.tooltip) chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+      chart.update('none');
+    };
+    const onPointerDown = (e) => {
+      if (!e.isPrimary || !inChartArea(e)) return;
+      pressing = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      clearTimeout(pressTimer);
+      if (e.pointerType === 'touch') {
+        // 触屏需按住 200ms 再激活，避免与上下滑动页面冲突（类似股票 App 长按 K 线）
+        pressTimer = setTimeout(() => { if (pressing) { state.active = true; moveTo(indexFromEvent(e)); } }, 200);
+      } else {
+        state.active = true;
+        moveTo(indexFromEvent(e));
+      }
+    };
+    const onPointerMove = (e) => {
+      if (!e.isPrimary) return;
+      if (state.active) { moveTo(indexFromEvent(e)); return; }
+      // 按住前若已明显移动（说明在滑页面），取消激活
+      if (pressing && (Math.abs(e.clientX - startX) > 8 || Math.abs(e.clientY - startY) > 8)) {
+        pressing = false;
+        clearTimeout(pressTimer);
+      }
+    };
+    const onContextMenu = (e) => { if (state.active) e.preventDefault(); };
+
+    canvas.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerup', endPress);
+    window.addEventListener('pointercancel', endPress);
+    canvas.addEventListener('contextmenu', onContextMenu);
+    state.cleanup = () => {
+      clearTimeout(pressTimer);
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', endPress);
+      window.removeEventListener('pointercancel', endPress);
+      canvas.removeEventListener('contextmenu', onContextMenu);
+    };
+  },
+  afterDatasetsDraw(chart) {
+    const state = chart.$crosshair;
+    if (!state || !state.active || state.index == null) return;
+    const area = chart.chartArea;
+    const xScale = chart.scales.x;
+    if (!area || !xScale) return;
+    const x = xScale.getPixelForValue(state.index);
+    if (!isFinite(x)) return;
+    const ctx = chart.ctx;
+    ctx.save();
+    // 竖向标注线（吸附到最近的日期点）
+    ctx.beginPath();
+    ctx.moveTo(x, area.top);
+    ctx.lineTo(x, area.bottom);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // 各条可见曲线在标注线处的高亮圆点
+    chart.data.datasets.forEach((ds, di) => {
+      if (!chart.isDatasetVisible(di)) return;
+      const el = chart.getDatasetMeta(di).data[state.index];
+      if (!el || !isFinite(el.x) || !isFinite(el.y)) return;
+      ctx.beginPath();
+      ctx.arc(el.x, el.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = ds.borderColor || INK;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+    });
+    ctx.restore();
+  },
+  destroy(chart) {
+    const state = chart.$crosshair;
+    if (state && state.cleanup) state.cleanup();
+  }
+};
+
 // ai coding: 重绘所选快照并移除不再展示的 meta 信息和开始日期参数 2026/10/09: 16:03
 function renderReport(snapshots, endDate){
   document.querySelectorAll('#page canvas').forEach(canvas => {
@@ -782,7 +905,8 @@ new Chart(document.getElementById('chartMaster'), {
         ticks: { color: INK3, font: { size: 11, family: FONT }, callback: v => v + '%' }
       }
     }
-  }
+  },
+  plugins: [crosshairPlugin]
 });
 
 // ── 03 Drawdown (single filled area) ──
@@ -818,7 +942,8 @@ new Chart(document.getElementById('chartDrawdown'), {
         grid: { color: RULE }, border: { color: INK },
         ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '%' } }
     }
-  }
+  },
+  plugins: [crosshairPlugin]
 });
 
 // ── 04 Position rate (single curve, from holdings_pos_curr_pct) ──
@@ -857,7 +982,8 @@ new Chart(document.getElementById('chartPosition'), {
         grid: { color: RULE }, border: { color: INK },
         ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '%' } }
     }
-  }
+  },
+  plugins: [crosshairPlugin]
 });
 
 // ── 05 Allocation (doughnut, grayscale + red accent) ──
