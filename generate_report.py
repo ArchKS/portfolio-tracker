@@ -644,7 +644,41 @@ function calculateRangeStats(snapshots){
   return result;
 }
 
-// ai coding: 新增按住拖动标注线插件——触屏按住稍作停留或鼠标按下后出现竖向标注线，手指/鼠标拖动可来回滑动并联动 tooltip，松开即消失 2026/11/05: 16:27
+// ai coding: 新增按住拖动标注线插件（含移动端触感反馈）——触屏按住稍作停留或鼠标按下后出现竖向标注线，拖动来回滑动并联动 tooltip，拖动每切换一个日期点轻震一下，松开即消失 2026/11/05: 16:54
+// 触感反馈：安卓走 Vibration API（需 HTTPS）；iOS Safari 不支持 vibrate，用隐藏的 switch 开关控件触发系统触感（iOS 17.5+），其余设备静默跳过
+const crosshairHaptic = (() => {
+  let iosControl = null;
+  const ua = navigator.userAgent || '';
+  const isIOS = /iP(hone|ad|od)/.test(ua) || (/Mac/.test(ua) && navigator.maxTouchPoints > 1);
+  if (isIOS) {
+    const label = document.createElement('label');
+    label.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;';
+    label.setAttribute('aria-hidden', 'true');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.setAttribute('switch', '');
+    label.appendChild(input);
+    document.body.appendChild(label);
+    iosControl = label;
+  }
+  return (strong) => {
+    try {
+      if (typeof navigator.vibrate === 'function' && navigator.vibrate(strong ? 12 : 4)) return;
+      if (iosControl) iosControl.click();
+    } catch (err) { /* 不支持触感反馈的设备静默忽略 */ }
+  };
+})();
+
+// ai coding: 新增固定侧 tooltip 定位器——无论悬浮还是按住标注线，数值标签都钉在绘图区左上角或右上角，并落在鼠标/手指对侧半区以防遮挡 2026/11/05: 17:04
+Chart.Tooltip.positioners.pinned = function(elements, eventPosition) {
+  const chart = this.chart;
+  const area = chart.chartArea;
+  if (!area) return false;
+  const refX = eventPosition ? eventPosition.x : (area.left + area.right) / 2;
+  const onRight = refX >= (area.left + area.right) / 2;
+  return { x: onRight ? area.left + 8 : area.right - 8, y: area.top + 8 };
+};
+
 const crosshairPlugin = {
   id: 'crosshair',
   afterInit(chart) {
@@ -669,14 +703,18 @@ const crosshairPlugin = {
     };
     const moveTo = (idx) => {
       if (idx == null || idx === state.index) return;
+      const first = state.index == null;
       state.index = idx;
+      // 拖动每切换一个日期点轻震一下（首次落点由激活震动覆盖）
+      if (!first) crosshairHaptic(false);
       const points = [];
       chart.data.datasets.forEach((ds, di) => {
         if (chart.isDatasetVisible(di) && ds.data[idx] != null) points.push({ datasetIndex: di, index: idx });
       });
       chart.setActiveElements(points);
       if (chart.tooltip) chart.tooltip.setActiveElements(points, { x: chart.scales.x.getPixelForValue(idx), y: chart.chartArea.top });
-      chart.update('none');
+      // 直接同步重绘：update('none') 会重放 Chart.js 上次 hover 事件，把标注线的 tooltip 状态覆盖掉
+      chart.draw();
     };
     const endPress = () => {
       pressing = false;
@@ -686,7 +724,7 @@ const crosshairPlugin = {
       state.index = null;
       chart.setActiveElements([]);
       if (chart.tooltip) chart.tooltip.setActiveElements([], { x: 0, y: 0 });
-      chart.update('none');
+      chart.draw();
     };
     const onPointerDown = (e) => {
       if (!e.isPrimary || !inChartArea(e)) return;
@@ -696,7 +734,7 @@ const crosshairPlugin = {
       clearTimeout(pressTimer);
       if (e.pointerType === 'touch') {
         // 触屏需按住 200ms 再激活，避免与上下滑动页面冲突（类似股票 App 长按 K 线）
-        pressTimer = setTimeout(() => { if (pressing) { state.active = true; moveTo(indexFromEvent(e)); } }, 200);
+        pressTimer = setTimeout(() => { if (pressing) { state.active = true; crosshairHaptic(true); moveTo(indexFromEvent(e)); } }, 200);
       } else {
         state.active = true;
         moveTo(indexFromEvent(e));
@@ -875,6 +913,8 @@ new Chart(document.getElementById('chartMaster'), {
                   color: INK, font: { size: 12, family: FONT, weight: '500' } }
       },
       tooltip: {
+        // ai coding: 标注线激活时数值标签固定在对侧上角 2026/11/05: 17:00
+        position: 'pinned',
         callbacks: {
           label: ctx => {
             const v = ctx.parsed.y;
@@ -929,7 +969,8 @@ new Chart(document.getElementById('chartDrawdown'), {
         onHover: (e) => { e.native.target.style.cursor = 'pointer'; },
         onLeave: (e) => { e.native.target.style.cursor = ''; },
         labels: { usePointStyle: true, pointStyle: 'rect', boxWidth: 14, padding: 14, color: INK, font: { size: 12, family: FONT, weight: '500' } } },
-      tooltip: { callbacks: { label: ctx => (ctx.parsed.y == null ? '—' : '回撤: ' + ctx.parsed.y.toFixed(2) + '%') } }
+      // ai coding: 标注线激活时数值标签固定在对侧上角 2026/11/05: 17:00
+      tooltip: { position: 'pinned', callbacks: { label: ctx => (ctx.parsed.y == null ? '—' : '回撤: ' + ctx.parsed.y.toFixed(2) + '%') } }
     },
     scales: {
       x: {
@@ -969,7 +1010,8 @@ new Chart(document.getElementById('chartPosition'), {
         onHover: (e) => { e.native.target.style.cursor = 'pointer'; },
         onLeave: (e) => { e.native.target.style.cursor = ''; },
         labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 26, padding: 14, color: INK, font: { size: 12, family: FONT, weight: '500' } } },
-      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(2) + '%') } }
+      // ai coding: 标注线激活时数值标签固定在对侧上角 2026/11/05: 17:00
+      tooltip: { position: 'pinned', callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(2) + '%') } }
     },
     scales: {
       x: {

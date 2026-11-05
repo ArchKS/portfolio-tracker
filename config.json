@@ -4,7 +4,7 @@
     "overview": true,
     "stats": false,
     "summary": true,
-    "drawdown": true,
+    "drawdown": false,
     "position": true,
     "allocation": true,
     "ranking": true,
