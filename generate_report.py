@@ -189,7 +189,7 @@ body{
   font-feature-settings:"tnum" 1;
   -webkit-font-smoothing:antialiased;
   padding:var(--pad);
-  max-width:1180px;
+  max-width:780px;
   margin:0 auto;
   touch-action:manipulation;
 }
@@ -226,7 +226,10 @@ body{
 .section.section-export-mode .chart-grid-2{grid-template-columns:1fr 1fr;}
 .section.section-export-mode .chart-card{padding:24px;}
 /* ai coding: 顶部保留更新时间和无边框起止日期输入并隐藏空提示 2026/10/09: 16:03 */
-.report-timestamp{text-align:left;color:var(--ink-3);font-size:11px;letter-spacing:.04em;margin-bottom:14px;}
+/* ai coding: 更新时间放在页面内容之外顶部居中平时折叠仅下拉时展开 2026/11/06: 18:46 */
+.report-timestamp{position:relative;top:calc(-1 * var(--pad));height:0;overflow:hidden;opacity:0;text-align:center;color:var(--ink-3);font-size:11px;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;transition:height .18s ease,opacity .18s ease;}
+.report-timestamp.is-pulling{transition:none;}
+@media(prefers-reduced-motion:reduce){.report-timestamp{transition:none;}}
 .date-filter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;font-size:12px;color:var(--ink-2);}
 .date-filter label{display:flex;align-items:center;gap:6px;}
 .date-filter input{font:inherit;border:0;border-radius:4px;padding:7px 10px;background:#f5f5f5;color:var(--ink);min-width:0;}
@@ -279,10 +282,10 @@ body{
 .ht-line::before{left:0;}
 .ht-line::after{right:0;}
 .ht-line.ht-open::after{background:var(--paper);outline:1px solid var(--ht-tone);}
-.ht-annual{position:absolute;left:calc(var(--ht-start) + var(--ht-span));top:7px;transform:translateX(-50%);color:var(--ht-tone);font-size:13px;font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.ht-annual{position:absolute;left:calc(var(--ht-start) + var(--ht-span));top:14px;transform:translateX(-50%);color:var(--ht-tone);font-size:13px;font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums;}
 .ht-detail{margin-top:18px;padding-top:18px;border-top:1px solid var(--rule);min-height:120px;}
 .ht-detail-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;}
-.ht-detail-head b{font-weight:500;font-size:13px;color:var(--ink);}
+.ht-detail-head b{font-weight:500;font-size:18px;color:var(--ink);}
 .ht-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px;}
 .ht-metric span{display:block;font-size:12px;color:var(--ink-2);}
 .ht-metric strong{display:block;font-weight:500;font-size:20px;margin-top:5px;color:var(--ink);font-variant-numeric:tabular-nums;}
@@ -380,7 +383,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 }
 @media (max-width:600px){
   :root{--pad:10px;}
-  body{padding:14px;}
+  body{padding:3px;}
   /* ai coding: 移动端页眉保持无边框布局 2026/10/09: 15:56 */
   .masthead{padding-bottom:12px;margin-bottom:24px;}
   .masthead .kicker{font-size:10px;letter-spacing:.14em;}
@@ -415,10 +418,10 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   table{font-size:11px;}
   thead th{padding:8px;font-size:9px;text-align:center;}
   tbody td{padding:8px;text-align:center;}
-  /* ai coding: 全宽折线图卡片收紧上下留白并保留图内安全边距 2026/11/06: 15:44 */
+  /* ai coding: 移动折线图取消负边距由组件配置统一控制左右间距 2026/11/06: 19:02 */
   .section[data-section="summary"] .chart-card,
   .section[data-section="drawdown"] .chart-card,
-  .section[data-section="position"] .chart-card{margin-left:-14px;margin-right:-14px;width:auto;padding:8px 0 0;}
+  .section[data-section="position"] .chart-card{margin-left:0;margin-right:0;width:100%;padding:8px 0 0;}
   /* ai coding: 持仓明细表公司名称列在移动端横向滚动时吸附固定，覆盖左侧市场列 2026/11/06: 15:17 */
   .table-scroll thead th:nth-child(2){position:sticky;left:0;background:#fff;z-index:2;}
   .table-scroll tbody td.name{position:sticky;left:0;background:#fff;z-index:1;}
@@ -484,13 +487,15 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 </head>
 <body>
 
-<div id="page">
-<!-- ai coding: 将最近更新时间移至页面最上方并随页面自然滚动 2026/10/09: 15:56 -->
+<!-- ai coding: 更新时间移出报告主体作为顶部下拉区域 2026/11/06: 18:46 -->
 <div class="report-timestamp">最近更新时间：__GENERATED_AT__（北京时间）</div>
-<div class="masthead">
+<div id="page">
+<!-- ai coding: 日期栏关闭时同时隐藏空页眉防止二十八像素下边距产生顶部留白 2026/11/06: 19:04 -->
+<div class="masthead" __DATE_FILTER_VISIBILITY__>
   <!-- ai coding: 删除页眉重复英文标题只保留报告名称 2026/11/06: 16:22 -->
   <!-- ai coding: 日期选择叠加固定年月日文本保留系统日期选择器 2026/11/06: 16:42 -->
-  <div class="date-filter">
+  <!-- ai coding: 日期栏在生成 HTML 时即按配置隐藏避免刷新首帧闪现 2026/11/06: 18:48 -->
+  <div class="date-filter" __DATE_FILTER_VISIBILITY__>
     <label>开始 <span class="date-input-shell"><span id="dateStartDisplay" aria-hidden="true"></span><input id="dateStart" type="date" required></span></label>
     <label>结束 <span class="date-input-shell"><span id="dateEndDisplay" aria-hidden="true"></span><input id="dateEnd" type="date" required></span></label>
     <span class="date-filter-status" id="dateFilterStatus" role="status" aria-live="polite"></span>
@@ -688,6 +693,68 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 const rawData = __DATA__;
 const stats = __STATS__;
 const pageConfig = __CONFIG__;
+// ai coding: 所有组件含折线图均在内容外层应用等距边距标题保持原位 2026/11/06: 19:02
+const componentMargin = name => {
+  const value = pageConfig.component_margins?.[name];
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : 0;
+};
+function applyComponentMargin(section) {
+  const name = section.dataset.section;
+  const margin = componentMargin(name);
+  Array.from(section.children).forEach(content => {
+    if (content.classList.contains('section-head') || content.tagName === 'SCRIPT') return;
+    content.style.marginInline = margin + 'px';
+    content.style.width = 'calc(100% - ' + margin * 2 + 'px)';
+  });
+}
+document.querySelectorAll('.section[data-section]').forEach(applyComponentMargin);
+// ai coding: 动态新增清仓组件也只调整内容边距保持标题对齐 2026/11/06: 18:59
+new MutationObserver(records => {
+  records.forEach(record => record.addedNodes.forEach(node => {
+    if (node.nodeType === 1 && node.matches('.section[data-section]')) applyComponentMargin(node);
+  }));
+}).observe(document.getElementById('page'), { childList: true });
+[['date_filter', '.date-filter'], ['report_timestamp', '.report-timestamp']].forEach(([name, selector]) => {
+  const element = document.querySelector(selector);
+  if (!element) return;
+  const margin = componentMargin(name);
+  element.style.marginInline = margin + 'px';
+  element.style.width = 'calc(100% - ' + margin * 2 + 'px)';
+});
+// ai coding: 仅在页面顶部单指下拉时展示更新时间松手收起并避开图表及表单手势 2026/11/06: 18:46
+const reportTimestamp = document.querySelector('.report-timestamp');
+let timestampPull = null;
+const closeTimestamp = () => {
+  timestampPull = null;
+  reportTimestamp.classList.remove('is-pulling');
+  reportTimestamp.style.height = '0px';
+  reportTimestamp.style.opacity = '0';
+};
+document.addEventListener('touchstart', event => {
+  if (event.touches.length !== 1 || window.scrollY > 0 || event.target.closest('.chart-card,.table-scroll,input,button')) return;
+  timestampPull = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+}, { passive: true });
+document.addEventListener('touchmove', event => {
+  if (!timestampPull) return;
+  if (event.touches.length !== 1 || window.scrollY > 0) { closeTimestamp(); return; }
+  const dx = Math.abs(event.touches[0].clientX - timestampPull.x);
+  const dy = event.touches[0].clientY - timestampPull.y;
+  if (dy <= 0 || dx > dy) { closeTimestamp(); return; }
+  const height = Math.min(52, dy * 0.4);
+  reportTimestamp.classList.add('is-pulling');
+  reportTimestamp.style.height = height + 'px';
+  reportTimestamp.style.opacity = String(Math.min(1, height / 26));
+}, { passive: true });
+document.addEventListener('touchend', closeTimestamp, { passive: true });
+document.addEventListener('touchcancel', closeTimestamp, { passive: true });
+// ai coding: 日期栏与页眉同步按配置隐藏避免空容器边距残留默认保持显示 2026/11/06: 19:04
+const dateFilterElement = document.querySelector('.date-filter');
+if (dateFilterElement) {
+  const display = pageConfig.date_filter === false ? 'none' : '';
+  dateFilterElement.style.display = display;
+  const masthead = dateFilterElement.closest('.masthead');
+  if (masthead) masthead.style.display = display;
+}
 
 // ai coding: 保留所有快照供日期筛选并共享当前区间末日供图片导出 2026/10/09: 15:56
 const allSnapshots = rawData.snapshots || [];
@@ -714,12 +781,12 @@ const FONT = "'Inter','Noto Sans SC',sans-serif";
 // ai coding: 移动端断点控制 Y 轴刻度数字显隐与折线线宽；Y 轴标题三端统一去掉（刻度带 % 后缀足以区分，且标题与图例互相遮挡） 2026/11/06: 15:26
 const isMobileView = window.innerWidth <= 600;
 const hideYAxisLabel = isMobileView;
-// ai coding: 资产保留蓝色收益和收益率使用统一盈亏配色并保持原线宽 2026/11/06: 18:31
-const C_ASSET = '#2962ff';
+// ai coding: 资产曲线使用页面次级文字深灰收益与收益率沿用统一深红深绿 2026/11/06: 18:45
+const C_ASSET = INK2;
 const C_PNL = PROFIT;
 const C_ROI = PROFIT;
+// ai coding: 三张折线图全部沿用仓位率的线宽手机一点三桌面二像素 2026/11/06: 18:43
 const LW_MAIN = isMobileView ? 1.3 : 2;
-const LW_SUB = isMobileView ? 1.1 : 1.7;
 // ai coding: 日期刻度改由 ECharts axisLabel.hideOverlap 自动抽稀，原 Chart.js ticks 配置移除 2026/11/06: 14:48
 
 // ai coding: 按所选快照重新计算持仓极值、最大回撤和日收益统计 2026/10/09: 15:58
@@ -912,7 +979,8 @@ function tvBaseOption(pointCount) {
   return {
     animation: false,
     textStyle: { fontFamily: FONT },
-    grid: { left: 24, right: 24, top: 30, bottom: isMobileView ? 30 : 32, containLabel: true },
+    // ai coding: 所有折线图统一左侧零留白右侧十二像素安全间距 2026/11/06: 18:50
+    grid: { left: 0, right: 12, top: 30, bottom: isMobileView ? 30 : 32, containLabel: true },
     // ai coding: 折线图启用双指缩放与单指平移长按时暂停平移 2026/11/06: 16:31
     dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'none',
       start: 0, end: 100, minValueSpan: 1, throttle: 50,
@@ -1024,57 +1092,93 @@ const summarySeriesConfig = pageConfig?.summary_series || {};
 const summarySeriesDefaults = { asset: false, pnl: false, roi: true };
 const defaultSeriesVisible = key => typeof summarySeriesConfig[key] === 'boolean'
   ? summarySeriesConfig[key] : summarySeriesDefaults[key];
+// ai coding: 多曲线末端名称向绘图区内侧对齐减少右侧留白并保留正负着色 2026/11/06: 18:47
+const showMasterEndpoints = ['asset', 'pnl', 'roi'].filter(defaultSeriesVisible).length > 1;
+function masterEndpoint(name, values, color, signed = false) {
+  return {
+    symbol: 'circle', showSymbol: true,
+    symbolSize: (_, params) => params.dataIndex === values.length - 1 ? 5 : 0,
+    endLabel: {
+      show: showMasterEndpoints, distance: -8, align: 'right', verticalAlign: 'bottom',
+      fontSize: 11, fontFamily: FONT,
+      formatter: params => {
+        const value = Array.isArray(params.value) ? params.value[params.value.length - 1] : params.value;
+        const tone = signed ? (value > 0 ? 'profit' : value < 0 ? 'loss' : 'neutral') : 'asset';
+        return '{' + tone + '|' + name + '}';
+      },
+      rich: { asset: { color, fontSize: 11 }, profit: { color: PROFIT, fontSize: 11 },
+        loss: { color: LOSS, fontSize: 11 }, neutral: { color: INK3, fontSize: 11 } }
+    },
+    labelLayout: { moveOverlap: 'shiftY' }
+  };
+}
 const masterChart = echarts.init(document.getElementById('chartMaster'));
 masterChart.setOption({
   ...tvBaseOption(dates.length),
-  // ai coding: 综合图单行读数下方留十二像素空白后开始绘图区 2026/11/06: 15:53
-  grid: { ...tvBaseOption(dates.length).grid, top: 30 },
+  // ai coding: 主图内部左右零留白组件边距仅由外层容器承担避免重复或抵消 2026/11/06: 19:02
+  grid: { ...tvBaseOption(dates.length).grid, top: 30, left: 0, right: 0 },
   legend: { ...tvBaseOption(dates.length).legend, selected: { '资产': defaultSeriesVisible('asset'), '收益': defaultSeriesVisible('pnl'), '收益率': defaultSeriesVisible('roi') } },
   tooltip: tvTooltip(p => p.seriesName === '收益率' ? p.value.toFixed(2) + '%' : fmtWan(p.value * 10000)),
   xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
-  // ai coding: 收益与收益率曲线正值深红负值深绿零值保持灰色 2026/11/06: 18:31
+  // ai coding: 使用有限数值区间保证收益曲线线段正确映射页面深红深绿色 2026/11/06: 18:45
   visualMap: { show: false, type: 'piecewise', seriesIndex: [1, 2], dimension: 1,
-    pieces: [{ gt: 0, color: PROFIT }, { lt: 0, color: LOSS }, { value: 0, color: INK3 }] },
+    pieces: [{ gt: 0, lte: Math.max(0, ...pnlWan, ...roiVals), color: PROFIT },
+      { gte: Math.min(0, ...pnlWan, ...roiVals), lt: 0, color: LOSS }, { value: 0, color: INK3 }] },
   yAxis: [
     { type: 'value', position: 'left',
       axisLine: { show: false }, axisTick: { show: false },
-      axisLabel: { ...tvAxisLabel, color: INK2, show: !hideYAxisLabel },
+      // ai coding: 主图左轴刻度置于图内避免桌面刻度挤出左侧留白 2026/11/06: 18:49
+      axisLabel: { ...tvAxisLabel, color: INK2, show: !hideYAxisLabel, inside: true, align: 'left', margin: 8 },
       splitLine: { lineStyle: { color: TV_SPLIT } } },
     { type: 'value', position: 'right',
       axisLine: { show: false }, axisTick: { show: false },
-      axisLabel: { ...tvAxisLabel, formatter: '{value}%', show: !hideYAxisLabel },
+      // ai coding: 右轴刻度放入图内避免图表自动追加单侧外部间距 2026/11/06: 19:02
+      axisLabel: { ...tvAxisLabel, formatter: '{value}%', show: !hideYAxisLabel, inside: true, align: 'right', margin: 8 },
       splitLine: { show: false } }
   ],
   series: [
     { name: '资产', type: 'line', data: assetWan, yAxisIndex: 0,
-      symbol: 'none', smooth: 0.3, lineStyle: { color: C_ASSET, width: LW_MAIN }, itemStyle: { color: C_ASSET },
+      // ai coding: 资产曲线增加末端圆点名称并保持统一仓位率线宽 2026/11/06: 18:43
+      ...masterEndpoint('资产', assetWan, C_ASSET),
+      smooth: 0.3, lineStyle: { color: C_ASSET, width: LW_MAIN }, itemStyle: { color: C_ASSET },
       markPoint: tvExtremum(C_ASSET, '万', 1, assetWan) },
     { name: '收益', type: 'line', data: pnlWan, yAxisIndex: 0,
-      // ai coding: 收益曲线由数值正负决定颜色并同步极值标记 2026/11/06: 18:31
-      symbol: 'none', smooth: 0.3, lineStyle: { width: LW_SUB }, itemStyle: { color: C_PNL },
+      // ai coding: 收益增加端点名称并沿用正负配色及统一仓位率线宽 2026/11/06: 18:43
+      ...masterEndpoint('收益', pnlWan, C_PNL, true),
+      smooth: 0.3, lineStyle: { width: LW_MAIN }, itemStyle: { color: C_PNL },
       markPoint: tvExtremum(C_PNL, '万', 2, pnlWan, true) },
     { name: '收益率', type: 'line', data: roiVals, yAxisIndex: 1,
-      // ai coding: 收益率曲线由数值正负决定颜色并同步极值标记 2026/11/06: 18:31
-      symbol: 'none', smooth: 0.3, lineStyle: { width: LW_SUB }, itemStyle: { color: C_ROI },
+      // ai coding: 收益率增加端点名称并沿用正负配色及统一仓位率线宽 2026/11/06: 18:43
+      ...masterEndpoint('收益率', roiVals, C_ROI, true),
+      smooth: 0.3, lineStyle: { width: LW_MAIN }, itemStyle: { color: C_ROI },
       markPoint: tvExtremum(C_ROI, '%', 0, roiVals, true) }
   ]
 });
 bindScrubHaptic(masterChart);
+// ai coding: 图例只剩一条可见曲线时隐藏端点名称多条时自动恢复 2026/11/06: 18:43
+masterChart.on('legendselectchanged', event => {
+  const show = ['资产', '收益', '收益率'].filter(name => event.selected[name] !== false).length > 1;
+  masterChart.setOption({ series: ['资产', '收益', '收益率'].map(name => ({ name, endLabel: { show } })) });
+});
 
 // ── 03 Drawdown (ECharts 面积线) ──
 // ai coding: 回撤曲线和极值使用黑色并将面积改为由白到黑的灰阶渐变 2026/11/06: 15:44
 const drawdownChart = echarts.init(document.getElementById('chartDrawdown'));
 drawdownChart.setOption({
   ...tvBaseOption(dates.length),
+  // ai coding: 回撤内部左右零留白组件配置统一作用于外层 2026/11/06: 19:02
+  grid: { ...tvBaseOption(dates.length).grid, left: 0, right: 0 },
   tooltip: tvTooltip(p => p.value.toFixed(2) + '%'),
   xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
   yAxis: { type: 'value',
     axisLine: { show: false }, axisTick: { show: false },
-    axisLabel: { ...tvAxisLabel, color: INK2, formatter: '{value}%', show: !hideYAxisLabel },
+    // ai coding: 回撤左轴刻度移入图内确保左侧零留白 2026/11/06: 18:50
+    axisLabel: { ...tvAxisLabel, color: INK2, formatter: '{value}%', show: !hideYAxisLabel, inside: true, align: 'left', margin: 8 },
     splitLine: { lineStyle: { color: TV_SPLIT } } },
   series: [
     { name: '回撤', type: 'line', data: ddOverall, symbol: 'none', smooth: 0.3,
-      lineStyle: { color: INK, width: 2 }, itemStyle: { color: INK },
+      // ai coding: 回撤曲线与仓位率统一使用同一线宽 2026/11/06: 18:43
+      lineStyle: { color: INK, width: LW_MAIN }, itemStyle: { color: INK },
       areaStyle: { origin: 'end', color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
         { offset: 0, color: 'rgba(255,255,255,0.06)' },
         { offset: 1, color: 'rgba(0,0,0,0.48)' }
@@ -1099,13 +1203,16 @@ positionExtremum.data[1].label = { ...positionExtremum.data[1].label, position: 
 const positionChart = echarts.init(document.getElementById('chartPosition'));
 positionChart.setOption({
   ...tvBaseOption(dates.length),
+  // ai coding: 仓位率内部左右零留白组件配置统一作用于外层 2026/11/06: 19:02
+  grid: { ...tvBaseOption(dates.length).grid, left: 0, right: 0 },
   // ai coding: 仓位图图例仅显示仓位曲线不显示辅助网格 2026/11/06: 16:47
   legend: { ...tvBaseOption(dates.length).legend, data: ['仓位'] },
   tooltip: tvTooltip(p => p.value.toFixed(2) + '%'),
   xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
   yAxis: { type: 'value', min: positionMin, max: positionMax,
     axisLine: { show: false }, axisTick: { show: false },
-    axisLabel: { ...tvAxisLabel, color: INK2, formatter: '{value}%', show: !hideYAxisLabel },
+    // ai coding: 仓位率左轴刻度移入图内确保左侧零留白 2026/11/06: 18:50
+    axisLabel: { ...tvAxisLabel, color: INK2, formatter: '{value}%', show: !hideYAxisLabel, inside: true, align: 'left', margin: 8 },
     splitLine: { show: false } },
   series: [
     { name: '仓位', type: 'line', data: posRateData, symbol: 'none', smooth: 0.3,
@@ -1888,6 +1995,8 @@ def generate_report(snapshots, stats):
             .replace("__DATA__", data_json)
             .replace("__STATS__", stats_json)
             .replace("__CONFIG__", config_json)
+            # ai coding: 日期筛选关闭时直接写入隐藏样式无需等待 JavaScript 2026/11/06: 18:48
+            .replace("__DATE_FILTER_VISIBILITY__", 'style="display:none"' if config.get("date_filter") is False else '')
             # ai coding: 将原生时间线内容写入报告模板 2026/11/06: 18:24
             .replace("__TIMELINE_HTML__", timeline_html)
             .replace("__GENERATED_AT__", generated_at))
@@ -1916,8 +2025,18 @@ def main():
 
     stats = calculate_stats(snapshots)
     output_file = generate_report(snapshots, stats)
+    # ai coding: 生成报告后自动同步网页入口避免配置修改只写入 report 而页面仍用旧值 2026/11/06: 19:01
+    public_dir = os.path.join(script_dir, "public")
+    os.makedirs(public_dir, exist_ok=True)
+    public_file = os.path.join(public_dir, "index.html")
+    with open(output_file, "r", encoding="utf-8") as report_file:
+        html = report_file.read()
+    with open(public_file, "w", encoding="utf-8") as page_file:
+        page_file.write(html)
 
     print(f"[OK] 报告已生成: {output_file}")
+    # ai coding: 显示已同步的网页入口便于确认配置已写入实际页面 2026/11/06: 19:01
+    print(f"     网页入口已同步: {public_file}")
     print(f"     快照数量: {len(snapshots)}")
     print(f"     最新日期: {stats.get('latest_date', 'N/A')}")
     print(f"     持仓数量: {stats.get('holdings_count', 0)}")

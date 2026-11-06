@@ -281,7 +281,11 @@ def generate_timeline_html(config):
         profit = trade.get("profit", 0)
         tone = "neutral" if row["open"] or profit == 0 else "profit" if profit > 0 else "loss"
         annual = row.get("annualized")
-        numeric = f'{annual * 100:+.0f}%' if annual is not None else "持有中"
+        # ai coding: 线段标记按配置显示持有年数利润年化未清仓保留真实状态 2026/11/06: 18:54
+        years = f'{(endpoint - row["buy"]).days / 365.25:.2f}年'
+        numeric = " / ".join(part.replace("利润", "").replace("年化", "") for part in row["label"].split("｜"))
+        if row["open"]:
+            numeric = years + " / " + numeric
         name = escape(row["name"])
         interval = f'{row["buy"].isoformat()} → {endpoint.isoformat()}'
         rows.append({"name": row["name"], "interval": interval,
@@ -294,7 +298,7 @@ def generate_timeline_html(config):
             f'style="--ht-start:{left:.4f}%;--ht-span:{width:.4f}%">'
             f'<span class="ht-name">{name}</span><span class="ht-track">'
             f'<i class="ht-line {"ht-open" if row["open"] else ""}"></i>'
-            f'<span class="ht-annual">{numeric}</span></span></button>'
+            f'<span class="ht-annual">{escape(numeric)}</span></span></button>'
         )
     html.append('</div><div class="ht-detail" aria-live="polite"></div></div>')
     payload = json.dumps(rows, ensure_ascii=False).replace("<", "\\u003c")
@@ -354,6 +358,16 @@ def generate_timeline_html(config):
     if (button) select(Number(button.dataset.holding));
   });
   select(0);
+  // ai coding: 长收益标记按实际宽度收进图内防止手机端超出左右边界 2026/11/06: 18:54
+  new ResizeObserver(() => {
+    root.querySelectorAll('.ht-row').forEach(button => {
+      const track = button.querySelector('.ht-track');
+      const label = button.querySelector('.ht-annual');
+      const endpoint = (parseFloat(button.style.getPropertyValue('--ht-start')) + parseFloat(button.style.getPropertyValue('--ht-span'))) / 100 * track.clientWidth;
+      label.style.transform = 'none';
+      label.style.left = Math.max(0, Math.min(endpoint - label.offsetWidth, track.clientWidth - label.offsetWidth)) + 'px';
+    });
+  }).observe(root);
 })();
 </script>''')
     return "\n".join(html)
