@@ -375,6 +375,34 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 .section[data-section="summary"] .section-head{padding-bottom:0;margin-bottom:0;}
 .section[data-section="summary"] > .chart-card{padding-top:12px;}
 
+/* ai coding: 页眉日期操作与概览统计改用简约排版并将长标的名称独立成行 2026/11/06: 16:22 */
+.masthead{margin-bottom:28px;padding-bottom:0;}
+.masthead h1{font-size:34px;font-weight:700;line-height:1.2;margin-top:0;}
+.date-filter{gap:12px;margin-top:20px;}
+.date-filter label{gap:8px;font-size:12px;color:var(--ink-3);}
+.date-filter input{padding:8px 10px;border-radius:6px;background:#f6f6f6;font-size:13px;}
+.save-btn{background:transparent;color:var(--ink-2);padding:8px 0;margin-left:auto;font-size:12px;}
+.strip,.stat-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 20px;}
+.cell,.stat{min-width:0;padding:0;}
+.cell .num,.stat .l{font-size:11px;font-weight:400;letter-spacing:0;color:var(--ink-3);}
+.cell .val{font-size:28px;line-height:1.2;margin-top:8px;font-weight:650;}
+.stat .v{font-size:21px;line-height:1.3;margin-top:8px;font-weight:600;white-space:normal;overflow-wrap:anywhere;}
+.stat .n{font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:5px;overflow-wrap:anywhere;}
+@media(max-width:600px){
+  .masthead h1{font-size:28px;}
+  .date-filter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin-top:16px;}
+  .date-filter label{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:4px;}
+  .date-filter input{width:100%;box-sizing:border-box;min-height:36px;}
+  .date-filter-status{grid-column:1/-1;}
+  .save-btn{grid-column:1/-1;justify-self:end;margin-left:0;padding:2px 0;}
+  .strip,.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;}
+  .cell .val{font-size:26px;}
+  .cell .num,.stat .l{font-size:11px;letter-spacing:0;}
+  .stat .v{font-size:20px;}
+  .section[data-section="overview"],.section[data-section="stats"]{margin-bottom:32px;}
+  .section[data-section="overview"] .section-head,.section[data-section="stats"] .section-head{margin-bottom:18px;}
+}
+
 </style>
 </head>
 <body>
@@ -383,14 +411,14 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <!-- ai coding: 将最近更新时间移至页面最上方并随页面自然滚动 2026/10/09: 15:56 -->
 <div class="report-timestamp">最近更新时间：__GENERATED_AT__（北京时间）</div>
 <div class="masthead">
-  <div class="kicker">Portfolio Performance Report</div>
+  <!-- ai coding: 删除页眉重复英文标题只保留报告名称 2026/11/06: 16:22 -->
   <h1>持仓收益分析</h1>
-  <!-- ai coding: 删除 meta、区间预设和应用按钮，仅保留起止日期选择 2026/10/09: 16:03 -->
+  <!-- ai coding: 日期选择保留开始结束标签并将图片导出按钮改为中文 2026/11/06: 16:23 -->
   <div class="date-filter">
     <label>开始 <input id="dateStart" type="date" required></label>
     <label>结束 <input id="dateEnd" type="date" required></label>
     <span class="date-filter-status" id="dateFilterStatus" role="status" aria-live="polite"></span>
-  <button class="save-btn" onclick="saveAsImage()">SAVE AS PNG</button>
+  <button class="save-btn" onclick="saveAsImage()">保存图片</button>
   </div>
 </div>
 
@@ -670,7 +698,8 @@ function tvTooltip(fmtVal) {
   return {
     trigger: 'axis',
     // 轻点钉住读数、按住拖动连续刷选；position 固定左上角，不再做左右侧切换
-    triggerOn: 'mousemove|click',
+    // ai coding: 移动端禁用自动光标改为长按手动显示读数 2026/11/06: 16:31
+    triggerOn: isMobileView ? 'none' : 'mousemove|click',
     // ai coding: 固定读数增加左右内边距并限制在图表宽度内 2026/11/06: 15:44
     position: [16, 0],
     confine: true,
@@ -680,6 +709,8 @@ function tvTooltip(fmtVal) {
     textStyle: { color: INK, fontSize: 11, fontFamily: FONT },
     extraCssText: 'box-shadow:none;pointer-events:none;',
     axisPointer: {
+      // ai coding: 移动端竖线仅响应长按派发的图表动作 2026/11/06: 16:31
+      triggerOn: isMobileView ? 'none' : 'mousemove|click',
       type: isMobileView ? 'line' : 'cross',
       snap: true,
       // ai coding: 移动端隐藏横向光标数值避免贴边裁切 2026/11/06: 15:44
@@ -724,6 +755,60 @@ const scrubHaptic = (() => {
     } catch (err) { /* 不支持触感反馈的设备静默忽略 */ }
   };
 })();
+// ai coding: 单指拖动平移图表长按三百五十毫秒进入读数模式松手隐藏光标 2026/11/06: 16:31
+document.querySelectorAll('#chartMaster,#chartDrawdown,#chartPosition').forEach(host => {
+  let gesture = null;
+  let holdTimer = null;
+  const chart = () => echarts.getInstanceByDom(host);
+  const cancelTimer = () => { clearTimeout(holdTimer); holdTimer = null; };
+  const showReading = touch => {
+    const bounds = host.getBoundingClientRect();
+    chart()?.dispatchAction({ type: 'showTip', x: touch.clientX - bounds.left, y: touch.clientY - bounds.top });
+  };
+  const release = () => {
+    cancelTimer();
+    if (gesture?.holding) chart()?.setOption({ dataZoom: [{ moveOnMouseMove: true }] });
+    chart()?.dispatchAction({ type: 'hideTip' });
+    chart()?.dispatchAction({ type: 'updateAxisPointer', currTrigger: 'leave' });
+    gesture = null;
+  };
+  host.addEventListener('touchstart', event => {
+    release();
+    if (event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    gesture = { x: touch.clientX, y: touch.clientY, direction: null, holding: false };
+    holdTimer = setTimeout(() => {
+      if (!gesture || gesture.direction) return;
+      gesture.holding = true;
+      chart()?.setOption({ dataZoom: [{ moveOnMouseMove: false }] });
+      showReading(touch);
+      scrubHaptic();
+    }, 350);
+  }, { passive: true });
+  host.addEventListener('touchmove', event => {
+    if (event.touches.length === 2) {
+      release();
+      if (event.cancelable) event.preventDefault();
+      return;
+    }
+    if (!gesture || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    if (gesture.holding) {
+      if (event.cancelable) event.preventDefault();
+      showReading(touch);
+      return;
+    }
+    const dx = Math.abs(touch.clientX - gesture.x);
+    const dy = Math.abs(touch.clientY - gesture.y);
+    if (!gesture.direction && Math.max(dx, dy) >= 6) {
+      cancelTimer();
+      gesture.direction = dx > dy ? 'horizontal' : 'vertical';
+    }
+    if (gesture.direction === 'horizontal' && event.cancelable) event.preventDefault();
+  }, { passive: false });
+  host.addEventListener('touchend', release, { passive: true });
+  host.addEventListener('touchcancel', release, { passive: true });
+});
 function bindScrubHaptic(chart) {
   let lastIdx = null;
   chart.on('updateAxisPointer', e => {
@@ -756,6 +841,11 @@ function tvBaseOption(pointCount) {
     animation: false,
     textStyle: { fontFamily: FONT },
     grid: { left: 24, right: 24, top: 44, bottom: isMobileView ? 30 : 32, containLabel: true },
+    // ai coding: 折线图启用双指缩放与单指平移长按时暂停平移 2026/11/06: 16:31
+    dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'none',
+      start: 0, end: 100, minValueSpan: 1, throttle: 50,
+      zoomOnMouseWheel: false, moveOnMouseMove: true, moveOnMouseWheel: false,
+      preventDefaultMouseMove: false }],
     legend: isMobileView
       ? { left: 'center', bottom: 0, ...legendBase }
       : { right: 4, top: 2, ...legendBase },
@@ -796,11 +886,12 @@ const stripEl = document.getElementById('strip');
 const holdingsCurrent = summary.regions?.['整体']?.current ?? summary.holdings_current;
 const totalPnl = summary.total_pnl;
 const totalRoi = summary.total_roi;
+// ai coding: 概览标签使用中文并删除重复序号与缩写 2026/11/06: 16:22
 const cells = [
-  { num:'01 · TA 总收益', label:'', value: fmtWan(holdingsCurrent), sub:'', cls:'' },
-  { num:'02 · YTD P&L', label:'', value: fmtWan(totalPnl), sub:'', cls: colorClass(totalPnl) },
-  { num:'03 · YTD 总收益率', label:'', value: fmtPct(totalRoi), sub:'', cls: colorClass(totalRoi) },
-  { num:'04 · MDD 最大回撤', label:'', value: stats.max_drawdown != null ? stats.max_drawdown.toFixed(2) + '%' : '—', sub: '', cls:'down' },
+  { num:'持仓总资产', label:'', value: fmtWan(holdingsCurrent), sub:'', cls:'' },
+  { num:'区间收益', label:'', value: fmtWan(totalPnl), sub:'', cls: colorClass(totalPnl) },
+  { num:'区间收益率', label:'', value: fmtPct(totalRoi), sub:'', cls: colorClass(totalRoi) },
+  { num:'最大回撤', label:'', value: stats.max_drawdown != null ? stats.max_drawdown.toFixed(2) + '%' : '—', sub: '', cls:'down' },
 ];
 stripEl.innerHTML = cells.map(c => `
   <div class="cell">
@@ -912,13 +1003,13 @@ bindScrubHaptic(drawdownChart);
 
 // ── 04 Position rate (ECharts 单折线) ──
 const posRateData = snapshots.map(s => (s.summary || {}).holdings_pos_curr_pct);
-// ai coding: 仓位率图删除满仓参考线；Y 轴不设上限，仓位超过 100% 时线条不再被截断 2026/11/06: 15:26
+// ai coding: 仓位率纵轴按有效数据极值上下各增加十个百分点 2026/11/06: 16:22
 const positionChart = echarts.init(document.getElementById('chartPosition'));
 positionChart.setOption({
   ...tvBaseOption(dates.length),
   tooltip: tvTooltip(p => p.value.toFixed(2) + '%'),
   xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
-  yAxis: { type: 'value', min: 0,
+  yAxis: { type: 'value', min: value => value.min - 10, max: value => value.max + 10,
     axisLine: { show: false }, axisTick: { show: false },
     axisLabel: { ...tvAxisLabel, color: INK2, formatter: '{value}%', show: !hideYAxisLabel },
     splitLine: { lineStyle: { color: TV_SPLIT } } },
@@ -1037,17 +1128,20 @@ statItems.push({ l: '持仓数量', v: stats.holdings_count + ' 只' });
 if (stats.max_drawdown != null) statItems.push({ l: '最大回撤', v: stats.max_drawdown.toFixed(2) + '%', cls: 'down' });
 if (stats.max_daily_return != null) statItems.push({ l: '最大日收益', v: fmtPct(stats.max_daily_return), cls: colorClass(stats.max_daily_return) });
 if (stats.min_daily_return != null) statItems.push({ l: '最大日亏损', v: fmtPct(stats.min_daily_return), cls: colorClass(stats.min_daily_return) });
-if (stats.max_roi != null) statItems.push({ l: '最大收益率', v: stats.max_roi_name + ' ' + fmtPct(stats.max_roi), cls: colorClass(stats.max_roi) });
-if (stats.min_roi != null) statItems.push({ l: '最小收益率', v: stats.min_roi_name + ' ' + fmtPct(stats.min_roi), cls: colorClass(stats.min_roi) });
-if (stats.max_pnl != null) statItems.push({ l: '最大收益额', v: stats.max_pnl_name + ' ' + fmtWan(stats.max_pnl), cls: colorClass(stats.max_pnl) });
-if (stats.min_pnl != null) statItems.push({ l: '最大亏损额', v: stats.min_pnl_name + ' ' + fmtWan(stats.min_pnl), cls: colorClass(stats.min_pnl) });
+// ai coding: 标的名称与极值读数分开渲染避免跨列文字重叠 2026/11/06: 16:22
+if (stats.max_roi != null) statItems.push({ l: '最大收益率', name: stats.max_roi_name, v: fmtPct(stats.max_roi), cls: colorClass(stats.max_roi) });
+if (stats.min_roi != null) statItems.push({ l: '最小收益率', name: stats.min_roi_name, v: fmtPct(stats.min_roi), cls: colorClass(stats.min_roi) });
+if (stats.max_pnl != null) statItems.push({ l: '最大收益额', name: stats.max_pnl_name, v: fmtWan(stats.max_pnl), cls: colorClass(stats.max_pnl) });
+if (stats.min_pnl != null) statItems.push({ l: '最大亏损额', name: stats.min_pnl_name, v: fmtWan(stats.min_pnl), cls: colorClass(stats.min_pnl) });
 statItems.push({ l: '持仓收益率', v: fmtPct(summary.holdings_roi), cls: colorClass(summary.holdings_roi) });
 statItems.push({ l: '持仓收益', v: fmtWan(summary.holdings_pnl), cls: colorClass(summary.holdings_pnl) });
 
+// ai coding: 统计数值优先展示标的名称置于独立次行 2026/11/06: 16:22
 statsEl.innerHTML = statItems.map(s => `
   <div class="stat">
     <div class="l">${s.l}</div>
     <div class="v ${s.cls || ''}">${s.v}</div>
+    ${s.name ? `<div class="n">${s.name}</div>` : ''}
   </div>`).join('');
 
 // ── 06 Holdings table ──
