@@ -2,14 +2,14 @@
   "_comment": "控制页面模块显隐，true=显示，false=隐藏",
   "sections": {
     "overview": true,
-    "stats": false,
+    "stats": true,
     "summary": true,
-    "drawdown": false,
+    "drawdown": true,
     "position": true,
     "allocation": true,
     "ranking": true,
-    "calendar": false,
-    "closed": false,
+    "calendar": true,
+    "closed": true,
     "holdings": true,
     "timeline": true,
     "annual_returns": true

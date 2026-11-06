@@ -80,7 +80,7 @@ def calculate_stats(snapshots):
 
     # 时间序列统计（需要多个快照）
     if len(snapshots) > 1:
-        # 资产走势统一使用"整体"region的current（与图表中的资产走势一致）
+        # 资产曲线统一使用"整体"region的current（与图表中的「资产」系列一致）
         values = [s.get("summary", {}).get("regions", {}).get("整体", {}).get("current", 0) for s in snapshots]
         drawdowns, max_dd = calculate_drawdown(values)
         stats["max_drawdown"] = max_dd
@@ -156,6 +156,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- ai coding: 折线图迁移到 ECharts（TradingView 风格十字光标交互），饼图/柱状图仍用 Chart.js 2026/11/06: 14:48 -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 :root{
@@ -245,7 +247,9 @@ body{
 .chart-card .chart-title{font-size:16px;font-weight:700;letter-spacing:-.01em;}
 .chart-card .chart-desc{font-size:12px;color:var(--ink-3);margin:6px 0 14px;letter-spacing:.02em;}
 .chart-canvas-wrap{position:relative;height:440px;}
-/* ai coding: 折线图画布保留竖向滚动，横向拖动留给按住标注线 2026/11/05: 16:27 */
+/* ai coding: 资产收益收益率图表高度提高为原来的一点五倍 2026/11/06: 15:46 */
+.section[data-section="summary"] .chart-canvas-wrap{height:660px;}
+/* ai coding: 折线图容器保留竖向滚动，横向拖动留给 ECharts 十字光标连续刷选 2026/11/06: 14:48 */
 #chartMaster,#chartDrawdown,#chartPosition{touch-action:pan-y;}
 .chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
 /* ai coding: 移除时间线容器外框并保留 SVG 原始绘制 2026/10/09: 15:56 */
@@ -316,6 +320,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .chart-grid-2{grid-template-columns:1fr;}
   .stat-grid{grid-template-columns:repeat(2,1fr);}
   .chart-canvas-wrap{height:360px;}
+/* ai coding: 资产收益收益率图表高度提高为原来的一点五倍 2026/11/06: 15:46 */
+.section[data-section="summary"] .chart-canvas-wrap{height:540px;}
   .masthead h1{font-size:32px;}
 }
 @media (max-width:600px){
@@ -325,8 +331,9 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .masthead{padding-bottom:12px;margin-bottom:24px;}
   .masthead .kicker{font-size:10px;letter-spacing:.14em;}
   .masthead h1{font-size:24px;}
-  .section{margin-bottom:28px;}
-  .section-head{gap:8px;padding-bottom:8px;margin-bottom:14px;flex-wrap:wrap;}
+  /* ai coding: 移动端模块间距统一并收紧标题与图表留白 2026/11/06: 15:44 */
+  .section{margin-bottom:24px;}
+  .section-head{gap:8px;padding-bottom:8px;margin-bottom:4px;flex-wrap:wrap;}
   .section-head h2{font-size:16px;}
   .section-head .note{font-size:10px;margin-left:0;width:100%;}
   /* ai coding: 移动端概览保留三列并移除全部分隔线 2026/10/09: 15:56 */
@@ -340,8 +347,10 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   /* ai coding: 移动端两个饼图改为并排两列并保持原始比例 2026/08/30: 08:52 */
   .chart-grid-2{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
   .chart-grid-2 .chart-card{padding:10px;}
-  /* ai coding: 缩减移动端折线图和持仓收益排行高度 2026/08/30: 08:52 */
-  .chart-canvas-wrap{height:230px;}
+  /* ai coding: 折线图增加读数区后保持足够绘图区高度 2026/11/06: 15:44 */
+  .chart-canvas-wrap{height:270px;}
+/* ai coding: 资产收益收益率图表高度提高为原来的一点五倍 2026/11/06: 15:46 */
+.section[data-section="summary"] .chart-canvas-wrap{height:405px;}
   .chart-canvas-wrap[style*="380px"],.chart-canvas-wrap[style*="340px"]{height:147px!important;}
   .chart-canvas-wrap[style*="height:420px"]{height:280px!important;}
   /* ai coding: 移动端统计摘要保留三列并移除全部分隔线 2026/10/09: 15:56 */
@@ -352,8 +361,20 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   table{font-size:11px;}
   thead th{padding:8px;font-size:9px;text-align:center;}
   tbody td{padding:8px;text-align:center;}
+  /* ai coding: 全宽折线图卡片收紧上下留白并保留图内安全边距 2026/11/06: 15:44 */
+  .section[data-section="summary"] .chart-card,
+  .section[data-section="drawdown"] .chart-card,
+  .section[data-section="position"] .chart-card{margin-left:-14px;margin-right:-14px;width:auto;padding:8px 0 0;}
+  /* ai coding: 持仓明细表公司名称列在移动端横向滚动时吸附固定，覆盖左侧市场列 2026/11/06: 15:17 */
+  .table-scroll thead th:nth-child(2){position:sticky;left:0;background:#fff;z-index:2;}
+  .table-scroll tbody td.name{position:sticky;left:0;background:#fff;z-index:1;}
+  .table-scroll tbody tr:hover td.name,.table-scroll tbody tr.summary-row td.name{background:#fafafa;}
   .notice{font-size:11px;padding:10px 12px;}
 }
+/* ai coding: 综合图读数上下各保留十二像素间距与底部日期图例留白一致 2026/11/06: 15:53 */
+.section[data-section="summary"] .section-head{padding-bottom:0;margin-bottom:0;}
+.section[data-section="summary"] > .chart-card{padding-top:12px;}
+
 </style>
 </head>
 <body>
@@ -391,7 +412,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   </div>
   <div class="chart-card">
     <div class="chart-canvas-wrap">
-      <canvas id="chartMaster"></canvas>
+      <!-- ai coding: 折线图容器由 canvas 换成 div 以承载 ECharts 实例 2026/11/06: 14:48 -->
+      <div id="chartMaster" class="echarts-host" style="width:100%;height:100%;"></div>
     </div>
   </div>
 </div>
@@ -404,7 +426,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   </div>
   <div class="chart-card">
     <div class="chart-canvas-wrap">
-      <canvas id="chartDrawdown"></canvas>
+      <div id="chartDrawdown" class="echarts-host" style="width:100%;height:100%;"></div>
     </div>
   </div>
 </div>
@@ -417,7 +439,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   </div>
   <div class="chart-card">
     <div class="chart-canvas-wrap">
-      <canvas id="chartPosition"></canvas>
+      <div id="chartPosition" class="echarts-host" style="width:100%;height:100%;"></div>
     </div>
   </div>
 </div>
@@ -450,12 +472,13 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
     <span class="idx">06</span>
     <h2>持仓收益排行</h2>
   </div>
-  <div class="chart-card">
-    <div class="chart-title">各标的收益（万）</div>
-    <div class="chart-canvas-wrap" style="height:220px;">
-      <canvas id="chartRanking"></canvas>
+    <div class="chart-card">
+      <!-- ai coding: 删除收益排行重复说明文字直接展示图表 2026/11/06: 15:55 -->
+      <div class="chart-canvas-wrap" style="height:220px;">
+        <!-- ai coding: 收益排行容器由 canvas 换成 div 以承载 ECharts 实例 2026/11/06: 15:17 -->
+        <div id="chartRanking" class="echarts-host" style="width:100%;height:100%;"></div>
+      </div>
     </div>
-  </div>
 </div>
 
 <!-- 07 Statistics -->
@@ -582,7 +605,6 @@ let latest = allSnapshots[allSnapshots.length - 1] || {};
 // ── Swiss palette ──
 const INK   = '#111111';
 const RED   = '#e4002b';
-const SLATE = '#6b7280';
 const RULE  = '#e4e4e4';
 const INK2  = '#5b5b5b';
 const INK3  = '#9a9a9a';
@@ -597,19 +619,16 @@ const fmtWan = v => v == null ? '—' : (Math.abs(v/10000) >= 1 ? (v/10000).toLo
 const fmtPct = v => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(2) + '%';
 const colorClass = v => v == null ? '' : (v > 0 ? 'up' : v < 0 ? 'down' : '');
 const FONT = "'Inter','Noto Sans SC',sans-serif";
-// ai coding: 根据移动端断点控制 Y 轴标题显隐 2026/08/30: 08:44
-const showYAxisTitle = window.innerWidth > 600;
-const dateAxisTicks = {
-  autoSkip: true,
-  maxTicksLimit: window.innerWidth <= 600 ? 4 : 8,
-  autoSkipPadding: 16,
-  minRotation: 0,
-  maxRotation: 0,
-  callback(value) {
-    const dateLabel = this.getLabelForValue(value);
-    return dateLabel ? dateLabel.slice(5).replace('-', '/') : '';
-  }
-};
+// ai coding: 移动端断点控制 Y 轴刻度数字显隐与折线线宽；Y 轴标题三端统一去掉（刻度带 % 后缀足以区分，且标题与图例互相遮挡） 2026/11/06: 15:26
+const isMobileView = window.innerWidth <= 600;
+const hideYAxisLabel = isMobileView;
+// ai coding: 主图三条线统一实线，配色换蓝/青/橙（TradingView 风），线宽再调细 2026/11/06: 15:37
+const C_ASSET = '#2962ff';
+const C_PNL = '#089981';
+const C_ROI = '#f57c00';
+const LW_MAIN = isMobileView ? 1.3 : 2;
+const LW_SUB = isMobileView ? 1.1 : 1.7;
+// ai coding: 日期刻度改由 ECharts axisLabel.hideOverlap 自动抽稀，原 Chart.js ticks 配置移除 2026/11/06: 14:48
 
 // ai coding: 按所选快照重新计算持仓极值、最大回撤和日收益统计 2026/10/09: 15:58
 function calculateRangeStats(snapshots){
@@ -644,13 +663,49 @@ function calculateRangeStats(snapshots){
   return result;
 }
 
-// ai coding: 新增按住拖动标注线插件（含移动端触感反馈）——触屏按住稍作停留或鼠标按下后出现竖向标注线，拖动来回滑动并联动 tooltip，拖动每切换一个日期点轻震一下，松开即消失 2026/11/05: 16:54
-// 触感反馈：安卓走 Vibration API（需 HTTPS）；iOS Safari 不支持 vibrate，用隐藏的 switch 开关控件触发系统触感（iOS 17.5+），其余设备静默跳过
-const crosshairHaptic = (() => {
+// ai coding: 折线图迁移到 ECharts（TradingView 风格）：十字吸附光标、读数固定左上角不随手指/鼠标飘移、触屏按住滑动全程跟踪（touch 隐式捕获，移出绘图区不丢定位）、轻点钉住数值 2026/11/06: 14:48
+const TV_SPLIT = '#f0f0f0';
+const tvAxisLabel = { color: INK3, fontSize: 10, fontFamily: FONT };
+function tvTooltip(fmtVal) {
+  return {
+    trigger: 'axis',
+    // 轻点钉住读数、按住拖动连续刷选；position 固定左上角，不再做左右侧切换
+    triggerOn: 'mousemove|click',
+    // ai coding: 固定读数增加左右内边距并限制在图表宽度内 2026/11/06: 15:44
+    position: [16, 0],
+    confine: true,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    padding: 0,
+    textStyle: { color: INK, fontSize: 11, fontFamily: FONT },
+    extraCssText: 'box-shadow:none;pointer-events:none;',
+    axisPointer: {
+      type: isMobileView ? 'line' : 'cross',
+      snap: true,
+      // ai coding: 移动端隐藏横向光标数值避免贴边裁切 2026/11/06: 15:44
+      label: { show: !isMobileView, backgroundColor: INK, color: '#fff', fontSize: 10, fontFamily: FONT, padding: [3, 5], borderRadius: 2 },
+      lineStyle: { color: INK3, width: 1, type: 'dashed' },
+      crossStyle: { color: INK3, width: 1, type: 'dashed' }
+    },
+    formatter(params) {
+      const items = params.filter(p => p.value != null);
+      if (!items.length) return '';
+      // ai coding: 日期和全部系列读数保持一行并按手机宽度缩小字号与间隔 2026/11/06: 15:51
+      const width = document.getElementById('chartMaster').clientWidth - 32;
+      const fontSize = isMobileView ? Math.max(8, Math.min(11, width / 40)) : 11;
+      const date = '<span style="color:' + INK3 + '">' + items[0].axisValue + '</span>';
+      const vals = items.map(p => '<span style="display:inline-flex;align-items:center;gap:3px;white-space:nowrap">' + p.marker + p.seriesName + ' <b>' + fmtVal(p) + '</b></span>').join('');
+      return '<div style="display:flex;align-items:center;flex-wrap:nowrap;gap:' + (isMobileView ? 6 : 12) + 'px;white-space:nowrap;font-size:' + fontSize + 'px;line-height:18px">' + date + vals + '</div>';
+    }
+  };
+}
+// ai coding: 移动端拖动十字光标时每切换一个日期点轻震一次（Android 走 Vibration API 需 HTTPS；iOS 17.5+ 用隐藏 switch 触发系统触感；仅触屏设备启用，桌面鼠标悬停不响） 2026/11/06: 15:26
+const scrubHaptic = (() => {
   let iosControl = null;
   const ua = navigator.userAgent || '';
   const isIOS = /iP(hone|ad|od)/.test(ua) || (/Mac/.test(ua) && navigator.maxTouchPoints > 1);
-  if (isIOS) {
+  const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  if (isIOS && coarse) {
     const label = document.createElement('label');
     label.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;';
     label.setAttribute('aria-hidden', 'true');
@@ -661,150 +716,71 @@ const crosshairHaptic = (() => {
     document.body.appendChild(label);
     iosControl = label;
   }
-  return (strong) => {
+  return () => {
+    if (!coarse) return;
     try {
-      if (typeof navigator.vibrate === 'function' && navigator.vibrate(strong ? 12 : 4)) return;
+      if (typeof navigator.vibrate === 'function' && navigator.vibrate(4)) return;
       if (iosControl) iosControl.click();
     } catch (err) { /* 不支持触感反馈的设备静默忽略 */ }
   };
 })();
-
-// ai coding: 新增固定侧 tooltip 定位器——无论悬浮还是按住标注线，数值标签都钉在绘图区左上角或右上角，并落在鼠标/手指对侧半区以防遮挡 2026/11/05: 17:04
-Chart.Tooltip.positioners.pinned = function(elements, eventPosition) {
-  const chart = this.chart;
-  const area = chart.chartArea;
-  if (!area) return false;
-  const refX = eventPosition ? eventPosition.x : (area.left + area.right) / 2;
-  const onRight = refX >= (area.left + area.right) / 2;
-  return { x: onRight ? area.left + 8 : area.right - 8, y: area.top + 8 };
-};
-
-const crosshairPlugin = {
-  id: 'crosshair',
-  afterInit(chart) {
-    const canvas = chart.canvas;
-    const state = chart.$crosshair = { active: false, index: null, cleanup: null };
-    let pressing = false, pressTimer = null, startX = 0, startY = 0;
-
-    const inChartArea = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const area = chart.chartArea;
-      if (!area) return false;
-      const x = e.clientX - rect.left, y = e.clientY - rect.top;
-      return x >= area.left && x <= area.right && y >= area.top && y <= area.bottom;
-    };
-    const indexFromEvent = (e) => {
-      const xScale = chart.scales.x;
-      if (!xScale) return null;
-      const rect = canvas.getBoundingClientRect();
-      const idx = Math.round(xScale.getValueForPixel(e.clientX - rect.left));
-      if (!isFinite(idx)) return null;
-      return Math.max(0, Math.min(chart.data.labels.length - 1, idx));
-    };
-    const moveTo = (idx) => {
-      if (idx == null || idx === state.index) return;
-      const first = state.index == null;
-      state.index = idx;
-      // 拖动每切换一个日期点轻震一下（首次落点由激活震动覆盖）
-      if (!first) crosshairHaptic(false);
-      const points = [];
-      chart.data.datasets.forEach((ds, di) => {
-        if (chart.isDatasetVisible(di) && ds.data[idx] != null) points.push({ datasetIndex: di, index: idx });
-      });
-      chart.setActiveElements(points);
-      if (chart.tooltip) chart.tooltip.setActiveElements(points, { x: chart.scales.x.getPixelForValue(idx), y: chart.chartArea.top });
-      // 直接同步重绘：update('none') 会重放 Chart.js 上次 hover 事件，把标注线的 tooltip 状态覆盖掉
-      chart.draw();
-    };
-    const endPress = () => {
-      pressing = false;
-      clearTimeout(pressTimer);
-      if (!state.active) return;
-      state.active = false;
-      state.index = null;
-      chart.setActiveElements([]);
-      if (chart.tooltip) chart.tooltip.setActiveElements([], { x: 0, y: 0 });
-      chart.draw();
-    };
-    const onPointerDown = (e) => {
-      if (!e.isPrimary || !inChartArea(e)) return;
-      pressing = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      clearTimeout(pressTimer);
-      if (e.pointerType === 'touch') {
-        // 触屏需按住 200ms 再激活，避免与上下滑动页面冲突（类似股票 App 长按 K 线）
-        pressTimer = setTimeout(() => { if (pressing) { state.active = true; crosshairHaptic(true); moveTo(indexFromEvent(e)); } }, 200);
-      } else {
-        state.active = true;
-        moveTo(indexFromEvent(e));
-      }
-    };
-    const onPointerMove = (e) => {
-      if (!e.isPrimary) return;
-      if (state.active) { moveTo(indexFromEvent(e)); return; }
-      // 按住前若已明显移动（说明在滑页面），取消激活
-      if (pressing && (Math.abs(e.clientX - startX) > 8 || Math.abs(e.clientY - startY) > 8)) {
-        pressing = false;
-        clearTimeout(pressTimer);
-      }
-    };
-    const onContextMenu = (e) => { if (state.active) e.preventDefault(); };
-
-    canvas.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-    window.addEventListener('pointerup', endPress);
-    window.addEventListener('pointercancel', endPress);
-    canvas.addEventListener('contextmenu', onContextMenu);
-    state.cleanup = () => {
-      clearTimeout(pressTimer);
-      canvas.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', endPress);
-      window.removeEventListener('pointercancel', endPress);
-      canvas.removeEventListener('contextmenu', onContextMenu);
-    };
-  },
-  afterDatasetsDraw(chart) {
-    const state = chart.$crosshair;
-    if (!state || !state.active || state.index == null) return;
-    const area = chart.chartArea;
-    const xScale = chart.scales.x;
-    if (!area || !xScale) return;
-    const x = xScale.getPixelForValue(state.index);
-    if (!isFinite(x)) return;
-    const ctx = chart.ctx;
-    ctx.save();
-    // 竖向标注线（吸附到最近的日期点）
-    ctx.beginPath();
-    ctx.moveTo(x, area.top);
-    ctx.lineTo(x, area.bottom);
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    // 各条可见曲线在标注线处的高亮圆点
-    chart.data.datasets.forEach((ds, di) => {
-      if (!chart.isDatasetVisible(di)) return;
-      const el = chart.getDatasetMeta(di).data[state.index];
-      if (!el || !isFinite(el.x) || !isFinite(el.y)) return;
-      ctx.beginPath();
-      ctx.arc(el.x, el.y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = ds.borderColor || INK;
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
-    });
-    ctx.restore();
-  },
-  destroy(chart) {
-    const state = chart.$crosshair;
-    if (state && state.cleanup) state.cleanup();
-  }
-};
+function bindScrubHaptic(chart) {
+  let lastIdx = null;
+  chart.on('updateAxisPointer', e => {
+    const idx = e.dataIndex != null ? e.dataIndex : e.dataIndexInside;
+    if (idx == null || idx === lastIdx) return;
+    if (lastIdx != null) scrubHaptic();
+    lastIdx = idx;
+  });
+}
+// ai coding: 极值标签朝曲线内侧排布并按系列错位防止边缘截断 2026/11/06: 15:44
+function tvExtremum(color, unit, lane, values) {
+  const num = p => String(+p.value.toFixed(2)) + unit;
+  const lbl = (position, offset) => ({ show: true, position, distance: 7, offset,
+    formatter: num, color, fontSize: 10, fontFamily: FONT,
+    backgroundColor: 'rgba(255,255,255,0.94)', padding: [3, 4], borderRadius: 2 });
+  return {
+    symbol: 'circle', symbolSize: 4,
+    itemStyle: { color, borderColor: '#fff', borderWidth: 1 },
+    data: [
+      { type: 'max', label: lbl(values.indexOf(Math.max(...values)) < values.length / 2 ? 'right' : 'left', [0, (lane || 0) * 16]) },
+      { type: 'min', label: lbl(values.indexOf(Math.min(...values)) < values.length / 2 ? 'right' : 'left', [0, -(lane || 0) * 16]) }
+    ]
+  };
+}
+function tvBaseOption(pointCount) {
+  // ai coding: 单行读数缩减顶部留白并收紧日期刻度与底部图例距离 2026/11/06: 15:51
+  const legendBase = { icon: 'rect', itemWidth: 14, itemHeight: 3, itemGap: 14,
+    textStyle: { color: INK2, fontSize: 11, fontFamily: FONT }, inactiveColor: '#cccccc' };
+  return {
+    animation: false,
+    textStyle: { fontFamily: FONT },
+    grid: { left: 24, right: 24, top: 44, bottom: isMobileView ? 30 : 32, containLabel: true },
+    legend: isMobileView
+      ? { left: 'center', bottom: 0, ...legendBase }
+      : { right: 4, top: 2, ...legendBase },
+    xAxis: {
+      type: 'category', boundaryGap: false,
+      axisLine: { lineStyle: { color: RULE } }, axisTick: { show: false },
+      axisLabel: { ...tvAxisLabel, margin: 12, interval: isMobileView ? Math.max(0, Math.ceil(pointCount / 4) - 1) : 'auto', showMinLabel: true, alignMinLabel: 'left', showMaxLabel: false, hideOverlap: true, formatter: v => String(v).slice(5).replace('-', '/') }
+    }
+  };
+}
+// ai coding: ECharts 折线图随窗口尺寸自适应；监听只注册一次、运行时动态取实例，日期筛选重建图表后仍有效 2026/11/06: 14:48
+window.addEventListener('resize', () => {
+  document.querySelectorAll('#page .echarts-host').forEach(el => {
+    const inst = echarts.getInstanceByDom(el);
+    if (inst) inst.resize();
+  });
+});
 
 // ai coding: 重绘所选快照并移除不再展示的 meta 信息和开始日期参数 2026/10/09: 16:03
 function renderReport(snapshots, endDate){
+  // ai coding: 折线图改用 ECharts 后同步销毁其实例，避免日期筛选重绘时泄漏 2026/11/06: 14:48
+  document.querySelectorAll('#page .echarts-host').forEach(el => {
+    const inst = echarts.getInstanceByDom(el);
+    if (inst) inst.dispose();
+  });
   document.querySelectorAll('#page canvas').forEach(canvas => {
     const chart = Chart.getChart(canvas);
     if (chart) chart.destroy();
@@ -878,155 +854,81 @@ const ddOverall  = ddSeries(regCur['整体']);
 const ddDomestic = ddSeries(regCur['国内']);
 const ddOverseas = ddSeries(regCur['境外']);
 
-// ai coding: 平滑折线并配置主图线型与默认显隐状态 2026/08/29: 15:25
-const smoothLine = {
-  tension: .4,
-  cubicInterpolationMode: 'monotone',
-  pointRadius: 0,
-  pointHoverRadius: 0,
-};
-
-// ── 02 Master combined chart (资产/收益/收益率, 双轴) ──
-const masterDatasets = [
-  { label:'资产走势', data: assetWan, borderColor: INK, borderWidth: 2.5, yAxisID:'yMoney',
-    hidden: true, ...smoothLine },
-  { label:'收益走势', data: pnlWan, borderColor: RED, borderWidth: 2, borderDash:[6,4], yAxisID:'yMoney',
-    hidden: true, ...smoothLine },
-  { label:'收益率', data: roiVals, borderColor: RED, borderWidth: 2, yAxisID:'yPerf',
-    ...smoothLine },
-];
-
-new Chart(document.getElementById('chartMaster'), {
-  type: 'line',
-  data: { labels: dates, datasets: masterDatasets },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { mode: 'index', intersect: false },
-    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
-    plugins: {
-      legend: {
-        position: 'top',
-        onHover: (e) => { e.native.target.style.cursor = 'pointer'; },
-        onLeave: (e) => { e.native.target.style.cursor = ''; },
-        labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 26, padding: 16,
-                  color: INK, font: { size: 12, family: FONT, weight: '500' } }
-      },
-      tooltip: {
-        // ai coding: 标注线激活时数值标签固定在对侧上角 2026/11/05: 17:00
-        position: 'pinned',
-        callbacks: {
-          label: ctx => {
-            const v = ctx.parsed.y;
-            if (v == null) return ctx.dataset.label + ': —';
-            if (ctx.dataset.yAxisID === 'yMoney') return ctx.dataset.label + ': ' + fmtWan(v * 10000);
-            return ctx.dataset.label + ': ' + v.toFixed(2) + '%';
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { ...dateAxisTicks, color: INK2, font: { size: 11, family: FONT } }
-      },
-      yMoney: {
-        position: 'left',
-        // ai coding: 移动端隐藏金额 Y 轴标题 2026/08/30: 08:44
-        title: { display: showYAxisTitle, text: '金额 (万)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
-        grid: { color: RULE }, border: { color: INK },
-        ticks: { color: INK2, font: { size: 11, family: FONT } }
-      },
-      yPerf: {
-        position: 'right',
-        // ai coding: 移动端隐藏收益率 Y 轴标题 2026/08/30: 08:44
-        title: { display: showYAxisTitle, text: '收益率 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
-        grid: { drawOnChartArea: false }, border: { display: false },
-        ticks: { color: INK3, font: { size: 11, family: FONT }, callback: v => v + '%' }
-      }
-    }
-  },
-  plugins: [crosshairPlugin]
+// ai coding: 主图 ECharts 双轴折线：系列改名 资产/收益/收益率，默认仅显示收益率（点图例可开另外两条），三实线黑/蓝/橙，十字吸附光标，读数固定左上角单行 2026/11/06: 15:26
+const masterChart = echarts.init(document.getElementById('chartMaster'));
+masterChart.setOption({
+  ...tvBaseOption(dates.length),
+  // ai coding: 综合图单行读数下方留十二像素空白后开始绘图区 2026/11/06: 15:53
+  grid: { ...tvBaseOption(dates.length).grid, top: 30 },
+  legend: { ...tvBaseOption(dates.length).legend, selected: { '资产': false, '收益': false, '收益率': true } },
+  tooltip: tvTooltip(p => p.seriesName === '收益率' ? p.value.toFixed(2) + '%' : fmtWan(p.value * 10000)),
+  xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
+  yAxis: [
+    { type: 'value', position: 'left',
+      axisLine: { show: false }, axisTick: { show: false },
+      axisLabel: { ...tvAxisLabel, color: INK2, show: !hideYAxisLabel },
+      splitLine: { lineStyle: { color: TV_SPLIT } } },
+    { type: 'value', position: 'right',
+      axisLine: { show: false }, axisTick: { show: false },
+      axisLabel: { ...tvAxisLabel, formatter: '{value}%', show: !hideYAxisLabel },
+      splitLine: { show: false } }
+  ],
+  series: [
+    { name: '资产', type: 'line', data: assetWan, yAxisIndex: 0,
+      symbol: 'none', smooth: 0.3, lineStyle: { color: C_ASSET, width: LW_MAIN }, itemStyle: { color: C_ASSET },
+      markPoint: tvExtremum(C_ASSET, '万', 1, assetWan) },
+    { name: '收益', type: 'line', data: pnlWan, yAxisIndex: 0,
+      symbol: 'none', smooth: 0.3, lineStyle: { color: C_PNL, width: LW_SUB }, itemStyle: { color: C_PNL },
+      markPoint: tvExtremum(C_PNL, '万', 2, pnlWan) },
+    { name: '收益率', type: 'line', data: roiVals, yAxisIndex: 1,
+      symbol: 'none', smooth: 0.3, lineStyle: { color: C_ROI, width: LW_SUB }, itemStyle: { color: C_ROI },
+      markPoint: tvExtremum(C_ROI, '%', 0, roiVals) }
+  ]
 });
+bindScrubHaptic(masterChart);
 
-// ── 03 Drawdown (single filled area) ──
-new Chart(document.getElementById('chartDrawdown'), {
-  type: 'line',
-  data: {
-    labels: dates,
-    datasets: [
-      { label:'回撤', data: ddOverall, borderColor: RED, borderWidth: 2,
-        backgroundColor: 'rgba(228,0,43,0.32)', fill: true,
-        ...smoothLine },
-    ]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    interaction: { mode: 'index', intersect: false },
-    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
-    plugins: {
-      legend: { position: 'top',
-        onHover: (e) => { e.native.target.style.cursor = 'pointer'; },
-        onLeave: (e) => { e.native.target.style.cursor = ''; },
-        labels: { usePointStyle: true, pointStyle: 'rect', boxWidth: 14, padding: 14, color: INK, font: { size: 12, family: FONT, weight: '500' } } },
-      // ai coding: 标注线激活时数值标签固定在对侧上角 2026/11/05: 17:00
-      tooltip: { position: 'pinned', callbacks: { label: ctx => (ctx.parsed.y == null ? '—' : '回撤: ' + ctx.parsed.y.toFixed(2) + '%') } }
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { ...dateAxisTicks, color: INK2, font: { size: 11, family: FONT } }
-      },
-      y: {
-        // ai coding: 移动端隐藏回撤 Y 轴标题 2026/08/30: 08:44
-        title: { display: showYAxisTitle, text: '回撤 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
-        grid: { color: RULE }, border: { color: INK },
-        ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '%' } }
-    }
-  },
-  plugins: [crosshairPlugin]
+// ── 03 Drawdown (ECharts 面积线) ──
+// ai coding: 回撤曲线和极值使用黑色并将面积改为由白到黑的灰阶渐变 2026/11/06: 15:44
+const drawdownChart = echarts.init(document.getElementById('chartDrawdown'));
+drawdownChart.setOption({
+  ...tvBaseOption(dates.length),
+  tooltip: tvTooltip(p => p.value.toFixed(2) + '%'),
+  xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
+  yAxis: { type: 'value',
+    axisLine: { show: false }, axisTick: { show: false },
+    axisLabel: { ...tvAxisLabel, color: INK2, formatter: '{value}%', show: !hideYAxisLabel },
+    splitLine: { lineStyle: { color: TV_SPLIT } } },
+  series: [
+    { name: '回撤', type: 'line', data: ddOverall, symbol: 'none', smooth: 0.3,
+      lineStyle: { color: INK, width: 2 }, itemStyle: { color: INK },
+      areaStyle: { origin: 'end', color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: 'rgba(255,255,255,0.06)' },
+        { offset: 1, color: 'rgba(0,0,0,0.48)' }
+      ]) },
+      markPoint: tvExtremum(INK, '%', 0, ddOverall) }
+  ]
 });
+bindScrubHaptic(drawdownChart);
 
-// ── 04 Position rate (single curve, from holdings_pos_curr_pct) ──
+// ── 04 Position rate (ECharts 单折线) ──
 const posRateData = snapshots.map(s => (s.summary || {}).holdings_pos_curr_pct);
-const fullLine = dates.map(() => 100);
-new Chart(document.getElementById('chartPosition'), {
-  type: 'line',
-  data: {
-    labels: dates,
-    datasets: [
-      { label:'仓位', data: posRateData, borderColor: INK, borderWidth: 2.5,
-        ...smoothLine },
-      { label:'满仓', data: fullLine, borderColor: SLATE, borderWidth: 1.5, borderDash:[6,5],
-        ...smoothLine, fill: false },
-    ]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    interaction: { mode: 'index', intersect: false },
-    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
-    plugins: {
-      legend: { position: 'top',
-        onHover: (e) => { e.native.target.style.cursor = 'pointer'; },
-        onLeave: (e) => { e.native.target.style.cursor = ''; },
-        labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 26, padding: 14, color: INK, font: { size: 12, family: FONT, weight: '500' } } },
-      // ai coding: 标注线激活时数值标签固定在对侧上角 2026/11/05: 17:00
-      tooltip: { position: 'pinned', callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y == null ? '—' : ctx.parsed.y.toFixed(2) + '%') } }
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { ...dateAxisTicks, color: INK2, font: { size: 11, family: FONT } }
-      },
-      y: { min: 0, suggestedMax: 100,
-        // ai coding: 移动端隐藏仓位率 Y 轴标题 2026/08/30: 08:44
-        title: { display: showYAxisTitle, text: '仓位率 (%)', color: INK2, font: { size: 11, family: FONT, weight: '600' } },
-        grid: { color: RULE }, border: { color: INK },
-        ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '%' } }
-    }
-  },
-  plugins: [crosshairPlugin]
+// ai coding: 仓位率图删除满仓参考线；Y 轴不设上限，仓位超过 100% 时线条不再被截断 2026/11/06: 15:26
+const positionChart = echarts.init(document.getElementById('chartPosition'));
+positionChart.setOption({
+  ...tvBaseOption(dates.length),
+  tooltip: tvTooltip(p => p.value.toFixed(2) + '%'),
+  xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
+  yAxis: { type: 'value', min: 0,
+    axisLine: { show: false }, axisTick: { show: false },
+    axisLabel: { ...tvAxisLabel, color: INK2, formatter: '{value}%', show: !hideYAxisLabel },
+    splitLine: { lineStyle: { color: TV_SPLIT } } },
+  series: [
+    { name: '仓位', type: 'line', data: posRateData, symbol: 'none', smooth: 0.3,
+      lineStyle: { color: INK, width: LW_MAIN }, itemStyle: { color: INK },
+      markPoint: tvExtremum(INK, '%', 0, posRateData) }
+  ]
 });
+bindScrubHaptic(positionChart);
 
 // ── 05 Allocation (doughnut, grayscale + red accent) ──
 const allocData = holdings
@@ -1083,34 +985,49 @@ new Chart(document.getElementById('chartMarket'), {
   }
 });
 
-// ── 04 Ranking (bar, red up / green down) ──
-// ai coding: 根据筛选后的持仓数量设置排行高度并保留空画布最小高度 2026/10/09: 15:58
+// ── 06 Ranking (ECharts 横向条形) ──
+// ai coding: 收益排行迁移到 ECharts：名称从 Y 轴移到条形末端外侧（正收益在右、负收益在左），不再占 Y 轴宽度 2026/11/06: 15:17
 const ranked = holdings.filter(h => h.pnl != null).sort((a, b) => b.pnl - a.pnl);
-const rankingCanvas = document.getElementById('chartRanking');
-rankingCanvas.parentElement.style.height = `${Math.max(ranked.length, 1) * 30}px`;
-new Chart(rankingCanvas, {
-  type: 'bar',
-  data: {
-    labels: ranked.map(h => h.name),
-    datasets: [{
-      label: '收益',
-      data: ranked.map(h => h.pnl / 10000),
-      backgroundColor: ranked.map(h => h.pnl > 0 ? PROFIT : h.pnl < 0 ? LOSS : '#9a9a9a'),
-      borderRadius: 0,
-    }]
+const rankingHost = document.getElementById('chartRanking');
+rankingHost.parentElement.style.height = `${Math.max(ranked.length, 1) * 30}px`;
+const rankAbsMaxWan = Math.max(...ranked.map(h => Math.abs(h.pnl)), 1) / 10000;
+// ai coding: 横轴上下限对齐统一刻度步长消除两端额外窄网格 2026/11/06: 15:55
+const rankTarget = rankAbsMaxWan * (window.innerWidth <= 600 ? 1.5 : 1.25);
+const rankStepBase = Math.pow(10, Math.floor(Math.log10(rankTarget / 3)));
+const rankStep = [1, 2, 3, 5, 10].reduce((best, n) =>
+  Math.abs(n - rankTarget / 3 / rankStepBase) < Math.abs(best - rankTarget / 3 / rankStepBase) ? n : best, 1) * rankStepBase;
+const rankLim = Math.ceil(rankTarget / rankStep) * rankStep;
+const rankingChart = echarts.init(rankingHost);
+rankingChart.setOption({
+  animation: false,
+  textStyle: { fontFamily: FONT },
+  grid: { left: 8, right: 8, top: 8, bottom: 8, containLabel: true },
+  tooltip: {
+    trigger: 'item',
+    backgroundColor: '#fff', borderColor: RULE, borderWidth: 1, padding: [6, 10],
+    textStyle: { color: INK, fontSize: 11, fontFamily: FONT },
+    formatter: p => p.name + ' ' + fmtWan(p.value * 10000) + ' (' + fmtPct(ranked[p.dataIndex].roi) + ')'
   },
-  options: {
-    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
-    plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: { label: ctx => fmtWan(ctx.parsed.x * 10000) + ' (' + fmtPct(ranked[ctx.dataIndex].roi) + ')' } }
-    },
-    scales: {
-      x: { grid: { color: RULE }, border: { color: INK }, ticks: { color: INK2, font: { size: 11, family: FONT }, callback: v => v + '万' } },
-      y: { grid: { display: false }, ticks: { color: INK, font: { size: 12, family: FONT } } }
-    }
-  }
+  xAxis: {
+    // ai coding: 固定横轴等距刻度并与边界竖线对齐 2026/11/06: 15:55
+    type: 'value', min: -rankLim, max: rankLim, interval: rankStep,
+    axisLabel: { color: INK2, fontSize: 11, fontFamily: FONT, formatter: v => v + '万' },
+    splitLine: { lineStyle: { color: RULE } }, axisLine: { show: false }, axisTick: { show: false }
+  },
+  yAxis: {
+    type: 'category', data: ranked.map(h => h.name), inverse: true,
+    axisLine: { show: false }, axisTick: { show: false },
+    axisLabel: { show: false }
+  },
+  series: [{
+    type: 'bar', barWidth: 14,
+    data: ranked.map(h => ({
+      value: h.pnl / 10000,
+      itemStyle: { color: h.pnl > 0 ? PROFIT : h.pnl < 0 ? LOSS : '#9a9a9a' },
+      label: { position: h.pnl >= 0 ? 'right' : 'left' }
+    })),
+    label: { show: true, distance: 4, color: INK, fontSize: 11, fontFamily: FONT, formatter: p => p.name }
+  }]
 });
 
 // ── 05 Stats grid ──
@@ -1462,6 +1379,11 @@ function waitForExportLayout(){
 }
 
 function resizeSectionCharts(section){
+  // ai coding: 板块导出图片时同步触发 ECharts 折线图重排尺寸 2026/11/06: 14:48
+  section.querySelectorAll('.echarts-host').forEach(el => {
+    const inst = echarts.getInstanceByDom(el);
+    if (inst) inst.resize();
+  });
   if (typeof Chart === 'undefined' || typeof Chart.getChart !== 'function') return;
   section.querySelectorAll('canvas').forEach(canvas => {
     const chart = Chart.getChart(canvas);
