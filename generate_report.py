@@ -13,7 +13,8 @@ import glob
 import sys
 from datetime import datetime, timedelta, timezone
 
-from generate_timeline import generate_timeline_svg
+# ai coding: 报告使用配置驱动的原生 HTML 持仓时间线 2026/11/06: 18:24
+from generate_timeline import generate_timeline_html
 
 
 # ── 数据处理 ──────────────────────────────────────────────
@@ -151,7 +152,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>持仓收益分析 — PORTFOLIO</title>
+<title>PORTFOLIO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -168,8 +169,9 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   --rule:#e4e4e4;
   --rule-strong:#111111;
   --accent:#e4002b;      /* Swiss red */
-  --profit:#e4002b;      /* 涨 = 红 */
-  --loss:#007a33;        /* 跌 = 绿 */
+  /* ai coding: 所有盈亏文字与图表统一使用深红盈利深绿亏损 2026/11/06: 18:31 */
+  --profit:#9f2d36;
+  --loss:#236449;
   --pad:28px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -257,9 +259,36 @@ body{
 /* ai coding: 折线图容器保留竖向滚动，横向拖动留给 ECharts 十字光标连续刷选 2026/11/06: 14:48 */
 #chartMaster,#chartDrawdown,#chartPosition{touch-action:pan-y;}
 .chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
-/* ai coding: 移除时间线容器外框并保留 SVG 原始绘制 2026/10/09: 15:56 */
-.timeline-card{background:#fbfbf8;overflow-x:auto;overflow-y:hidden;}
-.timeline-card svg{display:block;width:100%;height:auto;min-width:900px;}
+/* ai coding: 时间线与全局盈亏颜色共享变量保留单行端点数字和底部信息 2026/11/06: 18:31 */
+.timeline-card{background:var(--paper);overflow:visible;}
+.holding-timeline{--ht-profit:var(--profit);--ht-loss:var(--loss);--ht-neutral:#656565;}
+.ht-profit{--ht-tone:var(--ht-profit);}
+.ht-loss{--ht-tone:var(--ht-loss);}
+.ht-neutral{--ht-tone:var(--ht-neutral);}
+.ht-asof{color:var(--ink-2);font-size:12px;text-align:right;margin-bottom:16px;}
+.ht-axis{position:relative;height:28px;margin-left:106px;margin-right:20px;color:var(--ink-2);font-size:12px;}
+.ht-axis span{position:absolute;transform:translateX(-50%);}
+.ht-axis span:first-child{transform:none;}
+.ht-axis span:last-child{transform:translateX(-100%);}
+.ht-row{display:grid;grid-template-columns:74px minmax(0,1fr);gap:12px;align-items:center;width:100%;height:60px;border:0;background:none;padding:0;text-align:left;font:inherit;cursor:pointer;}
+.ht-row[aria-pressed="true"]{background:#f5f5f3;}
+.ht-name{font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;}
+.ht-track{position:relative;height:56px;margin:0 20px;}
+.ht-line{position:absolute;left:var(--ht-start);width:var(--ht-span);height:2px;top:37px;background:var(--ht-tone);}
+.ht-line::before,.ht-line::after{content:"";position:absolute;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--ht-tone);}
+.ht-line::before{left:0;}
+.ht-line::after{right:0;}
+.ht-line.ht-open::after{background:var(--paper);outline:1px solid var(--ht-tone);}
+.ht-annual{position:absolute;left:calc(var(--ht-start) + var(--ht-span));top:7px;transform:translateX(-50%);color:var(--ht-tone);font-size:13px;font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.ht-detail{margin-top:18px;padding-top:18px;border-top:1px solid var(--rule);min-height:120px;}
+.ht-detail-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;}
+.ht-detail-head b{font-weight:500;font-size:13px;color:var(--ink);}
+.ht-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px;}
+.ht-metric span{display:block;font-size:12px;color:var(--ink-2);}
+.ht-metric strong{display:block;font-weight:500;font-size:20px;margin-top:5px;color:var(--ink);font-variant-numeric:tabular-nums;}
+.ht-metric strong.ht-profit,.ht-metric strong.ht-loss{color:var(--ht-tone);}
+.ht-status{grid-column:2/-1;align-self:center;font-size:13px;color:var(--ink-2);}
+@media(max-width:480px){.ht-row{grid-template-columns:62px minmax(0,1fr);gap:8px;}.ht-axis{margin-left:90px;}.ht-name,.ht-annual{font-size:12px;}.ht-metric strong{font-size:18px;}.ht-detail-head{font-size:11px;}}
 .timeline-empty{padding:32px;color:var(--ink-3);font-size:13px;}
 
 /* ── Stats grid ── */
@@ -286,38 +315,58 @@ td.name{font-weight:500;text-align:left;}
 tbody tr.summary-row{font-weight:600;background:#fafafa;}
 /* ai coding: 恢复现金合计行上方原有的深色横线 2026/10/09: 16:07 */
 tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
+/* ai coding: 持仓明细容器和表格铺满可用宽度移除外框仅保留表头合计细线 2026/11/06: 18:30 */
+.section[data-section="holdings"] .table-box{border:0;width:100%;padding:0;}
+.section[data-section="holdings"] .table-scroll{width:100%;}
+#holdingsTable{width:100%;}
+#holdingsTable thead th{border-bottom:1px solid var(--rule);}
+#holdingsTable tbody td{border:0;}
+#holdingsTable tbody tr.summary-row td{border-top:1px solid var(--rule);}
+/* ai coding: 年化收益率表格沿用持仓明细的细线风格仅保留表头与汇总分隔 2026/11/06: 18:27 */
+#annualReturnsTable thead th{border-bottom:1px solid var(--rule);}
+#annualReturnsTable tbody td{border:0;}
+#annualReturnsTable tfoot td{border-top:1px solid var(--rule);}
+/* ai coding: 年化表格铺满章节宽度并压缩手机单元格留白避免超出容器 2026/11/06: 18:28 */
+.section[data-section="annual_returns"] > .chart-card{width:100%;padding-left:0;padding-right:0;}
+#annualReturnsTable{width:100%;}
+@media(max-width:480px){#annualReturnsTable{table-layout:fixed;font-size:12px;}#annualReturnsTable thead th,#annualReturnsTable tbody td{padding-left:4px;padding-right:4px;white-space:normal;overflow-wrap:anywhere;}#annualReturnsTable tfoot td{padding-left:4px!important;padding-right:4px!important;white-space:normal!important;overflow-wrap:anywhere;}}
 
 /* ── Notice ── */
 /* ai coding: 提示信息仅保留浅色背景而不使用左侧边框 2026/10/09: 15:56 */
 .notice{background:#fafafa;padding:12px 16px;font-size:13px;color:var(--ink-2);letter-spacing:.02em;margin-bottom:36px;}
 
-/* ── P&L Calendar ── */
-.cal-toggles{display:flex;gap:0;margin-left:auto;}
-/* ai coding: 移除日历视图切换按钮边框并保留选中背景 2026/10/09: 15:56 */
-.cal-btn{background:transparent;border:0;padding:4px 14px;font-size:12px;font-family:inherit;cursor:pointer;color:var(--ink-2);}
-.cal-btn.active{background:var(--ink);color:var(--paper);}
-.cal-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px;}
-/* ai coding: 移除日历翻页按钮外框 2026/10/09: 15:56 */
-.cal-nav-btn{background:transparent;border:0;padding:6px 14px;font-size:14px;cursor:pointer;color:var(--ink);}
-.cal-nav-btn:hover{background:var(--rule);}
-.cal-title{font-size:15px;font-weight:600;min-width:160px;text-align:center;}
-.cal-grid{display:grid;gap:3px;}
-.cal-grid.day{grid-template-columns:repeat(7,1fr);}
-.cal-grid.month{grid-template-columns:repeat(4,1fr);}
-.cal-grid.year{grid-template-columns:repeat(4,1fr);}
-.cal-cell{aspect-ratio:1;font-size:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:0;cursor:pointer;position:relative;font-variant-numeric:tabular-nums;}
-.cal-cell .day-num{font-weight:600;line-height:1;margin-bottom:16px;}
-.cal-cell .day-amt{font-size:12px;line-height:1;margin-top:1px;}
-.cal-cell .day-pct{font-size:12px;line-height:1;margin-top:6px;}
-.cal-cell.no-data{background:#f5f5f5;color:#ccc;cursor:default;}
-.cal-cell.weekday{background:transparent;color:var(--ink-3);font-size:10px;font-weight:600;aspect-ratio:auto;height:auto;padding:4px 0;cursor:default;border:none;text-align:center;display:block;}
-.cal-legend{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:12px;font-size:10px;color:var(--ink-2);}
-.cal-legend-label{margin:0 6px;}
-@media (max-width:600px){
-  .cal-toggles{width:100%;margin-left:0;margin-top:8px;}
-  .cal-grid.day{grid-template-columns:repeat(7,1fr);font-size:9px;}
-  .cal-cell .day-amt{font-size:7px;}
-  .cal-cell .day-pct{font-size:6px;}
+/* ai coding: 盈亏日历应用留白细线布局保留日月与金额收益率独立切换 2026/11/06: 17:30 */
+.cal-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.cal-toggles{display:flex;gap:4px;}
+.cal-btn,.cal-metric-btn{border:0;border-radius:4px;background:transparent;padding:8px 12px;font-size:12px;font-family:inherit;color:var(--ink-3);cursor:pointer;}
+.cal-btn.active,.cal-metric-btn.active{background:#f0f3f1;color:var(--ink);}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.cal-nav-btn{background:transparent;border:0;width:40px;height:40px;padding:0;font-size:20px;color:var(--ink-3);cursor:pointer;}
+.cal-title{font-size:18px;font-weight:500;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;}
+.cal-grid.month{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.cal-cell{height:62px;min-width:0;padding:9px 2px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;background:transparent;border:0;border-top:1px solid #edf0ee;color:var(--ink);font-family:inherit;box-sizing:border-box;}
+.cal-cell[data-date]{cursor:pointer;}
+.cal-cell:disabled{color:#9aa3a5;cursor:default;}
+.cal-cell .day-num{font-size:12px;font-weight:400;}
+.cal-cell .day-value{font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.cal-cell[aria-pressed="true"]{outline:1px solid var(--ink);outline-offset:-1px;border-radius:3px;}
+.cal-cell.weekday{border:0;height:auto;padding:0 0 12px;font-size:11px;color:var(--ink-3);display:block;text-align:center;}
+.cal-grid.month .cal-cell{height:88px;padding:16px 8px;}
+.cal-grid.month .day-num,.cal-grid.month .day-value{font-size:14px;}
+/* ai coding: 日期详情同时展示完整整数盈亏金额和两位小数收益率 2026/11/06: 17:30 */
+.cal-detail{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:16px;border-top:1px solid #edf0ee;font-size:12px;}
+.cal-detail-date{color:var(--ink-3);}
+.cal-detail-values{display:flex;gap:18px;font-variant-numeric:tabular-nums;white-space:nowrap;}
+@media(max-width:600px){
+  .cal-controls{gap:8px;}
+  .cal-btn,.cal-metric-btn{padding:10px 9px;min-height:44px;}
+  .cal-nav-btn{width:44px;height:44px;}
+  .cal-cell{height:60px;}
+  .cal-cell .day-value{font-size:11px;}
+  .cal-grid.month .cal-cell{height:84px;}
+  .cal-grid.month .day-value{font-size:13px;}
+  .cal-detail-values{gap:12px;}
 }
 
 @media (max-width:880px){
@@ -440,7 +489,6 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="report-timestamp">最近更新时间：__GENERATED_AT__（北京时间）</div>
 <div class="masthead">
   <!-- ai coding: 删除页眉重复英文标题只保留报告名称 2026/11/06: 16:22 -->
-  <h1>持仓收益分析</h1>
   <!-- ai coding: 日期选择叠加固定年月日文本保留系统日期选择器 2026/11/06: 16:42 -->
   <div class="date-filter">
     <label>开始 <span class="date-input-shell"><span id="dateStartDisplay" aria-hidden="true"></span><input id="dateStart" type="date" required></span></label>
@@ -464,7 +512,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="summary">
   <div class="section-head">
     <span class="idx">02</span>
-    <h2>资产 · 收益 · 收益率</h2>
+    <!-- ai coding: 综合折线图标题改为资产与收益走势 2026/11/06: 18:37 -->
+    <h2>资产与收益走势</h2>
   </div>
   <div class="chart-card">
     <div class="chart-canvas-wrap">
@@ -568,7 +617,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
     <span class="idx">09</span>
     <h2>重仓股持有时间线</h2>
   </div>
-  <div class="timeline-card">__TIMELINE_SVG__</div>
+  <!-- ai coding: 在报告中直接渲染 HTML 持仓时间线 2026/11/06: 18:24 -->
+  <div class="timeline-card">__TIMELINE_HTML__</div>
 </div>
 
 <!-- 10 P&L Calendar -->
@@ -576,27 +626,25 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   <div class="section-head">
     <span class="idx">10</span>
     <h2>盈亏日历</h2>
-    <div class="cal-toggles">
-      <button class="cal-btn active" data-view="day">日</button>
-      <button class="cal-btn" data-view="month">月</button>
-      <button class="cal-btn" data-view="year">年</button>
+  </div>
+  <!-- ai coding: 视图和指标分别切换仅保留日月日历并添加双读数日期详情 2026/11/06: 17:30 -->
+  <div class="cal-controls">
+    <div class="cal-toggles" role="group" aria-label="日月视图">
+      <button type="button" class="cal-btn active" data-view="day" aria-pressed="true">日</button>
+      <button type="button" class="cal-btn" data-view="month" aria-pressed="false">月</button>
+    </div>
+    <div class="cal-toggles" role="group" aria-label="盈亏指标">
+      <button type="button" class="cal-metric-btn active" data-metric="amt" aria-pressed="true">盈亏金额</button>
+      <button type="button" class="cal-metric-btn" data-metric="pct" aria-pressed="false">收益率</button>
     </div>
   </div>
   <div class="cal-nav">
-    <button class="cal-nav-btn" id="calPrev">←</button>
+    <button type="button" class="cal-nav-btn" id="calPrev" aria-label="上一期">‹</button>
     <span class="cal-title" id="calTitle"></span>
-    <button class="cal-nav-btn" id="calNext">→</button>
+    <button type="button" class="cal-nav-btn" id="calNext" aria-label="下一期">›</button>
   </div>
   <div class="cal-grid" id="calGrid"></div>
-  <div class="cal-legend">
-    <span class="cal-legend-label">亏损</span>
-    <span class="cal-swatch" style="background:#007a33;width:14px;height:14px;"></span>
-    <span class="cal-swatch" style="background:#c5e8d0;width:14px;height:14px;"></span>
-    <span class="cal-swatch" style="background:#e4e4e4;width:14px;height:14px;"></span>
-    <span class="cal-swatch" style="background:#f5c6cf;width:14px;height:14px;"></span>
-    <span class="cal-swatch" style="background:#e4002b;width:14px;height:14px;"></span>
-    <span class="cal-legend-label">盈利</span>
-  </div>
+  <div class="cal-detail" id="calDetail" aria-live="polite"></div>
 </div>
 
 <!-- 11 清仓盈亏 -->
@@ -651,8 +699,9 @@ const RED   = '#e4002b';
 const RULE  = '#e4e4e4';
 const INK2  = '#5b5b5b';
 const INK3  = '#9a9a9a';
-const PROFIT = '#e4002b';
-const LOSS   = '#007a33';
+// ai coding: 图表盈亏颜色读取页面全局变量避免各图使用不同红绿色 2026/11/06: 18:31
+const PROFIT = getComputedStyle(document.documentElement).getPropertyValue('--profit').trim();
+const LOSS = getComputedStyle(document.documentElement).getPropertyValue('--loss').trim();
 // 仓位率三档灰阶
 const POS_INK = '#374151';
 const POS_MID = '#9ca3af';
@@ -665,10 +714,10 @@ const FONT = "'Inter','Noto Sans SC',sans-serif";
 // ai coding: 移动端断点控制 Y 轴刻度数字显隐与折线线宽；Y 轴标题三端统一去掉（刻度带 % 后缀足以区分，且标题与图例互相遮挡） 2026/11/06: 15:26
 const isMobileView = window.innerWidth <= 600;
 const hideYAxisLabel = isMobileView;
-// ai coding: 主图三条线统一实线，配色换蓝/青/橙（TradingView 风），线宽再调细 2026/11/06: 15:37
+// ai coding: 资产保留蓝色收益和收益率使用统一盈亏配色并保持原线宽 2026/11/06: 18:31
 const C_ASSET = '#2962ff';
-const C_PNL = '#089981';
-const C_ROI = '#f57c00';
+const C_PNL = PROFIT;
+const C_ROI = PROFIT;
 const LW_MAIN = isMobileView ? 1.3 : 2;
 const LW_SUB = isMobileView ? 1.1 : 1.7;
 // ai coding: 日期刻度改由 ECharts axisLabel.hideOverlap 自动抽稀，原 Chart.js ticks 配置移除 2026/11/06: 14:48
@@ -840,18 +889,19 @@ function bindScrubHaptic(chart) {
     lastIdx = idx;
   });
 }
-// ai coding: 极值标签朝曲线内侧排布并按系列错位防止边缘截断 2026/11/06: 15:44
-function tvExtremum(color, unit, lane, values) {
+// ai coding: 极值标签保持错位排布收益类标签与圆点按正负显示全局盈亏色 2026/11/06: 18:31
+function tvExtremum(color, unit, lane, values, signed = false) {
+  const pointColor = value => signed ? (value > 0 ? PROFIT : value < 0 ? LOSS : INK3) : color;
   const num = p => String(+p.value.toFixed(2)) + unit;
-  const lbl = (position, offset) => ({ show: true, position, distance: 7, offset,
-    formatter: num, color, fontSize: 10, fontFamily: FONT,
+  const lbl = (position, offset, value) => ({ show: true, position, distance: 7, offset,
+    formatter: num, color: pointColor(value), fontSize: 10, fontFamily: FONT,
     backgroundColor: 'rgba(255,255,255,0.94)', padding: [3, 4], borderRadius: 2 });
   return {
     symbol: 'circle', symbolSize: 4,
     itemStyle: { color, borderColor: '#fff', borderWidth: 1 },
     data: [
-      { type: 'max', label: lbl(values.indexOf(Math.max(...values)) < values.length / 2 ? 'right' : 'left', [0, (lane || 0) * 16]) },
-      { type: 'min', label: lbl(values.indexOf(Math.min(...values)) < values.length / 2 ? 'right' : 'left', [0, -(lane || 0) * 16]) }
+      { type: 'max', itemStyle: { color: pointColor(Math.max(...values)) }, label: lbl(values.indexOf(Math.max(...values)) < values.length / 2 ? 'right' : 'left', [0, (lane || 0) * 16], Math.max(...values)) },
+      { type: 'min', itemStyle: { color: pointColor(Math.min(...values)) }, label: lbl(values.indexOf(Math.min(...values)) < values.length / 2 ? 'right' : 'left', [0, -(lane || 0) * 16], Math.min(...values)) }
     ]
   };
 }
@@ -982,6 +1032,9 @@ masterChart.setOption({
   legend: { ...tvBaseOption(dates.length).legend, selected: { '资产': defaultSeriesVisible('asset'), '收益': defaultSeriesVisible('pnl'), '收益率': defaultSeriesVisible('roi') } },
   tooltip: tvTooltip(p => p.seriesName === '收益率' ? p.value.toFixed(2) + '%' : fmtWan(p.value * 10000)),
   xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
+  // ai coding: 收益与收益率曲线正值深红负值深绿零值保持灰色 2026/11/06: 18:31
+  visualMap: { show: false, type: 'piecewise', seriesIndex: [1, 2], dimension: 1,
+    pieces: [{ gt: 0, color: PROFIT }, { lt: 0, color: LOSS }, { value: 0, color: INK3 }] },
   yAxis: [
     { type: 'value', position: 'left',
       axisLine: { show: false }, axisTick: { show: false },
@@ -997,11 +1050,13 @@ masterChart.setOption({
       symbol: 'none', smooth: 0.3, lineStyle: { color: C_ASSET, width: LW_MAIN }, itemStyle: { color: C_ASSET },
       markPoint: tvExtremum(C_ASSET, '万', 1, assetWan) },
     { name: '收益', type: 'line', data: pnlWan, yAxisIndex: 0,
-      symbol: 'none', smooth: 0.3, lineStyle: { color: C_PNL, width: LW_SUB }, itemStyle: { color: C_PNL },
-      markPoint: tvExtremum(C_PNL, '万', 2, pnlWan) },
+      // ai coding: 收益曲线由数值正负决定颜色并同步极值标记 2026/11/06: 18:31
+      symbol: 'none', smooth: 0.3, lineStyle: { width: LW_SUB }, itemStyle: { color: C_PNL },
+      markPoint: tvExtremum(C_PNL, '万', 2, pnlWan, true) },
     { name: '收益率', type: 'line', data: roiVals, yAxisIndex: 1,
-      symbol: 'none', smooth: 0.3, lineStyle: { color: C_ROI, width: LW_SUB }, itemStyle: { color: C_ROI },
-      markPoint: tvExtremum(C_ROI, '%', 0, roiVals) }
+      // ai coding: 收益率曲线由数值正负决定颜色并同步极值标记 2026/11/06: 18:31
+      symbol: 'none', smooth: 0.3, lineStyle: { width: LW_SUB }, itemStyle: { color: C_ROI },
+      markPoint: tvExtremum(C_ROI, '%', 0, roiVals, true) }
   ]
 });
 bindScrubHaptic(masterChart);
@@ -1190,7 +1245,8 @@ rankingChart.setOption({
       const end = api.coord([value, index]);
       const plot = params.coordSys;
       const rowHeight = plot.height / Math.max(ranked.length, 1);
-      const color = value > 0 ? '#d94b51' : value < 0 ? '#398674' : INK3;
+      // ai coding: 持仓收益排行线段圆点和金额沿用全局盈亏配色 2026/11/06: 18:31
+      const color = value > 0 ? PROFIT : value < 0 ? LOSS : INK3;
       return { type: 'group', children: [
         { type: 'line', shape: { x1: zero[0], y1: zero[1] - rowHeight / 2, x2: zero[0], y2: zero[1] + rowHeight / 2 }, style: { stroke: RULE, lineWidth: 1 } },
         { type: 'line', shape: { x1: zero[0], y1: zero[1], x2: end[0], y2: end[1] }, style: { stroke: color, lineWidth: 1.5 } },
@@ -1269,157 +1325,132 @@ holdingsHtml += `<tr class="summary-row">
 
 tbody.innerHTML = holdingsHtml;
 
-// ── 09 P&L Calendar ──
+// ai coding: 留白细线日历按两位有效数字格式化金额支持日月指标切换和双读数详情 2026/11/06: 17:30
 (function(){
   const calGrid = document.getElementById('calGrid');
   const calTitle = document.getElementById('calTitle');
+  const calDetail = document.getElementById('calDetail');
+  const calendarSection = calGrid.closest('.section');
   let view = 'day';
-  // ai coding: 日期筛选后将盈亏日历定位到区间内最后一个快照月份 2026/10/09: 15:58
-  let cursor = new Date((latest.date || endDate) + 'T12:00:00');
-  const fmtCal = v => v == null ? '—' : (v/10000).toFixed(1);  // always 万, 1 decimal
-
-  // compute daily stock P&L only when both today and the previous calendar day have snapshots
+  let metric = 'amt';
+  const initialDate = latest.date || endDate;
+  let year = Number(initialDate.slice(0, 4));
+  let month = Number(initialDate.slice(5, 7)) - 1;
+  let selected = initialDate;
+  const key = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}` + (d ? `-${String(d).padStart(2, '0')}` : '');
   const pnlMap = {};
-  snapshots.forEach((s, i) => {
-    const d = s.date;
-    if (i > 0) {
-      const prev = snapshots[i-1];
-      const dayGap = Math.round((Date.parse(d + 'T00:00:00Z') - Date.parse(prev.date + 'T00:00:00Z')) / 86400000);
-      if (dayGap === 1) {
-        const cur = (s.summary || {}).holdings_current;
-        const prevCur = (prev.summary || {}).holdings_current;
-        if (cur != null && prevCur > 0) {
-          pnlMap[d] = {
-            amt: +(cur - prevCur).toFixed(0),
-            pct: +((cur - prevCur) / prevCur * 100).toFixed(2)
-          };
-        }
+  // ai coding: 日历与上一份有效资产快照比较跨周末或缺档仍显示当次盈亏 2026/11/06: 17:32
+  let previousCalendarSnapshot = null;
+  snapshots.forEach(snapshot => {
+    const currentValue = snapshot.summary?.holdings_current;
+    if (!Number.isFinite(currentValue)) return;
+    if (previousCalendarSnapshot) {
+      const previousValue = previousCalendarSnapshot.summary.holdings_current;
+      if (previousValue > 0) {
+        pnlMap[snapshot.date] = { amt: Math.round(currentValue - previousValue), pct: (currentValue - previousValue) / previousValue * 100 };
       }
     }
+    previousCalendarSnapshot = snapshot;
   });
-
-  function colorFor(val, max) {
-    if (val == null || max === 0) return '#f5f5f5';
-    const r = val / max;
-    if (r < 0) {
-      const t = Math.min(1, Math.abs(r));
-      return `rgba(0,122,51,${0.15 + t * 0.85})`;
-    }
-    if (r > 0) {
-      const t = Math.min(1, r);
-      return `rgba(228,0,43,${0.15 + t * 0.85})`;
-    }
-    return '#f5f5f5';
+  const monthMap = {};
+  Object.entries(pnlMap).forEach(([date, value]) => {
+    const entry = monthMap[date.slice(0, 7)] ||= { amt: 0, pct: null };
+    entry.amt += value.amt;
+  });
+  Object.entries(monthMap).forEach(([date, value]) => {
+    const snapshot = [...snapshots].reverse().find(item => item.date.slice(0, 7) <= date);
+    const total = snapshot?.summary?.regions?.整体?.current;
+    value.pct = total > 0 ? value.amt / total * 100 : null;
+  });
+  // ai coding: 满一万元使用万单位小额显示数字均保留两位有效数字且不使用科学计数法 2026/11/06: 17:30
+  function formatCalendarAmount(value) {
+    const useWan = Math.abs(value) >= 10000;
+    const number = useWan ? value / 10000 : value;
+    const formatted = value === 0 ? '0' : new Intl.NumberFormat('zh-CN', {
+      minimumSignificantDigits: 2, maximumSignificantDigits: 2, useGrouping: false
+    }).format(number);
+    return (value > 0 ? '+' : '') + formatted + (useWan ? '万' : '');
   }
-
-  function renderDay() {
-    const y = cursor.getFullYear(), m = cursor.getMonth();
-    calTitle.textContent = `${y}年${m+1}月`;
-    calGrid.className = 'cal-grid day';
-    const DOW = ['一','二','三','四','五','六','日'];
-    let html = DOW.map(d => `<div class="cal-cell weekday">${d}</div>`).join('');
-
-    const first = new Date(y,m,1).getDay()||7;
-    const days = new Date(y,m+1,0).getDate();
-    const today = new Date().toISOString().slice(0,10);
-    const vals = []; for(let i=1;i<=days;i++){const dd=`${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;const e=pnlMap[dd];vals.push(e?Math.abs(e.amt):0);}
-    const maxV = Math.max(...vals, 1);
-
-    for(let i=1;i<first;i++) html+='<div class="cal-cell no-data"></div>';
-    for(let d=1;d<=days;d++){
-      const dd = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const e = pnlMap[dd];
-      let bg = '#f5f5f5', darkText = false, cls = ' no-data', textCls = '';
-      if (e) {
-        const intensity = Math.min(1, Math.abs(e.amt) / maxV);
-        darkText = intensity > 0.45;
-        if (e.amt > 0) bg = `rgba(228,0,43,${0.12 + intensity * 0.88})`;
-        else bg = `rgba(0,122,51,${0.12 + intensity * 0.88})`;
-        cls = '';
-        textCls = e.amt > 0 ? 'up' : 'down';
-      }
-      const border = dd === today ? 'border:2px solid #111;' : '';
-      const tc = darkText ? 'color:#fff;' : '';
-      html += `<div class="cal-cell${cls}" style="background:${bg};${border}${tc}">
-        <span class="day-num">${d}</span>
-        ${e ? `<span class="day-amt ${textCls}" style="${tc}">${e.amt>0?'+':''}${fmtCal(e.amt)}</span><span class="day-pct ${textCls}" style="${tc}">${e.pct>0?'+':''}${e.pct}%</span>` : ''}
-      </div>`;
-    }
-    calGrid.innerHTML = html;
+  // ai coding: 格内收益率保留一位小数避免窄屏溢出详情保留两位小数 2026/11/06: 17:31
+  const formatRate = (value, precision = 2) => value == null ? '—' : (value > 0 ? '+' : '') + value.toFixed(precision) + '%';
+  const make = (tag, className, text) => {
+    const element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  };
+  const activeMap = () => view === 'day' ? pnlMap : monthMap;
+  function renderDetail() {
+    const value = activeMap()[selected];
+    calDetail.replaceChildren(make('span', 'cal-detail-date', selected));
+    const values = make('span', 'cal-detail-values');
+    const amount = value ? (value.amt > 0 ? '+' : '') + Math.round(value.amt).toLocaleString('zh-CN') + '元' : '—';
+    values.append(make('span', value ? colorClass(value.amt) : '', amount), make('span', value ? colorClass(value.pct) : '', value ? formatRate(value.pct) : '—'));
+    calDetail.append(values);
+    calGrid.querySelectorAll('[data-date]').forEach(element => element.setAttribute('aria-pressed', String(!element.disabled && element.dataset.date === selected)));
   }
-
-  function renderMonth() {
-    const y = cursor.getFullYear();
-    calTitle.textContent = `${y}年`;
-    calGrid.className = 'cal-grid month';
-    let html = '';
-    for(let m=0;m<12;m++){
-      let sum=0,maxA=0,totalCurr=0;const days=[];
-      for(let d=1;d<=new Date(y,m+1,0).getDate();d++){
-        const dd=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const e=pnlMap[dd];if(e){sum+=e.amt;days.push(e.amt);maxA=Math.max(maxA,Math.abs(e.amt));}
-      }
-      // find the snapshot closest to end of month for asset value
-      const monthEnd = new Date(y,m+1,0);
-      const snap = [...snapshots].reverse().find(s => new Date(s.date) <= monthEnd);
-      if(snap) totalCurr = (((snap.summary || {}).regions || {}).整体 || {}).current || 1;
-      const roi = totalCurr > 0 && sum ? +(sum / totalCurr * 100).toFixed(2) : null;
-      const intensity = maxA ? Math.min(1, Math.abs(sum)/maxA) : 0;
-      const dark = intensity > 0.45;
-      const tc = dark ? 'color:#fff;' : '';
-      const bg = sum===0&&!days.length?'#f5f5f5':(sum>=0?`rgba(228,0,43,${0.12+intensity*0.88})`:`rgba(0,122,51,${0.12+intensity*0.88})`);
-      html += `<div class="cal-cell" style="background:${bg};${tc}">
-        <span class="day-num">${m+1}月</span>
-        ${days.length ? `<span class="day-amt ${sum>0?'up':'down'}" style="${tc}">${fmtCal(sum)}</span><span class="day-pct ${sum>0?'up':'down'}" style="${tc}">${roi?roi.toFixed(1):'—'}%</span>` : '<span class="day-amt">—</span>'}
-      </div>`;
-    }
-    calGrid.innerHTML = html;
-  }
-
-  function renderYear() {
-    const years = [...new Set(snapshots.map(s=>+s.date.slice(0,4)))].sort();
-    calTitle.textContent = '全部年份';
-    calGrid.className = 'cal-grid year';
-    let html = '';
-    years.forEach(y => {
-      const yrSnaps = snapshots.filter(s=>s.date.slice(0,4)==String(y));
-      const totalPnl = yrSnaps.length>1 ? yrSnaps[yrSnaps.length-1].summary.total_pnl : 0;
-      const totalRoi = yrSnaps.length ? yrSnaps[yrSnaps.length-1].summary.total_roi : null;
-      const intensity = Math.min(1, Math.abs(totalPnl) / 500000);
-      const dark = intensity > 0.3;
-      const tc = dark ? 'color:#fff;' : '';
-      const bg = totalPnl>=0?`rgba(228,0,43,${0.12+intensity*0.88})`:`rgba(0,122,51,${0.12+intensity*0.88})`;
-      html += `<div class="cal-cell" style="background:${bg};${tc}">
-        <span class="day-num">${y}</span>
-        <span class="day-amt ${totalPnl>0?'up':'down'}" style="${tc}">${fmtCal(totalPnl)}</span>
-        <span class="day-pct ${totalPnl>0?'up':'down'}" style="${tc}">${totalRoi!=null?totalRoi.toFixed(1):'—'}%</span>
-      </div>`;
+  function render() {
+    calTitle.textContent = view === 'day' ? `${year}年${month + 1}月` : `${year}年`;
+    calGrid.className = 'cal-grid ' + view;
+    calGrid.replaceChildren();
+    calendarSection.querySelectorAll('.cal-btn').forEach(button => {
+      const active = button.dataset.view === view;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
     });
-    calGrid.innerHTML = html;
+    calendarSection.querySelectorAll('.cal-metric-btn').forEach(button => {
+      const active = button.dataset.metric === metric;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    const append = (date, label) => {
+      const value = activeMap()[date];
+      const cell = make('button', 'cal-cell');
+      cell.type = 'button';
+      cell.dataset.date = date;
+      cell.disabled = !value;
+      cell.append(make('span', 'day-num', label));
+      if (value) {
+        const text = metric === 'amt' ? formatCalendarAmount(value.amt) : formatRate(value.pct, 1);
+        cell.append(make('span', 'day-value ' + colorClass(value[metric]), text));
+        cell.addEventListener('click', () => { selected = date; renderDetail(); });
+      }
+      cell.setAttribute('aria-label', date + (value ? `，盈亏${value.amt}元，收益率${formatRate(value.pct)}` : '，无记录'));
+      calGrid.append(cell);
+    };
+    if (view === 'day') {
+      ['一', '二', '三', '四', '五', '六', '日'].forEach(day => calGrid.append(make('div', 'cal-cell weekday', day)));
+      const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+      const days = new Date(year, month + 1, 0).getDate();
+      for (let index = 0; index < offset; index++) calGrid.append(make('div', 'cal-cell'));
+      for (let day = 1; day <= days; day++) append(key(year, month, day), String(day));
+      while (calGrid.children.length % 7) calGrid.append(make('div', 'cal-cell'));
+    } else {
+      for (let currentMonth = 0; currentMonth < 12; currentMonth++) append(key(year, currentMonth), `${currentMonth + 1}月`);
+    }
+    renderDetail();
   }
-
-  function render(){if(view==='day')renderDay();else if(view==='month')renderMonth();else renderYear();}
-
-  document.getElementById('calPrev').onclick = () => {
-    if(view==='day') cursor.setMonth(cursor.getMonth()-1);
-    else if(view==='month') cursor.setFullYear(cursor.getFullYear()-1);
-    else return;
-    render();
-  };
-  document.getElementById('calNext').onclick = () => {
-    if(view==='day') cursor.setMonth(cursor.getMonth()+1);
-    else if(view==='month') cursor.setFullYear(cursor.getFullYear()+1);
-    else return;
-    render();
-  };
-  document.querySelectorAll('.cal-btn').forEach(b => b.onclick = () => {
-    document.querySelector('.cal-btn.active').classList.remove('active');
-    b.classList.add('active');
-    view = b.dataset.view;
-    cursor = new Date();
-    render();
+  function selectVisibleDate() {
+    const prefix = view === 'day' ? key(year, month) : String(year);
+    const available = Object.keys(activeMap()).filter(date => date.startsWith(prefix)).sort();
+    selected = available[available.length - 1] || (view === 'day' ? key(year, month, 1) : key(year, month));
+  }
+  document.getElementById('calPrev').onclick = () => navigate(-1);
+  document.getElementById('calNext').onclick = () => navigate(1);
+  function navigate(delta) {
+    if (view === 'month') year += delta;
+    else {
+      month += delta;
+      if (month < 0) { month = 11; year--; }
+      if (month > 11) { month = 0; year++; }
+    }
+    selectVisibleDate(); render();
+  }
+  calendarSection.querySelectorAll('.cal-btn').forEach(button => button.onclick = () => {
+    view = button.dataset.view; selectVisibleDate(); render();
   });
-
+  calendarSection.querySelectorAll('.cal-metric-btn').forEach(button => button.onclick = () => { metric = button.dataset.metric; render(); });
+  if (!pnlMap[selected]) selectVisibleDate();
   render();
 })();
 
@@ -1704,8 +1735,7 @@ document.querySelectorAll('.section-head h2').forEach(title => {
       });
     }
     const tr = document.createElement('tr');
-    // ai coding: 恢复年化收益率合计行原有的深色顶部横线 2026/10/09: 16:07
-    tr.style.borderTop = '2px solid ' + INK;
+    // ai coding: 汇总行分隔线统一由表格细线样式控制 2026/11/06: 18:27
     tr.innerHTML = html;
     if (tfoot) tfoot.appendChild(tr);
   }
@@ -1768,9 +1798,8 @@ def generate_report(snapshots, stats):
     except:
         pass
     config_json = json.dumps(config, ensure_ascii=False)
-    timeline_svg = generate_timeline_svg(config, write_file=True)
-    if not timeline_svg:
-        timeline_svg = '<div class="timeline-empty">请在 config.json 中配置 timeline.trades。</div>'
+    # ai coding: 按配置生成 HTML 时间线没有交易时隐藏空内容 2026/11/06: 18:24
+    timeline_html = generate_timeline_html(config)
 
     # Calculate annual returns: historical (from config) + current year YTD (no annualization) + overall CAGR
     annual_data = []
@@ -1859,7 +1888,8 @@ def generate_report(snapshots, stats):
             .replace("__DATA__", data_json)
             .replace("__STATS__", stats_json)
             .replace("__CONFIG__", config_json)
-            .replace("__TIMELINE_SVG__", timeline_svg)
+            # ai coding: 将原生时间线内容写入报告模板 2026/11/06: 18:24
+            .replace("__TIMELINE_HTML__", timeline_html)
             .replace("__GENERATED_AT__", generated_at))
 
     script_dir = os.path.dirname(os.path.abspath(__file__))

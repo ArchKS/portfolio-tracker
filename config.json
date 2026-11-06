@@ -2,7 +2,7 @@
   "_comment": "控制页面模块显隐，true=显示，false=隐藏",
   "sections": {
     "overview": true,
-    "stats": true,
+    "stats": false,
     "summary": true,
     "drawdown": true,
     "position": true,
@@ -16,7 +16,7 @@
   },
   "summary_series": {
     "asset": true,
-    "pnl": false,
+    "pnl": true,
     "roi": true
   },
   "annual_returns_history": {
@@ -106,7 +106,7 @@
       },
       {
         "name": "海螺水泥",
-         "buy_date": "2026-04-10",
+        "buy_date": "2026-04-10",
         "sell_date": null,
         "buy_amount": 82.1,
         "broke_even": true

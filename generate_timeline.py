@@ -8,6 +8,10 @@ import os
 from datetime import date
 from html import escape
 
+# ai coding: HTML 时间线按上海日期计算未清仓持有区间 2026/11/06: 18:24
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(PROJECT_DIR, "config.json")
@@ -43,13 +47,9 @@ def _lerp_color(start, end, amount):
     return "#{:02x}{:02x}{:02x}".format(*rgb)
 
 
+# ai coding: 兼容 SVG 导出也统一深红盈利深绿亏损零值灰色 2026/11/06: 18:31
 def annualized_color(value, half):
-    amount = math.tanh(value / half)
-    return _lerp_color(
-        (238, 232, 219),
-        (196, 42, 42) if amount >= 0 else (43, 140, 84),
-        abs(amount),
-    )
+    return "#9f2d36" if value > 0 else "#236449" if value < 0 else "#656565"
 
 
 def compute_row(trade, settings, as_of):
@@ -232,10 +232,12 @@ def build_svg(config):
                 f'font-weight="700" fill="{colors["title"]}" text-anchor="middle">'
                 f'{escape(row["name"])}</text>'
             )
+        # ai coding: SVG 导出的盈亏年化文字也与对应线段使用统一深红深绿 2026/11/06: 18:31
+        label_color = annualized_color(row["annualized"], COLOR_SCALE_HALF) if not row["open"] else colors["subtitle"]
         label_x = min(x_end + layout["right_label_pad"], width - 260)
         svg.append(
             f'<text x="{label_x:.2f}" y="{row_y + 5}" font-size="14" '
-            f'fill="{colors["subtitle"]}">{escape(row["label"])}</text>'
+            f'fill="{label_color}">{escape(row["label"])}</text>'
         )
         row_y += layout["row_height"]
     svg.append("</svg>")
@@ -250,6 +252,111 @@ def generate_timeline_svg(config=None, write_file=True):
         with open(os.path.join(PROJECT_DIR, filename), "w", encoding="utf-8") as file:
             file.write(svg)
     return svg
+
+
+# ai coding: 用原生 HTML 细线端点替代内嵌 SVG 并以深红深绿同步标记线段与年化 2026/11/06: 18:24
+def generate_timeline_html(config):
+    settings = config.get("timeline", {})
+    trades = settings.get("trades", [])
+    if not trades:
+        return ""
+    as_of = parse_date(AS_OF_DATE) or datetime.now(ZoneInfo("Asia/Shanghai")).date()
+    computed = [compute_row(trade, settings, as_of) for trade in trades]
+    min_year = min(row["buy"].year for row in computed)
+    max_year = max((row["sell"] or as_of).year for row in computed) + 1
+    start, end = date(min_year, 1, 1), date(max_year, 1, 1)
+    span = (end - start).days
+    rows, html = [], [
+        '<div id="holdingTimeline" class="holding-timeline">',
+        '<div class="ht-axis">',
+    ]
+    for year in range(min_year, max_year + 1):
+        left = (date(year, 1, 1) - start).days / span * 100
+        html.append(f'<span style="left:{left:.4f}%">{year}</span>')
+    html.append('</div><div class="ht-lanes">')
+    for index, (trade, row) in enumerate(zip(trades, computed)):
+        endpoint = row["sell"] or as_of
+        left = (row["buy"] - start).days / span * 100
+        width = (endpoint - row["buy"]).days / span * 100
+        profit = trade.get("profit", 0)
+        tone = "neutral" if row["open"] or profit == 0 else "profit" if profit > 0 else "loss"
+        annual = row.get("annualized")
+        numeric = f'{annual * 100:+.0f}%' if annual is not None else "持有中"
+        name = escape(row["name"])
+        interval = f'{row["buy"].isoformat()} → {endpoint.isoformat()}'
+        rows.append({"name": row["name"], "interval": interval,
+                     "parts": row["label"].split("｜"), "open": row["open"],
+                     "tone": tone, "years": f'{(endpoint - row["buy"]).days / 365.25:.2f}年'})
+        aria = escape(f'{row["name"]} {interval} {row["label"]}', quote=True)
+        html.append(
+            f'<button type="button" class="ht-row ht-{tone}" data-holding="{index}" '
+            f'aria-pressed="{str(index == 0).lower()}" aria-label="{aria}" '
+            f'style="--ht-start:{left:.4f}%;--ht-span:{width:.4f}%">'
+            f'<span class="ht-name">{name}</span><span class="ht-track">'
+            f'<i class="ht-line {"ht-open" if row["open"] else ""}"></i>'
+            f'<span class="ht-annual">{numeric}</span></span></button>'
+        )
+    html.append('</div><div class="ht-detail" aria-live="polite"></div></div>')
+    payload = json.dumps(rows, ensure_ascii=False).replace("<", "\\u003c")
+    html.append(f'<script type="application/json" id="holdingTimelineData">{payload}</script>')
+    html.append(r'''<script>
+// ai coding: 点击标的更新底部完整配置数据并让收益数值沿用对应线段颜色 2026/11/06: 18:24
+(() => {
+  const root = document.getElementById('holdingTimeline');
+  const rows = JSON.parse(document.getElementById('holdingTimelineData').textContent);
+  const detail = root.querySelector('.ht-detail');
+  function select(index) {
+    const row = rows[index];
+    root.querySelectorAll('.ht-row').forEach(button => {
+      button.setAttribute('aria-pressed', String(Number(button.dataset.holding) === index));
+    });
+    detail.replaceChildren();
+    const header = document.createElement('div');
+    header.className = 'ht-detail-head';
+    const name = document.createElement('b');
+    name.textContent = row.name;
+    const dates = document.createElement('span');
+    dates.textContent = row.interval;
+    header.append(name, dates);
+    const metrics = document.createElement('div');
+    metrics.className = 'ht-metrics';
+    if (row.open) {
+      const years = document.createElement('div');
+      years.className = 'ht-metric';
+      const label = document.createElement('span');
+      label.textContent = '持有';
+      const value = document.createElement('strong');
+      value.textContent = row.years;
+      years.append(label, value);
+      const status = document.createElement('div');
+      status.className = 'ht-status';
+      status.textContent = row.parts.join(' · ');
+      metrics.append(years, status);
+    } else {
+      row.parts.forEach(part => {
+        const metric = document.createElement('div');
+        metric.className = 'ht-metric';
+        const isProfit = part.startsWith('利润');
+        const isAnnual = part.startsWith('年化');
+        const label = document.createElement('span');
+        label.textContent = isProfit ? '利润' : isAnnual ? '年化' : '持有';
+        const value = document.createElement('strong');
+        value.textContent = part.replace(/^(利润|年化)/, '');
+        if (isProfit || isAnnual) value.className = 'ht-' + row.tone;
+        metric.append(label, value);
+        metrics.append(metric);
+      });
+    }
+    detail.append(header, metrics);
+  }
+  root.addEventListener('click', event => {
+    const button = event.target.closest('.ht-row');
+    if (button) select(Number(button.dataset.holding));
+  });
+  select(0);
+})();
+</script>''')
+    return "\n".join(html)
 
 
 def main():
