@@ -174,6 +174,11 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{background:var(--paper);}
+/* ai coding: 限制页面宽度并裁切横向溢出防止苹果手机整页左右滑动 2026/11/06: 16:41 */
+html,body{width:100%;overflow-x:hidden;overscroll-behavior-x:none;}
+@supports(overflow:clip){html,body{overflow-x:clip;}}
+/* ai coding: 表格和时间线保留内部横向滚动并阻止滚动传递到整页 2026/11/06: 16:41 */
+.table-scroll,.timeline-card{overscroll-behavior-x:contain;max-width:100%;}
 .chart-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 body{
   font-family:'Inter','Noto Sans SC',-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;
@@ -371,14 +376,18 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .table-scroll tbody tr:hover td.name,.table-scroll tbody tr.summary-row td.name{background:#fafafa;}
   .notice{font-size:11px;padding:10px 12px;}
 }
-/* ai coding: 综合图读数上下各保留十二像素间距与底部日期图例留白一致 2026/11/06: 15:53 */
-.section[data-section="summary"] .section-head{padding-bottom:0;margin-bottom:0;}
-.section[data-section="summary"] > .chart-card{padding-top:12px;}
+/* ai coding: 三个折线图统一标题读数和绘图区间距各保留十二像素 2026/11/06: 16:40 */
+.section:is([data-section="summary"],[data-section="drawdown"],[data-section="position"]) .section-head{padding-bottom:0;margin-bottom:0;}
+.section:is([data-section="summary"],[data-section="drawdown"],[data-section="position"]) > .chart-card{padding-top:12px;}
 
 /* ai coding: 页眉日期操作与概览统计改用简约排版并将长标的名称独立成行 2026/11/06: 16:22 */
 .masthead{margin-bottom:28px;padding-bottom:0;}
 .masthead h1{font-size:34px;font-weight:700;line-height:1.2;margin-top:0;}
-.date-filter{gap:12px;margin-top:20px;}
+/* ai coding: 起止日期与保存图片固定在同一行错误状态单独占下一行 2026/11/06: 16:39 */
+.date-filter{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:12px;margin-top:20px;}
+.date-filter > label{min-width:0;white-space:nowrap;}
+.date-filter-status{grid-column:1/-1;grid-row:2;}
+.date-filter .save-btn{grid-column:3;grid-row:1;white-space:nowrap;}
 .date-filter label{gap:8px;font-size:12px;color:var(--ink-3);}
 .date-filter input{padding:8px 10px;border-radius:6px;background:#f6f6f6;font-size:13px;}
 .save-btn{background:transparent;color:var(--ink-2);padding:8px 0;margin-left:auto;font-size:12px;}
@@ -390,11 +399,12 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 .stat .n{font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:5px;overflow-wrap:anywhere;}
 @media(max-width:600px){
   .masthead h1{font-size:28px;}
-  .date-filter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin-top:16px;}
-  .date-filter label{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:4px;}
-  .date-filter input{width:100%;box-sizing:border-box;min-height:36px;}
-  .date-filter-status{grid-column:1/-1;}
-  .save-btn{grid-column:1/-1;justify-self:end;margin-left:0;padding:2px 0;}
+  /* ai coding: 手机端日期标签输入和导出按钮紧凑单行排列避免窄屏换行 2026/11/06: 16:39 */
+  .date-filter{gap:6px;margin-top:16px;}
+  .date-filter label{display:flex;flex-direction:row;align-items:center;gap:3px;font-size:10px;}
+  .date-filter input{flex:1;width:0;min-width:0;box-sizing:border-box;min-height:36px;padding:6px 4px;font-size:10px;}
+  .date-filter input::-webkit-calendar-picker-indicator{width:12px;margin:0;padding:0;}
+  .save-btn{justify-self:end;margin-left:0;padding:8px 0;font-size:10px;}
   .strip,.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;}
   .cell .val{font-size:26px;}
   .cell .num,.stat .l{font-size:11px;letter-spacing:0;}
@@ -402,6 +412,24 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .section[data-section="overview"],.section[data-section="stats"]{margin-bottom:32px;}
   .section[data-section="overview"] .section-head,.section[data-section="stats"] .section-head{margin-bottom:18px;}
 }
+
+/* ai coding: 日期控件缩窄并用固定格式文本覆盖系统本地化日期显示 2026/11/06: 16:42 */
+.date-filter{grid-template-columns:max-content max-content auto;}
+.date-input-shell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:108px;height:36px;background:#f6f6f6;border-radius:6px;flex:none;font-size:12px;font-variant-numeric:tabular-nums;}
+.date-filter .date-input-shell input{position:absolute;inset:0;width:100%;height:100%;opacity:0;padding:0;cursor:pointer;}
+.date-input-shell:focus-within{outline:2px solid var(--accent);outline-offset:2px;}
+.date-filter .save-btn{justify-self:start;margin-left:0;}
+@media(max-width:600px){.date-input-shell{width:86px;font-size:10px;}}
+
+/* ai coding: 市场分组比例条和标的列表响应手机尺寸并支持选中关联色段 2026/11/06: 17:09 */
+
+#portfolioAllocation{--ink:light-dark(#202a2d,#e8eff1);--muted:light-dark(#7e898d,#a1afb6);--paper:light-dark(#fff,#1b2327);background:var(--paper);color:var(--ink);padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;box-sizing:border-box;}
+#portfolioAllocation .heading{display:flex;align-items:baseline;gap:12px;margin-bottom:30px;}#portfolioAllocation .heading span{color:light-dark(#d7494f,#ec888e);font-size:13px;}#portfolioAllocation h2{font-size:20px;font-weight:500;margin:0;}
+#portfolioAllocation .market-labels,#portfolioAllocation .bar{display:flex;gap:5px;}#portfolioAllocation .market-label{min-width:0;font-size:12px;line-height:1.5;margin-bottom:10px;}#portfolioAllocation .market-label span{display:block;color:var(--muted);font-variant-numeric:tabular-nums;}
+#portfolioAllocation .bar{height:32px;margin-bottom:28px;}#portfolioAllocation .market-segments{display:flex;min-width:0;}#portfolioAllocation .segment{min-width:0;box-sizing:border-box;border-right:1px solid var(--paper);transition:opacity .18s;}#portfolioAllocation .segment:last-child{border-right:0;}#portfolioAllocation .segment.active{box-shadow:inset 0 0 0 2px var(--ink);}#portfolioAllocation .segment.dim{opacity:.4;}
+#portfolioAllocation .legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 36px;}#portfolioAllocation .market-list{display:grid;align-content:start;gap:2px;}#portfolioAllocation .entry{width:100%;display:grid;grid-template-columns:8px minmax(0,1fr) 54px;align-items:center;gap:10px;min-height:44px;padding:4px 0;background:transparent;border:0;text-align:left;font:12px -apple-system,BlinkMacSystemFont,sans-serif;color:var(--ink);box-sizing:border-box;}#portfolioAllocation .swatch{width:8px;height:8px;border-radius:1px;}#portfolioAllocation .name{line-height:1.5;overflow-wrap:anywhere;}#portfolioAllocation .pct{text-align:right;font-variant-numeric:tabular-nums;}#portfolioAllocation .entry[aria-pressed=true] .name{text-decoration:underline;text-underline-offset:5px;}#portfolioAllocation .market-list-head{font-size:11px;color:var(--muted);margin-bottom:6px;}
+@media(max-width:460px){#portfolioAllocation{padding:8px 0;}#portfolioAllocation .heading{margin-bottom:24px;}#portfolioAllocation .bar{height:28px;}#portfolioAllocation .legend{grid-template-columns:minmax(0,1fr);gap:20px;}#portfolioAllocation h2{font-size:18px;}}
+@media(prefers-reduced-motion:reduce){#portfolioAllocation .segment{transition:none;}}
 
 </style>
 </head>
@@ -413,10 +441,10 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="masthead">
   <!-- ai coding: 删除页眉重复英文标题只保留报告名称 2026/11/06: 16:22 -->
   <h1>持仓收益分析</h1>
-  <!-- ai coding: 日期选择保留开始结束标签并将图片导出按钮改为中文 2026/11/06: 16:23 -->
+  <!-- ai coding: 日期选择叠加固定年月日文本保留系统日期选择器 2026/11/06: 16:42 -->
   <div class="date-filter">
-    <label>开始 <input id="dateStart" type="date" required></label>
-    <label>结束 <input id="dateEnd" type="date" required></label>
+    <label>开始 <span class="date-input-shell"><span id="dateStartDisplay" aria-hidden="true"></span><input id="dateStart" type="date" required></span></label>
+    <label>结束 <span class="date-input-shell"><span id="dateEndDisplay" aria-hidden="true"></span><input id="dateEnd" type="date" required></span></label>
     <span class="date-filter-status" id="dateFilterStatus" role="status" aria-live="polite"></span>
   <button class="save-btn" onclick="saveAsImage()">保存图片</button>
   </div>
@@ -478,20 +506,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
     <span class="idx">05</span>
     <h2>结构分布</h2>
   </div>
-  <div class="chart-grid-2">
-    <div class="chart-card">
-      <div class="chart-title">仓位分布</div>
-      <div class="chart-canvas-wrap" style="aspect-ratio:1.2;height:auto;">
-        <canvas id="chartAllocation"></canvas>
-      </div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">市场分布</div>
-      <div class="chart-canvas-wrap" style="aspect-ratio:1.2;height:auto;">
-        <canvas id="chartMarket"></canvas>
-      </div>
-    </div>
-  </div>
+  <!-- ai coding: 仓位市场圆环合并为单条市场分组比例图与标的列表 2026/11/06: 17:09 -->
+  <div id="portfolioAllocation" class="allocation-strip"></div>
 </div>
 
 <!-- 06 Ranking -->
@@ -551,7 +567,6 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   <div class="section-head">
     <span class="idx">09</span>
     <h2>重仓股持有时间线</h2>
-    <span class="note">交易记录与显示设置来自 config.json</span>
   </div>
   <div class="timeline-card">__TIMELINE_SVG__</div>
 </div>
@@ -719,7 +734,8 @@ function tvTooltip(fmtVal) {
       crossStyle: { color: INK3, width: 1, type: 'dashed' }
     },
     formatter(params) {
-      const items = params.filter(p => p.value != null);
+      // ai coding: 读数只包含数据曲线不包含底层网格系列 2026/11/06: 16:47
+      const items = params.filter(p => p.value != null && p.seriesType !== 'custom');
       if (!items.length) return '';
       // ai coding: 日期和全部系列读数保持一行并按手机宽度缩小字号与间隔 2026/11/06: 15:51
       const width = document.getElementById('chartMaster').clientWidth - 32;
@@ -761,9 +777,15 @@ document.querySelectorAll('#chartMaster,#chartDrawdown,#chartPosition').forEach(
   let holdTimer = null;
   const chart = () => echarts.getInstanceByDom(host);
   const cancelTimer = () => { clearTimeout(holdTimer); holdTimer = null; };
+  // ai coding: 长按滑出绘图区时将读数坐标限制在左右边界滑回后继续跟随 2026/11/06: 16:33
   const showReading = touch => {
+    const instance = chart();
+    if (!instance) return;
     const bounds = host.getBoundingClientRect();
-    chart()?.dispatchAction({ type: 'showTip', x: touch.clientX - bounds.left, y: touch.clientY - bounds.top });
+    const plot = instance.getModel().getComponent('grid').coordinateSystem.getRect();
+    const x = Math.max(plot.x + 0.5, Math.min(plot.x + plot.width - 0.5, touch.clientX - bounds.left));
+    const y = Math.max(plot.y + 0.5, Math.min(plot.y + plot.height - 0.5, touch.clientY - bounds.top));
+    instance.dispatchAction({ type: 'showTip', x, y });
   };
   const release = () => {
     cancelTimer();
@@ -834,13 +856,13 @@ function tvExtremum(color, unit, lane, values) {
   };
 }
 function tvBaseOption(pointCount) {
-  // ai coding: 单行读数缩减顶部留白并收紧日期刻度与底部图例距离 2026/11/06: 15:51
+  // ai coding: 所有折线图统一单行读数上下留白和日期图例间距 2026/11/06: 16:40
   const legendBase = { icon: 'rect', itemWidth: 14, itemHeight: 3, itemGap: 14,
     textStyle: { color: INK2, fontSize: 11, fontFamily: FONT }, inactiveColor: '#cccccc' };
   return {
     animation: false,
     textStyle: { fontFamily: FONT },
-    grid: { left: 24, right: 24, top: 44, bottom: isMobileView ? 30 : 32, containLabel: true },
+    grid: { left: 24, right: 24, top: 30, bottom: isMobileView ? 30 : 32, containLabel: true },
     // ai coding: 折线图启用双指缩放与单指平移长按时暂停平移 2026/11/06: 16:31
     dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'none',
       start: 0, end: 100, minValueSpan: 1, throttle: 50,
@@ -852,7 +874,8 @@ function tvBaseOption(pointCount) {
     xAxis: {
       type: 'category', boundaryGap: false,
       axisLine: { lineStyle: { color: RULE } }, axisTick: { show: false },
-      axisLabel: { ...tvAxisLabel, margin: 12, interval: isMobileView ? Math.max(0, Math.ceil(pointCount / 4) - 1) : 'auto', showMinLabel: true, alignMinLabel: 'left', showMaxLabel: false, hideOverlap: true, formatter: v => String(v).slice(5).replace('-', '/') }
+      // ai coding: 折线图强制显示左右端日期并朝图内对齐避免边缘裁切 2026/11/06: 16:43
+      axisLabel: { ...tvAxisLabel, margin: 12, interval: isMobileView ? Math.max(0, Math.ceil(pointCount / 4) - 1) : 'auto', showMinLabel: true, alignMinLabel: 'left', showMaxLabel: true, alignMaxLabel: 'right', hideOverlap: true, formatter: v => String(v).slice(5).replace('-', '/') }
     }
   };
 }
@@ -946,12 +969,17 @@ const ddDomestic = ddSeries(regCur['国内']);
 const ddOverseas = ddSeries(regCur['境外']);
 
 // ai coding: 主图 ECharts 双轴折线：系列改名 资产/收益/收益率，默认仅显示收益率（点图例可开另外两条），三实线黑/蓝/橙，十字吸附光标，读数固定左上角单行 2026/11/06: 15:26
+// ai coding: 从配置读取三条曲线默认显隐缺失配置时保持仅显示收益率 2026/11/06: 16:38
+const summarySeriesConfig = pageConfig?.summary_series || {};
+const summarySeriesDefaults = { asset: false, pnl: false, roi: true };
+const defaultSeriesVisible = key => typeof summarySeriesConfig[key] === 'boolean'
+  ? summarySeriesConfig[key] : summarySeriesDefaults[key];
 const masterChart = echarts.init(document.getElementById('chartMaster'));
 masterChart.setOption({
   ...tvBaseOption(dates.length),
   // ai coding: 综合图单行读数下方留十二像素空白后开始绘图区 2026/11/06: 15:53
   grid: { ...tvBaseOption(dates.length).grid, top: 30 },
-  legend: { ...tvBaseOption(dates.length).legend, selected: { '资产': false, '收益': false, '收益率': true } },
+  legend: { ...tvBaseOption(dates.length).legend, selected: { '资产': defaultSeriesVisible('asset'), '收益': defaultSeriesVisible('pnl'), '收益率': defaultSeriesVisible('roi') } },
   tooltip: tvTooltip(p => p.seriesName === '收益率' ? p.value.toFixed(2) + '%' : fmtWan(p.value * 10000)),
   xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
   yAxis: [
@@ -1004,86 +1032,134 @@ bindScrubHaptic(drawdownChart);
 // ── 04 Position rate (ECharts 单折线) ──
 const posRateData = snapshots.map(s => (s.summary || {}).holdings_pos_curr_pct);
 // ai coding: 仓位率纵轴按有效数据极值上下各增加十个百分点 2026/11/06: 16:22
+// ai coding: 仓位率极值标签上下分离最大值置于曲线上方最小值置于下方 2026/11/06: 16:35
+// ai coding: 仓位率按精确上下界生成六条等距横向网格线避免边界出现窄间隔 2026/11/06: 16:37
+const validPositionRates = posRateData.filter(Number.isFinite);
+const positionMin = validPositionRates.length ? Math.min(...validPositionRates) - 10 : -10;
+const positionMax = validPositionRates.length ? Math.max(...validPositionRates) + 10 : 10;
+const positionGridLines = Array.from({ length: 6 }, (_, i) => ({ yAxis: positionMin + (positionMax - positionMin) * i / 5 }));
+const positionExtremum = tvExtremum(INK, '%', 0, posRateData);
+positionExtremum.data[0].label = { ...positionExtremum.data[0].label, position: 'top', distance: 10, offset: [0, 0] };
+positionExtremum.data[1].label = { ...positionExtremum.data[1].label, position: 'bottom', distance: 10, offset: [0, 0] };
 const positionChart = echarts.init(document.getElementById('chartPosition'));
 positionChart.setOption({
   ...tvBaseOption(dates.length),
+  // ai coding: 仓位图图例仅显示仓位曲线不显示辅助网格 2026/11/06: 16:47
+  legend: { ...tvBaseOption(dates.length).legend, data: ['仓位'] },
   tooltip: tvTooltip(p => p.value.toFixed(2) + '%'),
   xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
-  yAxis: { type: 'value', min: value => value.min - 10, max: value => value.max + 10,
+  yAxis: { type: 'value', min: positionMin, max: positionMax,
     axisLine: { show: false }, axisTick: { show: false },
     axisLabel: { ...tvAxisLabel, color: INK2, formatter: '{value}%', show: !hideYAxisLabel },
-    splitLine: { lineStyle: { color: TV_SPLIT } } },
+    splitLine: { show: false } },
   series: [
     { name: '仓位', type: 'line', data: posRateData, symbol: 'none', smooth: 0.3,
       lineStyle: { color: INK, width: LW_MAIN }, itemStyle: { color: INK },
-      markPoint: tvExtremum(INK, '%', 0, posRateData) }
+      markPoint: positionExtremum },
+    // ai coding: 等距网格改为独立底层绘制防止灰线覆盖曲线造成粗细不一致 2026/11/06: 16:47
+    { type: 'custom', silent: true, z: 0, animation: false,
+      data: positionGridLines.map(line => [line.yAxis]),
+      encode: { x: -1, y: 0, tooltip: [] }, tooltip: { show: false },
+      renderItem(params, api) {
+        const plot = params.coordSys;
+        const y = api.coord([0, api.value(0)])[1];
+        return { type: 'line', shape: { x1: plot.x, y1: y, x2: plot.x + plot.width, y2: y },
+          style: { stroke: TV_SPLIT, lineWidth: 1 } };
+      }
+    }
   ]
 });
 bindScrubHaptic(positionChart);
 
-// ── 05 Allocation (doughnut, grayscale + red accent) ──
-const allocData = holdings
-  .filter(h => h.current != null && h.current > 0)
-  .map(h => ({ name: h.name, value: h.current }))
+// ai coding: 合并市场仓位为比例条使用高区分度色板并联动完整标的占比列表 2026/11/06: 17:09
+const allocationRoot = document.getElementById('portfolioAllocation');
+allocationRoot.replaceChildren();
+const allocationRows = holdings.filter(h => Number.isFinite(h.current) && h.current > 0)
+  .map(h => ({ name: h.name, market: h.market || '其他', value: h.current }))
   .sort((a, b) => b.value - a.value);
-
-const GREY_RAMP = ['#3a3a3a','#5b5b5b','#7a7a7a','#9a9a9a','#b5b5b5','#cccccc','#dcdcdc','#e8e8e8'];
-const allocColors = allocData.map((d, i) => i === 0 ? RED : GREY_RAMP[(i - 1) % GREY_RAMP.length]);
-
-new Chart(document.getElementById('chartAllocation'), {
-  type: 'doughnut',
-  data: { labels: allocData.map(d => d.name), datasets: [{ data: allocData.map(d => d.value), backgroundColor: allocColors, borderWidth: 1, borderColor: '#fff' }] },
-  options: {
-    responsive: true, maintainAspectRatio: true, aspectRatio: 1.2, cutout: '58%',
-    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
-    plugins: {
-      legend: { position: 'bottom', labels: { boxWidth: 10, color: INK, font: { size: 11, family: FONT } } },
-      tooltip: { callbacks: { label: ctx => {
-        const total = allocData.reduce((s, d) => s + d.value, 0);
-        const pct = (ctx.parsed / total * 100).toFixed(1);
-        return ctx.label + ': ' + fmtWan(ctx.parsed) + ' (' + pct + '%)';
-      } } }
-    }
-  }
+const allocationTotal = allocationRows.reduce((sum, row) => sum + row.value, 0);
+const allocationMarketNames = { HK: '港股', US: '美股', CN: 'A股' };
+// ai coding: 恢复原始绿灰蓝同色系配色并为未来A股保留中性暖灰色系 2026/11/06: 17:12
+const allocationTones = {
+  HK: { hue: 161, saturation: 21, lightness: 47, step: 7 },
+  US: { hue: 205, saturation: 12, lightness: 36, step: 8 },
+  CN: { hue: 36, saturation: 12, lightness: 42, step: 7 }
+};
+const allocationGroups = [];
+allocationRows.forEach(row => {
+  row.pct = row.value / allocationTotal * 100;
+  let group = allocationGroups.find(item => item.market === row.market);
+  if (!group) { group = { market: row.market, pct: 0, rows: [] }; allocationGroups.push(group); }
+  group.pct += row.pct;
+  group.rows.push(row);
+});
+allocationGroups.sort((a, b) => b.pct - a.pct);
+const allocationElement = (tag, className, text) => {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
+};
+const allocationLabels = allocationElement('div', 'market-labels');
+const allocationBar = allocationElement('div', 'bar');
+allocationBar.setAttribute('role', 'img');
+allocationBar.setAttribute('aria-label', '各市場分组及标的占总持仓比例');
+const allocationLegend = allocationElement('div', 'legend');
+allocationRoot.append(allocationLabels, allocationBar, allocationLegend);
+let allocationSelected = null;
+const selectAllocation = name => {
+  allocationSelected = allocationSelected === name ? null : name;
+  allocationRoot.querySelectorAll('.segment').forEach(element => {
+    element.classList.toggle('active', allocationSelected === element.dataset.name);
+    element.classList.toggle('dim', !!allocationSelected && allocationSelected !== element.dataset.name);
+  });
+  allocationRoot.querySelectorAll('.entry').forEach(element =>
+    element.setAttribute('aria-pressed', String(allocationSelected === element.dataset.name)));
+};
+allocationGroups.forEach(group => {
+  const marketName = allocationMarketNames[group.market] || group.market;
+  const label = allocationElement('div', 'market-label', marketName);
+  label.style.flex = group.pct;
+  label.append(allocationElement('span', '', group.pct.toFixed(1) + '%'));
+  allocationLabels.append(label);
+  const area = allocationElement('div', 'market-segments');
+  area.style.flex = group.pct;
+  allocationBar.append(area);
+  const list = allocationElement('div', 'market-list');
+  list.append(allocationElement('div', 'market-list-head', marketName));
+  allocationLegend.append(list);
+  // ai coding: 按最新快照仓位顺序建立稳定色序日期切换保持标的颜色不变 2026/11/06: 17:12
+  const stableNames = [...new Set(allSnapshots.slice().reverse().flatMap(snapshot => (snapshot.holdings || [])
+    .filter(row => (row.market || '其他') === group.market).slice().sort((a, b) => (b.current || 0) - (a.current || 0))
+    .map(row => row.name)).concat(group.rows.map(row => row.name)))];
+  group.rows.forEach(row => {
+    const colorIndex = stableNames.indexOf(row.name);
+    const tone = allocationTones[group.market] || { hue: 200, saturation: 10, lightness: 44, step: 7 };
+    const color = `hsl(${tone.hue} ${tone.saturation}% ${Math.min(85, tone.lightness + colorIndex * tone.step)}%)`;
+    const segment = allocationElement('div', 'segment');
+    segment.style.flex = row.value;
+    segment.style.background = color;
+    segment.dataset.name = row.name;
+    area.append(segment);
+    const entry = allocationElement('button', 'entry');
+    entry.type = 'button';
+    entry.dataset.name = row.name;
+    entry.setAttribute('aria-pressed', 'false');
+    entry.setAttribute('aria-label', `${row.name}，${marketName}，占总持仓${row.pct.toFixed(2)}%`);
+    const swatch = allocationElement('i', 'swatch');
+    swatch.style.background = color;
+    entry.append(swatch, allocationElement('span', 'name', row.name), allocationElement('span', 'pct', row.pct.toFixed(1) + '%'));
+    entry.addEventListener('click', () => selectAllocation(row.name));
+    list.append(entry);
+  });
 });
 
-// ── 03 Market (doughnut, Swiss-toned) ──
-const marketMap = {};
-holdings.forEach(h => {
-  const m = h.market || '其他';
-  if (h.current != null) marketMap[m] = (marketMap[m] || 0) + h.current;
-});
-const marketLabels = Object.keys(marketMap);
-const marketData = marketLabels.map(m => marketMap[m]);
-const marketNames = { CN: 'A股', HK: '港股', US: '美股' };
-const marketColor = { CN: RED, HK: '#5b5b5b', US: '#9a9a9a', '其他': '#cccccc' };
-const marketColors = marketLabels.map(m => marketColor[m] || '#cccccc');
-
-new Chart(document.getElementById('chartMarket'), {
-  type: 'doughnut',
-  data: { labels: marketLabels.map(m => marketNames[m] || m), datasets: [{ data: marketData, backgroundColor: marketColors, borderWidth: 1, borderColor: '#fff' }] },
-  options: {
-    responsive: true, maintainAspectRatio: true, aspectRatio: 1.2, cutout: '58%',
-    onHover: (e, el) => { e.native.target.style.cursor = el.length ? 'pointer' : 'default'; },
-    plugins: {
-      legend: { position: 'bottom', labels: { boxWidth: 10, color: INK, font: { size: 11, family: FONT } } },
-      tooltip: { callbacks: { label: ctx => {
-        const total = marketData.reduce((s, v) => s + v, 0);
-        const pct = (ctx.parsed / total * 100).toFixed(1);
-        return ctx.label + ': ' + fmtWan(ctx.parsed) + ' (' + pct + '%)';
-      } } }
-    }
-  }
-});
-
-// ── 06 Ranking (ECharts 横向条形) ──
-// ai coding: 收益排行迁移到 ECharts：名称从 Y 轴移到条形末端外侧（正收益在右、负收益在左），不再占 Y 轴宽度 2026/11/06: 15:17
+// ai coding: 持仓收益排行改为细线圆点名称固定左侧金额固定右侧 2026/11/06: 16:59
 const ranked = holdings.filter(h => h.pnl != null).sort((a, b) => b.pnl - a.pnl);
 const rankingHost = document.getElementById('chartRanking');
-rankingHost.parentElement.style.height = `${Math.max(ranked.length, 1) * 30}px`;
+rankingHost.parentElement.style.height = `${Math.max(ranked.length, 1) * 44 + 40}px`;
 const rankAbsMaxWan = Math.max(...ranked.map(h => Math.abs(h.pnl)), 1) / 10000;
-// ai coding: 横轴上下限对齐统一刻度步长消除两端额外窄网格 2026/11/06: 15:55
-const rankTarget = rankAbsMaxWan * (window.innerWidth <= 600 ? 1.5 : 1.25);
+const rankTarget = rankAbsMaxWan * 1.1;
 const rankStepBase = Math.pow(10, Math.floor(Math.log10(rankTarget / 3)));
 const rankStep = [1, 2, 3, 5, 10].reduce((best, n) =>
   Math.abs(n - rankTarget / 3 / rankStepBase) < Math.abs(best - rankTarget / 3 / rankStepBase) ? n : best, 1) * rankStepBase;
@@ -1092,32 +1168,40 @@ const rankingChart = echarts.init(rankingHost);
 rankingChart.setOption({
   animation: false,
   textStyle: { fontFamily: FONT },
-  grid: { left: 8, right: 8, top: 8, bottom: 8, containLabel: true },
-  tooltip: {
-    trigger: 'item',
-    backgroundColor: '#fff', borderColor: RULE, borderWidth: 1, padding: [6, 10],
-    textStyle: { color: INK, fontSize: 11, fontFamily: FONT },
-    formatter: p => p.name + ' ' + fmtWan(p.value * 10000) + ' (' + fmtPct(ranked[p.dataIndex].roi) + ')'
-  },
+  grid: { left: isMobileView ? 126 : 180, right: isMobileView ? 74 : 100, top: 8, bottom: 32, containLabel: false },
+  tooltip: { show: false },
   xAxis: {
-    // ai coding: 固定横轴等距刻度并与边界竖线对齐 2026/11/06: 15:55
     type: 'value', min: -rankLim, max: rankLim, interval: rankStep,
-    axisLabel: { color: INK2, fontSize: 11, fontFamily: FONT, formatter: v => v + '万' },
-    splitLine: { lineStyle: { color: RULE } }, axisLine: { show: false }, axisTick: { show: false }
+    axisLabel: { color: INK3, fontSize: 10, fontFamily: FONT, margin: 12,
+      formatter: value => value === 0 ? '0' : Math.abs(value) === rankLim ? value + '万' : '' },
+    splitLine: { show: false }, axisLine: { show: false }, axisTick: { show: false }
   },
   yAxis: {
     type: 'category', data: ranked.map(h => h.name), inverse: true,
-    axisLine: { show: false }, axisTick: { show: false },
-    axisLabel: { show: false }
+    axisLine: { show: false }, axisTick: { show: false }, axisLabel: { show: false }
   },
   series: [{
-    type: 'bar', barWidth: 14,
-    data: ranked.map(h => ({
-      value: h.pnl / 10000,
-      itemStyle: { color: h.pnl > 0 ? PROFIT : h.pnl < 0 ? LOSS : '#9a9a9a' },
-      label: { position: h.pnl >= 0 ? 'right' : 'left' }
-    })),
-    label: { show: true, distance: 4, color: INK, fontSize: 11, fontFamily: FONT, formatter: p => p.name }
+    type: 'custom', clip: false, silent: true,
+    data: ranked.map((h, index) => [h.pnl / 10000, index]), encode: { x: 0, y: 1 },
+    renderItem(params, api) {
+      const value = api.value(0);
+      const index = api.value(1);
+      const zero = api.coord([0, index]);
+      const end = api.coord([value, index]);
+      const plot = params.coordSys;
+      const rowHeight = plot.height / Math.max(ranked.length, 1);
+      const color = value > 0 ? '#d94b51' : value < 0 ? '#398674' : INK3;
+      return { type: 'group', children: [
+        { type: 'line', shape: { x1: zero[0], y1: zero[1] - rowHeight / 2, x2: zero[0], y2: zero[1] + rowHeight / 2 }, style: { stroke: RULE, lineWidth: 1 } },
+        { type: 'line', shape: { x1: zero[0], y1: zero[1], x2: end[0], y2: end[1] }, style: { stroke: color, lineWidth: 1.5 } },
+        { type: 'circle', shape: { cx: end[0], cy: end[1], r: 3.5 }, style: { fill: color } },
+        { type: 'text', style: { x: 8, y: zero[1], text: ranked[index].name, fill: INK2,
+          font: '12px ' + FONT, width: plot.x - 20, overflow: 'break', lineHeight: 16, verticalAlign: 'middle' } },
+        { type: 'text', style: { x: api.getWidth() - 8, y: zero[1],
+          text: (value > 0 ? '+' : '') + value.toFixed(2) + '万', fill: INK,
+          font: '12px ' + FONT, align: 'right', verticalAlign: 'middle' } }
+      ] };
+    }
   }]
 });
 
@@ -1420,7 +1504,14 @@ dateEnd.max = reportToday;
 dateStart.value = yearStart;
 dateEnd.value = reportToday;
 
+// ai coding: 输入初始化与日期变更时同步显示标准年月日格式 2026/11/06: 16:42
+function syncDateLabels(){
+  [dateStart, dateEnd].forEach(input => {
+    document.getElementById(input.id + 'Display').textContent = input.value;
+  });
+}
 function applyDateRange(){
+  syncDateLabels();
   const startDate = dateStart.value;
   const endDate = dateEnd.value;
   if (!startDate || !endDate || startDate > endDate || endDate > reportToday) {

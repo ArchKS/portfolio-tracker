@@ -9,10 +9,15 @@
     "allocation": true,
     "ranking": true,
     "calendar": true,
-    "closed": true,
+    "closed": false,
     "holdings": true,
     "timeline": true,
     "annual_returns": true
+  },
+  "summary_series": {
+    "asset": true,
+    "pnl": false,
+    "roi": true
   },
   "annual_returns_history": {
     "2022": 0.58,
