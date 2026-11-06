@@ -266,18 +266,29 @@ def generate_timeline_html(config):
     max_year = max((row["sell"] or as_of).year for row in computed) + 1
     start, end = date(min_year, 1, 1), date(max_year, 1, 1)
     span = (end - start).days
+    # ai coding: 每个自然年固定配置像素宽度时间轨道超出容器时横向滚动 2026/11/06: 19:51
+    year_width = settings.get("year_width", 180)
+    if not isinstance(year_width, (int, float)) or isinstance(year_width, bool) or not math.isfinite(year_width) or year_width <= 0:
+        year_width = 180
+    year_count = max_year - min_year
+    def year_position(value):
+        year_start = date(value.year, 1, 1)
+        year_end = date(value.year + 1, 1, 1)
+        return value.year - min_year + (value - year_start).days / (year_end - year_start).days
     rows, html = [], [
-        '<div id="holdingTimeline" class="holding-timeline">',
+        f'<div id="holdingTimeline" class="holding-timeline" style="--ht-time-width:{year_count * year_width:g}px">',
+        '<div class="ht-scroll"><div class="ht-canvas">',
         '<div class="ht-axis">',
     ]
     for year in range(min_year, max_year + 1):
-        left = (date(year, 1, 1) - start).days / span * 100
+        left = (year - min_year) / year_count * 100
         html.append(f'<span style="left:{left:.4f}%">{year}</span>')
     html.append('</div><div class="ht-lanes">')
     for index, (trade, row) in enumerate(zip(trades, computed)):
         endpoint = row["sell"] or as_of
-        left = (row["buy"] - start).days / span * 100
-        width = (endpoint - row["buy"]).days / span * 100
+        # ai coding: 起止点按自然年内比例定位保证闰年与平年每年显示同等宽度 2026/11/06: 19:51
+        left = year_position(row["buy"]) / year_count * 100
+        width = (year_position(endpoint) - year_position(row["buy"])) / year_count * 100
         profit = trade.get("profit", 0)
         tone = "neutral" if row["open"] or profit == 0 else "profit" if profit > 0 else "loss"
         annual = row.get("annualized")
@@ -300,7 +311,8 @@ def generate_timeline_html(config):
             f'<i class="ht-line {"ht-open" if row["open"] else ""}"></i>'
             f'<span class="ht-annual">{escape(numeric)}</span></span></button>'
         )
-    html.append('</div><div class="ht-detail" aria-live="polite"></div></div>')
+    # ai coding: 仅时间轴和线段进入滚动区域底部标的详情保持容器内显示 2026/11/06: 19:51
+    html.append('</div></div></div><div class="ht-detail" aria-live="polite"></div></div>')
     payload = json.dumps(rows, ensure_ascii=False).replace("<", "\\u003c")
     html.append(f'<script type="application/json" id="holdingTimelineData">{payload}</script>')
     html.append(r'''<script>

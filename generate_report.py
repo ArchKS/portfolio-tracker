@@ -209,6 +209,15 @@ body{
 .section-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;margin-bottom:20px;}
 .section-head .idx{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
 .section-head h2{font-size:21px;font-weight:700;letter-spacing:-.01em;}
+/* ai coding: 概览右侧增加水平对齐目录按钮与简约浮层并在图片导出时隐藏 2026/11/06: 20:05 */
+.page-toc{position:relative;margin-left:auto;align-self:center;}
+.page-toc-toggle{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:transparent;border:0;color:var(--ink-2);cursor:pointer;border-radius:6px;}
+.page-toc-toggle svg{width:20px;height:20px;}
+.page-toc-toggle:hover{background:#f5f5f3;}
+.page-toc-list{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:220px;max-width:calc(100vw - 64px);padding:6px;background:#fff;border:1px solid var(--rule);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.08);}
+.page-toc-list a{display:block;padding:9px 12px;color:var(--ink);font-size:13px;text-decoration:none;border-radius:5px;}
+.page-toc-list a:hover,.page-toc-list a:focus-visible{background:#f5f5f3;}
+.section-export-mode .page-toc{display:none;}
 .section-download-btn{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;align-self:center;padding:0;border:0;border-radius:4px;background:transparent;color:var(--ink-3);cursor:pointer;}
 .section-download-btn:hover{background:#f1f1f1;color:var(--ink);}
 .section-download-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
@@ -265,6 +274,12 @@ body{
 /* ai coding: 时间线与全局盈亏颜色共享变量保留单行端点数字和底部信息 2026/11/06: 18:31 */
 .timeline-card{background:var(--paper);overflow:visible;}
 .holding-timeline{--ht-profit:var(--profit);--ht-loss:var(--loss);--ht-neutral:#656565;}
+/* ai coding: 固定年度轨道宽度仅时间线内部横向滚动并保持标的名称可见 2026/11/06: 19:51 */
+.ht-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;}
+.ht-canvas{width:calc(var(--ht-time-width) + 126px);}
+.ht-scroll .ht-name{position:sticky;left:0;margin-bottom: 5px;z-index:2;background:var(--module-fill,var(--paper));}
+.ht-scroll .ht-row[aria-pressed="true"] .ht-name{background:#f5f5f3 !important;}
+@media(max-width:480px){.ht-canvas{width:calc(var(--ht-time-width) + 110px);}}
 .ht-profit{--ht-tone:var(--ht-profit);}
 .ht-loss{--ht-tone:var(--ht-loss);}
 .ht-neutral{--ht-tone:var(--ht-neutral);}
@@ -326,13 +341,15 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 #holdingsTable tbody td{border:0;}
 #holdingsTable tbody tr.summary-row td{border-top:1px solid var(--rule);}
 /* ai coding: 年化收益率表格沿用持仓明细的细线风格仅保留表头与汇总分隔 2026/11/06: 18:27 */
-#annualReturnsTable thead th{border-bottom:1px solid var(--rule);}
+/* ai coding: 年化收益率表头统一十二像素覆盖移动端与导出表头字号 2026/11/06: 19:33 */
+#annualReturnsTable thead th{border-bottom:1px solid var(--rule);font-size:12px;}
 #annualReturnsTable tbody td{border:0;}
 #annualReturnsTable tfoot td{border-top:1px solid var(--rule);}
-/* ai coding: 年化表格铺满章节宽度并压缩手机单元格留白避免超出容器 2026/11/06: 18:28 */
+/* ai coding: 年化表格所有单元格禁止换行手机使用自动列宽并在表格内部横向滚动 2026/11/06: 20:01 */
 .section[data-section="annual_returns"] > .chart-card{width:100%;padding-left:0;padding-right:0;}
 #annualReturnsTable{width:100%;}
-@media(max-width:480px){#annualReturnsTable{table-layout:fixed;font-size:12px;}#annualReturnsTable thead th,#annualReturnsTable tbody td{padding-left:4px;padding-right:4px;white-space:normal;overflow-wrap:anywhere;}#annualReturnsTable tfoot td{padding-left:4px!important;padding-right:4px!important;white-space:normal!important;overflow-wrap:anywhere;}}
+#annualReturnsTable th,#annualReturnsTable td{white-space:nowrap!important;overflow-wrap:normal;word-break:normal;}
+@media(max-width:480px){#annualReturnsTable{table-layout:auto;font-size:12px;}#annualReturnsTable th,#annualReturnsTable td{padding-left:4px;padding-right:4px;}#annualReturnsTable tfoot td{padding-left:4px!important;padding-right:4px!important;}}
 
 /* ── Notice ── */
 /* ai coding: 提示信息仅保留浅色背景而不使用左侧边框 2026/10/09: 15:56 */
@@ -346,7 +363,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
 .cal-nav-btn{background:transparent;border:0;width:40px;height:40px;padding:0;font-size:20px;color:var(--ink-3);cursor:pointer;}
 .cal-title{font-size:18px;font-weight:500;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;}
+/* ai coding: 日历日视图改为周一至周五五列月视图保持原布局 2026/11/06: 19:49 */
+.cal-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;}
 .cal-grid.month{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
 .cal-cell{height:62px;min-width:0;padding:9px 2px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;background:transparent;border:0;border-top:1px solid #edf0ee;color:var(--ink);font-family:inherit;box-sizing:border-box;}
 .cal-cell[data-date]{cursor:pointer;}
@@ -483,13 +501,24 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 @media(max-width:460px){#portfolioAllocation{padding:8px 0;}#portfolioAllocation .heading{margin-bottom:24px;}#portfolioAllocation .bar{height:28px;}#portfolioAllocation .legend{grid-template-columns:minmax(0,1fr);gap:20px;}#portfolioAllocation h2{font-size:18px;}}
 @media(prefers-reduced-motion:reduce){#portfolioAllocation .segment{transition:none;}}
 
+/* ai coding: 增加白底柔影和暖灰卡片主题且横向不加内边距避免重复组件边距 2026/11/06: 19:16 */
+#page[data-theme="soft_shadow"],#page[data-theme="warm_gray"]{--module-fill:#fff;--module-border:#eeeeec;--module-shadow:0 3px 14px rgba(30,35,30,.055);}
+#page[data-theme="warm_gray"]{--module-fill:#fcfbf8;--module-border:#e6e1d8;--module-shadow:none;}
+#page:is([data-theme="soft_shadow"],[data-theme="warm_gray"]) > .section{background:var(--module-fill);border:1px solid var(--module-border);border-radius:12px;box-shadow:var(--module-shadow);padding:20px 0;margin-bottom:20px;min-width:0;}
+#page:is([data-theme="soft_shadow"],[data-theme="warm_gray"]) > .section > .section-head{margin-left:18px;margin-right:18px;}
+#page:is([data-theme="soft_shadow"],[data-theme="warm_gray"]) .chart-card{background:transparent;}
+@media(max-width:480px){
+  #page:is([data-theme="soft_shadow"],[data-theme="warm_gray"]) > .section{padding-top:18px;padding-bottom:18px;}
+  #page:is([data-theme="soft_shadow"],[data-theme="warm_gray"]) > .section > .section-head{margin-left:12px;margin-right:12px;}
+}
 </style>
 </head>
 <body>
 
 <!-- ai coding: 更新时间移出报告主体作为顶部下拉区域 2026/11/06: 18:46 -->
 <div class="report-timestamp">最近更新时间：__GENERATED_AT__（北京时间）</div>
-<div id="page">
+<!-- ai coding: 生成时写入主题避免首屏样式切换闪动 2026/11/06: 19:16 -->
+<div id="page" data-theme="__PAGE_THEME__">
 <!-- ai coding: 日期栏关闭时同时隐藏空页眉防止二十八像素下边距产生顶部留白 2026/11/06: 19:04 -->
 <div class="masthead" __DATE_FILTER_VISIBILITY__>
   <!-- ai coding: 删除页眉重复英文标题只保留报告名称 2026/11/06: 16:22 -->
@@ -509,6 +538,11 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   <div class="section-head">
     <span class="idx">01</span>
     <h2>概览</h2>
+    <!-- ai coding: 概览标题右侧目录图标点击展开当前可见章节 2026/11/06: 20:05 -->
+    <div class="page-toc">
+      <button type="button" class="page-toc-toggle" id="pageTocToggle" aria-label="页面目录" aria-expanded="false" aria-controls="pageTocList"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/></svg></button>
+      <nav class="page-toc-list" id="pageTocList" aria-label="页面目录" hidden></nav>
+    </div>
   </div>
   <div class="strip" id="strip"></div>
 </div>
@@ -620,7 +654,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <div class="section" data-section="timeline">
   <div class="section-head">
     <span class="idx">09</span>
-    <h2>重仓股持有时间线</h2>
+    <!-- ai coding: 时间线章节标题简化为时间线目录同步读取新标题 2026/11/06: 20:06 -->
+    <h2>时间线</h2>
   </div>
   <!-- ai coding: 在报告中直接渲染 HTML 持仓时间线 2026/11/06: 18:24 -->
   <div class="timeline-card">__TIMELINE_HTML__</div>
@@ -675,6 +710,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
     <h2>年化收益率</h2>
   </div>
   <div class="chart-card">
+    <!-- ai coding: 年化表格增加独立横向滚动容器防止不换行内容撑宽页面 2026/11/06: 20:01 -->
+    <div class="table-scroll">
     <table class="holdings-table" id="annualReturnsTable">
       <thead>
         <tr>
@@ -686,6 +723,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
       <tbody id="annualReturnsBody"></tbody>
       <tfoot id="annualReturnsFoot"></tfoot>
     </table>
+    </div>
   </div>
 </div>
 </div>
@@ -693,18 +731,61 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 const rawData = __DATA__;
 const stats = __STATS__;
 const pageConfig = __CONFIG__;
-// ai coding: 所有组件含折线图均在内容外层应用等距边距标题保持原位 2026/11/06: 19:02
+// ai coding: 目录按当前可见模块顺序生成链接支持跳转外部点击和Escape关闭 2026/11/06: 20:05
+const pageTocToggle = document.getElementById('pageTocToggle');
+const pageTocList = document.getElementById('pageTocList');
+function closePageToc() {
+  pageTocList.hidden = true;
+  pageTocToggle.setAttribute('aria-expanded', 'false');
+}
+pageTocToggle.addEventListener('click', () => {
+  if (!pageTocList.hidden) { closePageToc(); return; }
+  pageTocList.replaceChildren();
+  document.querySelectorAll('#page > .section[data-section]').forEach(section => {
+    const title = section.querySelector('.section-head h2');
+    if (!title || !section.getClientRects().length) return;
+    if (!section.id) section.id = 'section-' + section.dataset.section;
+    const link = document.createElement('a');
+    link.href = '#' + section.id;
+    link.textContent = title.textContent.trim();
+    link.addEventListener('click', event => {
+      event.preventDefault();
+      closePageToc();
+      section.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    });
+    pageTocList.appendChild(link);
+  });
+  pageTocList.hidden = false;
+  pageTocToggle.setAttribute('aria-expanded', 'true');
+});
+document.addEventListener('click', event => {
+  if (!event.target.closest('.page-toc')) closePageToc();
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !pageTocList.hidden) { closePageToc(); pageTocToggle.focus(); }
+});
+// ai coding: 按配置归一化模块内外边距比例无效值回退四比六并保留标题独立间距 2026/11/06: 19:19
 const componentMargin = name => {
   const value = pageConfig.component_margins?.[name];
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : 0;
 };
+const componentInnerRatio = (() => {
+  const { inner, outer } = pageConfig.component_margin_ratio || {};
+  if (![inner, outer].every(value => typeof value === 'number' && Number.isFinite(value) && value >= 0) || Math.max(inner, outer) === 0) return 0.4;
+  const scale = Math.max(inner, outer);
+  return (inner / scale) / (inner / scale + outer / scale);
+})();
 function applyComponentMargin(section) {
   const name = section.dataset.section;
   const margin = componentMargin(name);
+  const innerMargin = margin * componentInnerRatio;
+  const outerMargin = margin * (1 - componentInnerRatio);
+  section.style.marginInline = outerMargin + 'px';
+  section.style.width = 'calc(100% - ' + outerMargin * 2 + 'px)';
   Array.from(section.children).forEach(content => {
     if (content.classList.contains('section-head') || content.tagName === 'SCRIPT') return;
-    content.style.marginInline = margin + 'px';
-    content.style.width = 'calc(100% - ' + margin * 2 + 'px)';
+    content.style.marginInline = innerMargin + 'px';
+    content.style.width = 'calc(100% - ' + innerMargin * 2 + 'px)';
   });
 }
 document.querySelectorAll('.section[data-section]').forEach(applyComponentMargin);
@@ -781,10 +862,10 @@ const FONT = "'Inter','Noto Sans SC',sans-serif";
 // ai coding: 移动端断点控制 Y 轴刻度数字显隐与折线线宽；Y 轴标题三端统一去掉（刻度带 % 后缀足以区分，且标题与图例互相遮挡） 2026/11/06: 15:26
 const isMobileView = window.innerWidth <= 600;
 const hideYAxisLabel = isMobileView;
-// ai coding: 资产曲线使用页面次级文字深灰收益与收益率沿用统一深红深绿 2026/11/06: 18:45
+// ai coding: 资产收益收益率分别固定使用页面石墨灰深红深绿不随正负变色 2026/11/06: 19:23
 const C_ASSET = INK2;
 const C_PNL = PROFIT;
-const C_ROI = PROFIT;
+const C_ROI = LOSS;
 // ai coding: 三张折线图全部沿用仓位率的线宽手机一点三桌面二像素 2026/11/06: 18:43
 const LW_MAIN = isMobileView ? 1.3 : 2;
 // ai coding: 日期刻度改由 ECharts axisLabel.hideOverlap 自动抽稀，原 Chart.js ticks 配置移除 2026/11/06: 14:48
@@ -832,7 +913,7 @@ function tvTooltip(fmtVal) {
     // ai coding: 移动端禁用自动光标改为长按手动显示读数 2026/11/06: 16:31
     triggerOn: isMobileView ? 'none' : 'mousemove|click',
     // ai coding: 固定读数增加左右内边距并限制在图表宽度内 2026/11/06: 15:44
-    position: [16, 0],
+    position: [2, 0],
     confine: true,
     backgroundColor: 'transparent',
     borderWidth: 0,
@@ -862,28 +943,15 @@ function tvTooltip(fmtVal) {
     }
   };
 }
-// ai coding: 移动端拖动十字光标时每切换一个日期点轻震一次（Android 走 Vibration API 需 HTTPS；iOS 17.5+ 用隐藏 switch 触发系统触感；仅触屏设备启用，桌面鼠标悬停不响） 2026/11/06: 15:26
+// ai coding: 仅Android触屏设备使用原生震动接口轻震八毫秒移除无效iOS隐藏开关方案 2026/11/06: 19:59
 const scrubHaptic = (() => {
-  let iosControl = null;
   const ua = navigator.userAgent || '';
-  const isIOS = /iP(hone|ad|od)/.test(ua) || (/Mac/.test(ua) && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
   const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-  if (isIOS && coarse) {
-    const label = document.createElement('label');
-    label.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;';
-    label.setAttribute('aria-hidden', 'true');
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.setAttribute('switch', '');
-    label.appendChild(input);
-    document.body.appendChild(label);
-    iosControl = label;
-  }
   return () => {
-    if (!coarse) return;
+    if (!isAndroid || !coarse || typeof navigator.vibrate !== 'function') return;
     try {
-      if (typeof navigator.vibrate === 'function' && navigator.vibrate(4)) return;
-      if (iosControl) iosControl.click();
+      navigator.vibrate(8);
     } catch (err) { /* 不支持触感反馈的设备静默忽略 */ }
   };
 })();
@@ -947,14 +1015,17 @@ document.querySelectorAll('#chartMaster,#chartDrawdown,#chartPosition').forEach(
   host.addEventListener('touchend', release, { passive: true });
   host.addEventListener('touchcancel', release, { passive: true });
 });
+// ai coding: 从轴指针事件的系列索引读取日期点仅跨日期时触发反馈并在离开时重置 2026/11/06: 19:39
 function bindScrubHaptic(chart) {
   let lastIdx = null;
   chart.on('updateAxisPointer', e => {
-    const idx = e.dataIndex != null ? e.dataIndex : e.dataIndexInside;
+    const point = e.axesInfo?.find(axis => axis.seriesDataIndices?.length)?.seriesDataIndices[0];
+    const idx = e.dataIndex ?? e.dataIndexInside ?? point?.dataIndex ?? point?.dataIndexInside;
     if (idx == null || idx === lastIdx) return;
     if (lastIdx != null) scrubHaptic();
     lastIdx = idx;
   });
+  chart.on('hideTip', () => { lastIdx = null; });
 }
 // ai coding: 极值标签保持错位排布收益类标签与圆点按正负显示全局盈亏色 2026/11/06: 18:31
 function tvExtremum(color, unit, lane, values, signed = false) {
@@ -1092,25 +1163,16 @@ const summarySeriesConfig = pageConfig?.summary_series || {};
 const summarySeriesDefaults = { asset: false, pnl: false, roi: true };
 const defaultSeriesVisible = key => typeof summarySeriesConfig[key] === 'boolean'
   ? summarySeriesConfig[key] : summarySeriesDefaults[key];
-// ai coding: 多曲线末端名称向绘图区内侧对齐减少右侧留白并保留正负着色 2026/11/06: 18:47
-const showMasterEndpoints = ['asset', 'pnl', 'roi'].filter(defaultSeriesVisible).length > 1;
-function masterEndpoint(name, values, color, signed = false) {
-  return {
-    symbol: 'circle', showSymbol: true,
-    symbolSize: (_, params) => params.dataIndex === values.length - 1 ? 5 : 0,
-    endLabel: {
-      show: showMasterEndpoints, distance: -8, align: 'right', verticalAlign: 'bottom',
-      fontSize: 11, fontFamily: FONT,
-      formatter: params => {
-        const value = Array.isArray(params.value) ? params.value[params.value.length - 1] : params.value;
-        const tone = signed ? (value > 0 ? 'profit' : value < 0 ? 'loss' : 'neutral') : 'asset';
-        return '{' + tone + '|' + name + '}';
-      },
-      rich: { asset: { color, fontSize: 11 }, profit: { color: PROFIT, fontSize: 11 },
-        loss: { color: LOSS, fontSize: 11 }, neutral: { color: INK3, fontSize: 11 } }
-    },
-    labelLayout: { moveOverlap: 'shiftY' }
-  };
+// ai coding: 主图仅一条曲线可见时生成最大最小值标记多条或零条时清空 2026/11/06: 19:25
+const masterSelection = { '资产': defaultSeriesVisible('asset'), '收益': defaultSeriesVisible('pnl'), '收益率': defaultSeriesVisible('roi') };
+const masterExtrema = {
+  '资产': tvExtremum(C_ASSET, '万', 1, assetWan),
+  '收益': tvExtremum(C_PNL, '万', 2, pnlWan),
+  '收益率': tvExtremum(C_ROI, '%', 0, roiVals)
+};
+function masterMarkPoint(name, selected) {
+  const visible = Object.keys(masterExtrema).filter(key => selected[key] !== false);
+  return { ...masterExtrema[name], data: visible.length === 1 && visible[0] === name ? masterExtrema[name].data : [] };
 }
 const masterChart = echarts.init(document.getElementById('chartMaster'));
 masterChart.setOption({
@@ -1120,10 +1182,6 @@ masterChart.setOption({
   legend: { ...tvBaseOption(dates.length).legend, selected: { '资产': defaultSeriesVisible('asset'), '收益': defaultSeriesVisible('pnl'), '收益率': defaultSeriesVisible('roi') } },
   tooltip: tvTooltip(p => p.seriesName === '收益率' ? p.value.toFixed(2) + '%' : fmtWan(p.value * 10000)),
   xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
-  // ai coding: 使用有限数值区间保证收益曲线线段正确映射页面深红深绿色 2026/11/06: 18:45
-  visualMap: { show: false, type: 'piecewise', seriesIndex: [1, 2], dimension: 1,
-    pieces: [{ gt: 0, lte: Math.max(0, ...pnlWan, ...roiVals), color: PROFIT },
-      { gte: Math.min(0, ...pnlWan, ...roiVals), lt: 0, color: LOSS }, { value: 0, color: INK3 }] },
   yAxis: [
     { type: 'value', position: 'left',
       axisLine: { show: false }, axisTick: { show: false },
@@ -1138,27 +1196,29 @@ masterChart.setOption({
   ],
   series: [
     { name: '资产', type: 'line', data: assetWan, yAxisIndex: 0,
-      // ai coding: 资产曲线增加末端圆点名称并保持统一仓位率线宽 2026/11/06: 18:43
-      ...masterEndpoint('资产', assetWan, C_ASSET),
+      // ai coding: 资产曲线去掉末端名称保留固定灰色与统一线宽 2026/11/06: 19:25
+      symbol: 'none', showSymbol: false, endLabel: { show: false },
       smooth: 0.3, lineStyle: { color: C_ASSET, width: LW_MAIN }, itemStyle: { color: C_ASSET },
-      markPoint: tvExtremum(C_ASSET, '万', 1, assetWan) },
+      // ai coding: 资产极值初始显隐遵循配置中的可见曲线数量 2026/11/06: 19:25
+      markPoint: masterMarkPoint('资产', masterSelection) },
     { name: '收益', type: 'line', data: pnlWan, yAxisIndex: 0,
-      // ai coding: 收益增加端点名称并沿用正负配色及统一仓位率线宽 2026/11/06: 18:43
-      ...masterEndpoint('收益', pnlWan, C_PNL, true),
-      smooth: 0.3, lineStyle: { width: LW_MAIN }, itemStyle: { color: C_PNL },
-      markPoint: tvExtremum(C_PNL, '万', 2, pnlWan, true) },
+      // ai coding: 收益曲线去掉末端名称保留固定深红与统一线宽 2026/11/06: 19:25
+      symbol: 'none', showSymbol: false, endLabel: { show: false },
+      smooth: 0.3, lineStyle: { color: C_PNL, width: LW_MAIN }, itemStyle: { color: C_PNL },
+      // ai coding: 收益极值初始显隐遵循配置中的可见曲线数量 2026/11/06: 19:25
+      markPoint: masterMarkPoint('收益', masterSelection) },
     { name: '收益率', type: 'line', data: roiVals, yAxisIndex: 1,
-      // ai coding: 收益率增加端点名称并沿用正负配色及统一仓位率线宽 2026/11/06: 18:43
-      ...masterEndpoint('收益率', roiVals, C_ROI, true),
-      smooth: 0.3, lineStyle: { width: LW_MAIN }, itemStyle: { color: C_ROI },
-      markPoint: tvExtremum(C_ROI, '%', 0, roiVals, true) }
+      // ai coding: 收益率曲线去掉末端名称保留固定深绿与统一线宽 2026/11/06: 19:25
+      symbol: 'none', showSymbol: false, endLabel: { show: false },
+      smooth: 0.3, lineStyle: { color: C_ROI, width: LW_MAIN }, itemStyle: { color: C_ROI },
+      // ai coding: 收益率极值初始显隐遵循配置中的可见曲线数量 2026/11/06: 19:25
+      markPoint: masterMarkPoint('收益率', masterSelection) }
   ]
 });
 bindScrubHaptic(masterChart);
-// ai coding: 图例只剩一条可见曲线时隐藏端点名称多条时自动恢复 2026/11/06: 18:43
+// ai coding: 点击图例后同步极值标记仅为唯一可见曲线显示最大最小值 2026/11/06: 19:25
 masterChart.on('legendselectchanged', event => {
-  const show = ['资产', '收益', '收益率'].filter(name => event.selected[name] !== false).length > 1;
-  masterChart.setOption({ series: ['资产', '收益', '收益率'].map(name => ({ name, endLabel: { show } })) });
+  masterChart.setOption({ series: Object.keys(masterExtrema).map(name => ({ name, markPoint: masterMarkPoint(name, event.selected) })) });
 });
 
 // ── 03 Drawdown (ECharts 面积线) ──
@@ -1174,7 +1234,8 @@ drawdownChart.setOption({
     axisLine: { show: false }, axisTick: { show: false },
     // ai coding: 回撤左轴刻度移入图内确保左侧零留白 2026/11/06: 18:50
     axisLabel: { ...tvAxisLabel, color: INK2, formatter: '{value}%', show: !hideYAxisLabel, inside: true, align: 'left', margin: 8 },
-    splitLine: { lineStyle: { color: TV_SPLIT } } },
+    // ai coding: 回撤分析关闭横向网格线保留纵轴刻度 2026/11/06: 20:02
+    splitLine: { show: false } },
   series: [
     { name: '回撤', type: 'line', data: ddOverall, symbol: 'none', smooth: 0.3,
       // ai coding: 回撤曲线与仓位率统一使用同一线宽 2026/11/06: 18:43
@@ -1192,11 +1253,9 @@ bindScrubHaptic(drawdownChart);
 const posRateData = snapshots.map(s => (s.summary || {}).holdings_pos_curr_pct);
 // ai coding: 仓位率纵轴按有效数据极值上下各增加十个百分点 2026/11/06: 16:22
 // ai coding: 仓位率极值标签上下分离最大值置于曲线上方最小值置于下方 2026/11/06: 16:35
-// ai coding: 仓位率按精确上下界生成六条等距横向网格线避免边界出现窄间隔 2026/11/06: 16:37
 const validPositionRates = posRateData.filter(Number.isFinite);
 const positionMin = validPositionRates.length ? Math.min(...validPositionRates) - 10 : -10;
 const positionMax = validPositionRates.length ? Math.max(...validPositionRates) + 10 : 10;
-const positionGridLines = Array.from({ length: 6 }, (_, i) => ({ yAxis: positionMin + (positionMax - positionMin) * i / 5 }));
 const positionExtremum = tvExtremum(INK, '%', 0, posRateData);
 positionExtremum.data[0].label = { ...positionExtremum.data[0].label, position: 'top', distance: 10, offset: [0, 0] };
 positionExtremum.data[1].label = { ...positionExtremum.data[1].label, position: 'bottom', distance: 10, offset: [0, 0] };
@@ -1217,21 +1276,45 @@ positionChart.setOption({
   series: [
     { name: '仓位', type: 'line', data: posRateData, symbol: 'none', smooth: 0.3,
       lineStyle: { color: INK, width: LW_MAIN }, itemStyle: { color: INK },
-      markPoint: positionExtremum },
-    // ai coding: 等距网格改为独立底层绘制防止灰线覆盖曲线造成粗细不一致 2026/11/06: 16:47
-    { type: 'custom', silent: true, z: 0, animation: false,
-      data: positionGridLines.map(line => [line.yAxis]),
-      encode: { x: -1, y: 0, tooltip: [] }, tooltip: { show: false },
-      renderItem(params, api) {
-        const plot = params.coordSys;
-        const y = api.coord([0, api.value(0)])[1];
-        return { type: 'line', shape: { x1: plot.x, y1: y, x2: plot.x + plot.width, y2: y },
-          style: { stroke: TV_SPLIT, lineWidth: 1 } };
-      }
-    }
+      // ai coding: 仓位率只保留数据曲线和极值删除辅助横向网格系列 2026/11/06: 20:02
+      markPoint: positionExtremum }
   ]
 });
 bindScrubHaptic(positionChart);
+// ai coding: 三张折线图初始展示最新值并在交互结束后保留最后查看日期读数同步图例显隐 2026/11/06: 19:42
+function bindLatestReading(chart) {
+  const host = chart.getDom();
+  host.style.position = 'relative';
+  const reading = document.createElement('div');
+  reading.style.cssText = 'position:absolute;left:2px;right:16px;top:0;pointer-events:none;z-index:2;overflow:hidden;';
+  host.appendChild(reading);
+  // ai coding: 回撤分析默认选取区间最大跌幅发生点其他折线图仍默认最新日期 2026/11/06: 20:03
+  const maxDrawdownIndex = ddOverall.indexOf(Math.min(...ddOverall.filter(Number.isFinite)));
+  let readingIndex = chart === drawdownChart && maxDrawdownIndex >= 0 ? maxDrawdownIndex : dates.length - 1;
+  const formatter = chart.getOption().tooltip[0].formatter;
+  chart.setOption({ tooltip: { formatter(params) {
+    const date = params.find(item => item.seriesType === 'line' && item.value != null)?.axisValue;
+    const index = dates.indexOf(date);
+    if (index >= 0) readingIndex = index;
+    return formatter(params);
+  } } });
+  const render = () => {
+    const option = chart.getOption();
+    const selected = option.legend?.[0]?.selected || {};
+    const index = readingIndex;
+    const params = option.series.filter(series => series.type === 'line' && selected[series.name] !== false).map(series => {
+      const color = series.lineStyle?.color || series.itemStyle?.color || INK;
+      return { seriesName: series.name, seriesType: 'line', axisValue: dates[index], value: series.data[index],
+        marker: '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + color + '"></span>' };
+    });
+    reading.innerHTML = formatter(params);
+  };
+  render();
+  chart.on('showTip', () => { reading.hidden = true; });
+  chart.on('hideTip', () => { render(); reading.hidden = false; });
+  chart.on('legendselectchanged', render);
+}
+[masterChart, drawdownChart, positionChart].forEach(bindLatestReading);
 
 // ai coding: 合并市场仓位为比例条使用高区分度色板并联动完整标的占比列表 2026/11/06: 17:09
 const allocationRoot = document.getElementById('portfolioAllocation');
@@ -1440,21 +1523,35 @@ tbody.innerHTML = holdingsHtml;
   const calendarSection = calGrid.closest('.section');
   let view = 'day';
   let metric = 'amt';
-  const initialDate = latest.date || endDate;
+  // ai coding: 将周末快照归入前一周五并让日历初始选择对应工作日 2026/11/06: 19:47
+  function calendarBusinessDate(date) {
+    const day = new Date(date + 'T00:00:00Z');
+    const weekday = day.getUTCDay();
+    if (weekday === 6) day.setUTCDate(day.getUTCDate() - 1);
+    if (weekday === 0) day.setUTCDate(day.getUTCDate() - 2);
+    return day.toISOString().slice(0, 10);
+  }
+  const initialDate = calendarBusinessDate(latest.date || endDate);
   let year = Number(initialDate.slice(0, 4));
   let month = Number(initialDate.slice(5, 7)) - 1;
   let selected = initialDate;
   const key = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}` + (d ? `-${String(d).padStart(2, '0')}` : '');
   const pnlMap = {};
-  // ai coding: 日历与上一份有效资产快照比较跨周末或缺档仍显示当次盈亏 2026/11/06: 17:32
+  // ai coding: 每工作日取最后有效快照周六美股数据合入周五后计算相邻工作日盈亏 2026/11/06: 19:47
+  const calendarSnapshotMap = new Map();
+  [...snapshots].sort((a, b) => (a.snapshot_time || a.date).localeCompare(b.snapshot_time || b.date)).forEach(snapshot => {
+    if (!Number.isFinite(snapshot.summary?.holdings_current)) return;
+    calendarSnapshotMap.set(calendarBusinessDate(snapshot.date), snapshot);
+  });
+  const calendarSnapshots = [...calendarSnapshotMap.entries()].sort(([a], [b]) => a.localeCompare(b));
   let previousCalendarSnapshot = null;
-  snapshots.forEach(snapshot => {
+  calendarSnapshots.forEach(([date, snapshot]) => {
     const currentValue = snapshot.summary?.holdings_current;
     if (!Number.isFinite(currentValue)) return;
     if (previousCalendarSnapshot) {
       const previousValue = previousCalendarSnapshot.summary.holdings_current;
       if (previousValue > 0) {
-        pnlMap[snapshot.date] = { amt: Math.round(currentValue - previousValue), pct: (currentValue - previousValue) / previousValue * 100 };
+        pnlMap[date] = { amt: Math.round(currentValue - previousValue), pct: (currentValue - previousValue) / previousValue * 100 };
       }
     }
     previousCalendarSnapshot = snapshot;
@@ -1465,7 +1562,8 @@ tbody.innerHTML = holdingsHtml;
     entry.amt += value.amt;
   });
   Object.entries(monthMap).forEach(([date, value]) => {
-    const snapshot = [...snapshots].reverse().find(item => item.date.slice(0, 7) <= date);
+    // ai coding: 月收益率分母使用归并后的工作日快照确保跨月周末口径一致 2026/11/06: 19:47
+    const snapshot = [...calendarSnapshots].reverse().find(([day]) => day.slice(0, 7) <= date)?.[1];
     const total = snapshot?.summary?.regions?.整体?.current;
     value.pct = total > 0 ? value.amt / total * 100 : null;
   });
@@ -1526,12 +1624,17 @@ tbody.innerHTML = holdingsHtml;
       calGrid.append(cell);
     };
     if (view === 'day') {
-      ['一', '二', '三', '四', '五', '六', '日'].forEach(day => calGrid.append(make('div', 'cal-cell weekday', day)));
-      const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+      // ai coding: 移除周六周日表头与日期格按首个工作日对齐并补齐五列行 2026/11/06: 19:49
+      ['一', '二', '三', '四', '五'].forEach(day => calGrid.append(make('div', 'cal-cell weekday', day)));
       const days = new Date(year, month + 1, 0).getDate();
+      const workingDays = Array.from({ length: days }, (_, index) => index + 1).filter(day => {
+        const weekday = new Date(year, month, day).getDay();
+        return weekday >= 1 && weekday <= 5;
+      });
+      const offset = new Date(year, month, workingDays[0]).getDay() - 1;
       for (let index = 0; index < offset; index++) calGrid.append(make('div', 'cal-cell'));
-      for (let day = 1; day <= days; day++) append(key(year, month, day), String(day));
-      while (calGrid.children.length % 7) calGrid.append(make('div', 'cal-cell'));
+      workingDays.forEach(day => append(key(year, month, day), String(day)));
+      while (calGrid.children.length % 5) calGrid.append(make('div', 'cal-cell'));
     } else {
       for (let currentMonth = 0; currentMonth < 12; currentMonth++) append(key(year, currentMonth), `${currentMonth + 1}月`);
     }
@@ -1553,6 +1656,37 @@ tbody.innerHTML = holdingsHtml;
     }
     selectVisibleDate(); render();
   }
+  // ai coding: 日历单指横滑翻月月视图翻年锁定方向保留纵向滚动并阻止滑动后的误点击 2026/11/06: 19:32
+  let calendarSwipe = null;
+  let suppressCalendarClickUntil = 0;
+  calGrid.addEventListener('touchstart', event => {
+    calendarSwipe = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY, dx: 0, direction: null } : null;
+  }, { passive: true });
+  calGrid.addEventListener('touchmove', event => {
+    if (!calendarSwipe || event.touches.length !== 1) { calendarSwipe = null; return; }
+    const dx = event.touches[0].clientX - calendarSwipe.x;
+    const dy = event.touches[0].clientY - calendarSwipe.y;
+    if (!calendarSwipe.direction && Math.max(Math.abs(dx), Math.abs(dy)) >= 8) {
+      calendarSwipe.direction = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'horizontal' : 'vertical';
+    }
+    calendarSwipe.dx = dx;
+    if (calendarSwipe.direction === 'horizontal') {
+      suppressCalendarClickUntil = Date.now() + 400;
+      if (event.cancelable) event.preventDefault();
+    }
+  }, { passive: false });
+  calGrid.addEventListener('touchend', event => {
+    if (!calendarSwipe) return;
+    const swipe = calendarSwipe;
+    calendarSwipe = null;
+    if (event.touches.length || swipe.direction !== 'horizontal') return;
+    const dx = event.changedTouches[0] ? event.changedTouches[0].clientX - swipe.x : swipe.dx;
+    if (Math.abs(dx) >= 48) navigate(dx < 0 ? 1 : -1);
+  }, { passive: true });
+  calGrid.addEventListener('touchcancel', () => { calendarSwipe = null; }, { passive: true });
+  calGrid.addEventListener('click', event => {
+    if (Date.now() < suppressCalendarClickUntil) { event.preventDefault(); event.stopImmediatePropagation(); }
+  }, true);
   calendarSection.querySelectorAll('.cal-btn').forEach(button => button.onclick = () => {
     view = button.dataset.view; selectVisibleDate(); render();
   });
@@ -1731,11 +1865,12 @@ async function saveAsImage(){
   }
 }
 
+// ai coding: 用单一配置控制全部模块下载按钮关闭时不创建按钮避免首屏闪现 2026/11/06: 19:38
 document.querySelectorAll('.section-head h2').forEach(title => {
+  if (pageConfig.section_download_buttons === false) return;
   const downloadButton = document.createElement('button');
   downloadButton.type = 'button';
   downloadButton.className = 'section-download-btn';
-  downloadButton.title = '下载此板块图片';
   downloadButton.setAttribute('aria-label', '下载' + title.textContent.trim() + '图片');
   downloadButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   title.insertAdjacentElement('afterend', downloadButton);
@@ -1827,7 +1962,7 @@ document.querySelectorAll('.section-head h2').forEach(title => {
   const cagr = stats.annual_cagr;
   if (cagr != null) {
     const color = cagr >= 0 ? PROFIT : LOSS;
-    let html = '<td style="font-weight:700;padding:4px 12px 4px 8px;white-space:nowrap;">投资以来年化</td>'
+    let html = '<td style="font-weight:700;padding:4px 12px 4px 8px;white-space:nowrap;">整体</td>'
       + '<td style="text-align:center;font-weight:600;padding:8px;">' + (stats.annual_cumulative_nav || 0).toFixed(4) + '</td>'
       + '<td style="text-align:center;padding:8px;color:' + color + ';font-weight:700;">' + (cagr >= 0 ? '+' : '') + cagr.toFixed(2) + '%</td>';
     if (showBench) {
@@ -1995,6 +2130,8 @@ def generate_report(snapshots, stats):
             .replace("__DATA__", data_json)
             .replace("__STATS__", stats_json)
             .replace("__CONFIG__", config_json)
+            # ai coding: 仅允许已定义主题并将未知配置回退到原始白底 2026/11/06: 19:16
+            .replace("__PAGE_THEME__", config.get("theme") if config.get("theme") in ("soft_shadow", "warm_gray", "plain") else "plain")
             # ai coding: 日期筛选关闭时直接写入隐藏样式无需等待 JavaScript 2026/11/06: 18:48
             .replace("__DATE_FILTER_VISIBILITY__", 'style="display:none"' if config.get("date_filter") is False else '')
             # ai coding: 将原生时间线内容写入报告模板 2026/11/06: 18:24

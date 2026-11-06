@@ -14,25 +14,32 @@
     "timeline": true,
     "annual_returns": true
   },
+  "theme": "warm_gray",
+  "_theme_comment": "soft_shadow=纯白柔影；warm_gray=暖灰纸感；plain=原始无框白底。修改后运行 python3 generate_report.py",
+  "component_margin_ratio": {
+    "inner": 7,
+    "outer": 3
+  },
+  "_component_margin_ratio_comment": "所有模块的内容内距与容器外距比例，自动归一化；inner=4、outer=6表示40%内距、60%外距，标题间距独立",
   "component_margins": {
-    "overview": 10,
-    "stats": 10,
-    "summary": 10,
-    "drawdown": 10,
-    "position": 10,
-    "allocation": 10,
-    "ranking": 10,
-    "calendar": 10,
-    "closed": 10,
-    "holdings": 10,
-    "timeline": 10,
-    "annual_returns": 10,
-    "date_filter": 10,
-    "report_timestamp": 10
+    "overview": 20,
+    "stats": 20,
+    "summary": 20,
+    "drawdown": 20,
+    "position": 20,
+    "allocation": 20,
+    "ranking": 20,
+    "calendar": 20,
+    "closed": 20,
+    "holdings": 20,
+    "timeline": 20,
+    "annual_returns": 20,
+    "date_filter": 20,
+    "report_timestamp": 20
   },
   "summary_series": {
     "asset": true,
-    "pnl": true,
+    "pnl": false,
     "roi": true
   },
   "annual_returns_history": {
@@ -66,7 +73,10 @@
   },
   "date_filter": false,
   "save_button": false,
+  "section_download_buttons": false,
+  "_section_download_buttons_comment": "统一控制所有模块下载按钮：true显示，false隐藏；不影响整页保存图片按钮",
   "timeline": {
+    "year_width": 100,
     "show_amount": true,
     "output_file": "timeline.svg",
     "output_format": "svg",
