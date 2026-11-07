@@ -292,11 +292,19 @@ def generate_timeline_html(config):
         profit = trade.get("profit", 0)
         tone = "neutral" if row["open"] or profit == 0 else "profit" if profit > 0 else "loss"
         annual = row.get("annualized")
-        # ai coding: 线段标记按配置显示持有年数利润年化未清仓保留真实状态 2026/11/06: 18:54
+        # ai coding: 时间线利润独立包裹供金额开关隐藏持有时间和年化百分比保留 2026/11/07: 14:12
         years = f'{(endpoint - row["buy"]).days / 365.25:.2f}年'
         numeric = " / ".join(part.replace("利润", "").replace("年化", "") for part in row["label"].split("｜"))
         if row["open"]:
             numeric = years + " / " + numeric
+        parts = row["label"].split("｜")
+        if row["open"]:
+            parts = [years] + parts
+        numeric_html = "".join(
+            (f'<span class="money-value">{escape((" / " if index else "") + part.replace("利润", "").replace("年化", ""))}</span>'
+             if part.startswith("利润") else escape((" / " if index else "") + part.replace("年化", "")))
+            for index, part in enumerate(parts)
+        )
         name = escape(row["name"])
         interval = f'{row["buy"].isoformat()} → {endpoint.isoformat()}'
         rows.append({"name": row["name"], "interval": interval,
@@ -309,7 +317,7 @@ def generate_timeline_html(config):
             f'style="--ht-start:{left:.4f}%;--ht-span:{width:.4f}%">'
             f'<span class="ht-name">{name}</span><span class="ht-track">'
             f'<i class="ht-line {"ht-open" if row["open"] else ""}"></i>'
-            f'<span class="ht-annual">{escape(numeric)}</span></span></button>'
+            f'<span class="ht-annual">{numeric_html}</span></span></button>'
         )
     # ai coding: 仅时间轴和线段进入滚动区域底部标的详情保持容器内显示 2026/11/06: 19:51
     html.append('</div></div></div><div class="ht-detail" aria-live="polite"></div></div>')
@@ -357,7 +365,8 @@ def generate_timeline_html(config):
         const label = document.createElement('span');
         label.textContent = isProfit ? '利润' : isAnnual ? '年化' : '持有';
         const value = document.createElement('strong');
-        value.textContent = part.replace(/^(利润|年化)/, '');
+        // ai coding: 底部利润读数随全局金额开关隐藏百分比年化仍可见 2026/11/07: 14:12
+        value.textContent = isProfit && document.body.dataset.moneyVisible !== 'true' ? '—' : part.replace(/^(利润|年化)/, '');
         if (isProfit || isAnnual) value.className = 'ht-' + row.tone;
         metric.append(label, value);
         metrics.append(metric);
@@ -370,6 +379,11 @@ def generate_timeline_html(config):
     if (button) select(Number(button.dataset.holding));
   });
   select(0);
+  // ai coding: 金额开关切换时重绘当前选中标的利润读数 2026/11/07: 14:12
+  document.addEventListener('moneyvisibilitychange', () => {
+    const current = root.querySelector('.ht-row[aria-pressed="true"]');
+    select(current ? Number(current.dataset.holding) : 0);
+  });
   // ai coding: 长收益标记按实际宽度收进图内防止手机端超出左右边界 2026/11/06: 18:54
   new ResizeObserver(() => {
     root.querySelectorAll('.ht-row').forEach(button => {

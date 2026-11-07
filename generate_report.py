@@ -11,6 +11,8 @@ import json
 import os
 import glob
 import sys
+# ai coding: 校验归并快照的资产数值排除无效值 2026/11/07: 13:19
+import math
 from datetime import datetime, timedelta, timezone
 
 # ai coding: 报告使用配置驱动的原生 HTML 持仓时间线 2026/11/06: 18:24
@@ -19,14 +21,40 @@ from generate_timeline import generate_timeline_html
 
 # ── 数据处理 ──────────────────────────────────────────────
 
+# ai coding: 数据入口按交易日归并周末至周五保留抓取日期时间并取同日最后有效快照 2026/11/07: 13:19
+def normalize_snapshots(snapshots):
+    grouped = {}
+    for snapshot in snapshots:
+        capture_date = snapshot.get("capture_date") or snapshot["date"]
+        captured_day = datetime.strptime(capture_date, "%Y-%m-%d").date()
+        trade_day = captured_day - timedelta(days=max(0, captured_day.weekday() - 4))
+        value = snapshot.get("summary", {}).get("holdings_current")
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            continue
+        timestamp = snapshot.get("snapshot_time")
+        try:
+            captured_at = datetime.fromisoformat(timestamp) if timestamp else None
+        except (ValueError, TypeError):
+            captured_at = None
+        if captured_at is None:
+            captured_at = datetime.combine(captured_day, datetime.min.time(), tzinfo=timezone(timedelta(hours=8)))
+        elif captured_at.tzinfo is None:
+            captured_at = captured_at.replace(tzinfo=timezone(timedelta(hours=8)))
+        normalized = dict(snapshot, date=trade_day.isoformat(), trade_date=trade_day.isoformat(), capture_date=capture_date)
+        previous = grouped.get(normalized["date"])
+        if previous is None or captured_at >= previous[0]:
+            grouped[normalized["date"]] = (captured_at, normalized)
+    return [grouped[day][1] for day in sorted(grouped)]
+
+
 def load_snapshots(snap_dir):
-    """读取所有快照 JSON，按日期排序"""
+    """读取原始快照并统一归并为工作日序列。"""
     files = sorted(glob.glob(os.path.join(snap_dir, "*.json")))
     snapshots = []
     for f in files:
         with open(f, "r", encoding="utf-8") as fp:
             snapshots.append(json.load(fp))
-    return snapshots
+    return normalize_snapshots(snapshots)
 
 
 def calculate_drawdown(values):
@@ -160,6 +188,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <!-- ai coding: 折线图迁移到 ECharts（TradingView 风格十字光标交互），饼图/柱状图仍用 Chart.js 2026/11/06: 14:48 -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<!-- ai coding: 引入标准哈希库用于金额开关密码校验 2026/11/07: 14:10 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
 <style>
 :root{
   --paper:#fcfbf8;
@@ -209,8 +239,20 @@ body{
 .section-head{display:flex;align-items:baseline;gap:14px;padding-bottom:10px;margin-bottom:20px;}
 .section-head .idx{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
 .section-head h2{font-size:21px;font-weight:700;letter-spacing:-.01em;}
-/* ai coding: 概览右侧增加水平对齐目录按钮与简约浮层并在图片导出时隐藏 2026/11/06: 20:05 */
-.page-toc{position:relative;margin-left:auto;align-self:center;}
+/* ai coding: 概览右侧目录与金额开关水平排列并在图片导出时隐藏 2026/11/07: 14:10 */
+.page-toc{position:relative;margin-left:auto;align-self:center;display:flex;align-items:center;gap:2px;}
+/* ai coding: 增加金额可见开关和密码输入窗口默认隐藏金额片段 2026/11/07: 14:10 */
+body:not([data-money-visible="true"]) .money-value{display:none!important;}
+.money-dialog{margin:auto;padding:20px;border:1px solid var(--rule);border-radius:12px;background:var(--paper);color:var(--ink);width:min(320px,calc(100% - 32px));}
+.money-dialog::backdrop{background:rgba(0,0,0,.2);}
+.money-dialog form{display:grid;gap:12px;}
+.money-dialog label{font-size:14px;}
+.money-dialog input{width:100%;font:inherit;font-size:16px;padding:10px;border:1px solid var(--rule);border-radius:6px;}
+.money-dialog button{font:inherit;padding:10px;border:0;border-radius:6px;background:var(--ink);color:var(--paper);}
+/* ai coding: 密码窗口操作按钮改为右下角取消与确定 2026/11/07: 14:20 */
+.money-dialog-actions{display:flex;justify-content:flex-end;gap:8px;}
+.money-dialog-actions button{padding:9px 18px;min-height:44px;}
+.money-dialog-actions button[type="button"]{background:transparent;color:var(--ink-2);}
 .page-toc-toggle{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:transparent;border:0;color:var(--ink-2);cursor:pointer;border-radius:6px;}
 .page-toc-toggle svg{width:20px;height:20px;}
 .page-toc-toggle:hover{background:#f5f5f3;}
@@ -229,6 +271,10 @@ body{
 .section.section-export-mode .section-head h2{font-size:21px;}
 .section.section-export-mode .section-head .note{width:auto;margin-left:auto;font-size:12px;}
 .section.section-export-mode .table-scroll{overflow:visible!important;}
+/* ai coding: 时间线导出展开完整横向区域并取消固定姓名避免截断截图 2026/11/07: 13:57 */
+.section.section-export-mode .ht-scroll{overflow:visible!important;}
+.section.section-export-mode .ht-name{position:static;}
+.section:is([data-section="holdings"],[data-section="timeline"]) .section-head h2{touch-action:manipulation;user-select:none;-webkit-user-select:none;}
 .section.section-export-mode table{width:100%;font-size:13px;}
 .section.section-export-mode thead th{padding:12px 16px;font-size:11px;}
 .section.section-export-mode tbody td{padding:11px 16px;}
@@ -277,7 +323,7 @@ body{
 /* ai coding: 固定年度轨道宽度仅时间线内部横向滚动并保持标的名称可见 2026/11/06: 19:51 */
 .ht-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;}
 .ht-canvas{width:calc(var(--ht-time-width) + 126px);}
-.ht-scroll .ht-name{position:sticky;left:0;margin-bottom: 5px;z-index:2;}
+.ht-scroll .ht-name{position:sticky;left:0;margin-bottom: 5px;z-index:2;background:#fcfbf8;}
 .ht-scroll .ht-row[aria-pressed="true"] .ht-name{background:#f5f5f3 !important;}
 @media(max-width:480px){.ht-canvas{width:calc(var(--ht-time-width) + 110px);}}
 .ht-profit{--ht-tone:var(--ht-profit);}
@@ -493,7 +539,7 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 
 /* ai coding: 市场分组比例条和标的列表响应手机尺寸并支持选中关联色段 2026/11/06: 17:09 */
 
-#portfolioAllocation{--ink:light-dark(#202a2d,#e8eff1);--muted:light-dark(#7e898d,#a1afb6);--paper:light-dark(#fff,#1b2327);background:var(--paper);color:var(--ink);padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;box-sizing:border-box;}
+#portfolioAllocation{--ink:light-dark(#202a2d,#e8eff1);--muted:light-dark(#7e898d,#a1afb6);background:var(--paper);color:var(--ink);padding:12px 0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;box-sizing:border-box;}
 #portfolioAllocation .heading{display:flex;align-items:baseline;gap:12px;margin-bottom:30px;}#portfolioAllocation .heading span{color:light-dark(#d7494f,#ec888e);font-size:13px;}#portfolioAllocation h2{font-size:20px;font-weight:500;margin:0;}
 #portfolioAllocation .market-labels,#portfolioAllocation .bar{display:flex;gap:5px;}#portfolioAllocation .market-label{min-width:0;font-size:12px;line-height:1.5;margin-bottom:10px;}#portfolioAllocation .market-label span{display:block;color:var(--muted);font-variant-numeric:tabular-nums;}
 #portfolioAllocation .bar{height:32px;margin-bottom:28px;}#portfolioAllocation .market-segments{display:flex;min-width:0;}#portfolioAllocation .segment{min-width:0;box-sizing:border-box;border-right:1px solid var(--paper);transition:opacity .18s;}#portfolioAllocation .segment:last-child{border-right:0;}#portfolioAllocation .segment.active{box-shadow:inset 0 0 0 2px var(--ink);}#portfolioAllocation .segment.dim{opacity:.4;}
@@ -514,6 +560,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 </style>
 </head>
 <body>
+<!-- ai coding: 金额解锁密码窗口右下角提供取消与确定按钮 2026/11/07: 14:20 -->
+<dialog class="money-dialog" id="moneyDialog"><form id="moneyForm"><label for="moneyPassword">密码</label><input id="moneyPassword" type="password" autocomplete="current-password" required><div class="money-dialog-actions"><button type="button" id="moneyCancel">取消</button><button type="submit">确定</button></div></form></dialog>
 
 <!-- ai coding: 更新时间移出报告主体作为顶部下拉区域 2026/11/06: 18:46 -->
 <div class="report-timestamp">最近更新时间：__GENERATED_AT__（北京时间）</div>
@@ -540,6 +588,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
     <h2>概览</h2>
     <!-- ai coding: 概览标题右侧目录图标点击展开当前可见章节 2026/11/06: 20:05 -->
     <div class="page-toc">
+      <!-- ai coding: 目录旁金额眼睛开关默认关闭打开需密码验证 2026/11/07: 14:10 -->
+      <button type="button" class="page-toc-toggle" id="moneyToggle" aria-label="显示金额" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path id="moneyEyeSlash" d="m3 3 18 18"/></svg></button>
       <button type="button" class="page-toc-toggle" id="pageTocToggle" aria-label="页面目录" aria-expanded="false" aria-controls="pageTocList"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/></svg></button>
       <nav class="page-toc-list" id="pageTocList" aria-label="页面目录" hidden></nav>
     </div>
@@ -731,6 +781,80 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 const rawData = __DATA__;
 const stats = __STATS__;
 const pageConfig = __CONFIG__;
+// ai coding: 金额默认关闭永久授权持久保存开关状态临时授权按上海日期过期 2026/11/07: 14:10
+const moneyStorageKey = 'portfolio-money-access-v1';
+const moneyDay = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+let moneyAccess = {};
+try { moneyAccess = JSON.parse(localStorage.getItem(moneyStorageKey) || '{}') || {}; } catch {}
+// ai coding: URL参数与密码输入复用校验有效key在首次渲染前直接解锁并保存授权 2026/11/07: 14:23
+function verifyMoneyKey(key) {
+  if (typeof key !== 'string' || typeof CryptoJS === 'undefined') return null;
+  if (CryptoJS.SHA256(key).toString() === 'd8716d587c9be371a239ec5191a5b5b9cc04ef962d68601465ff304d3e8b9839') return { kind: 'permanent', visible: true };
+  const day = moneyDay();
+  if (key.trim().toLowerCase() === CryptoJS.MD5(day.replaceAll('-', '.') + 'Z').toString()) return { kind: 'daily', date: day, visible: true };
+  return null;
+}
+const urlMoneyAccess = verifyMoneyKey(new URLSearchParams(location.search).get('key'));
+if (urlMoneyAccess) {
+  moneyAccess = moneyAccess.kind === 'permanent' ? { kind: 'permanent', visible: true } : urlMoneyAccess;
+  try { localStorage.setItem(moneyStorageKey, JSON.stringify(moneyAccess)); } catch {}
+}
+const validMoneyAccess = () => moneyAccess.kind === 'permanent' || (moneyAccess.kind === 'daily' && moneyAccess.date === moneyDay());
+let moneyVisible = validMoneyAccess() && moneyAccess.visible === true;
+document.body.dataset.moneyVisible = String(moneyVisible);
+const moneyToggle = document.getElementById('moneyToggle');
+function saveMoneyAccess() { try { localStorage.setItem(moneyStorageKey, JSON.stringify(moneyAccess)); } catch {} }
+function syncMoneyToggle() {
+  document.body.dataset.moneyVisible = String(moneyVisible);
+  moneyToggle.setAttribute('aria-pressed', String(moneyVisible));
+  moneyToggle.setAttribute('aria-label', moneyVisible ? '隐藏金额' : '显示金额');
+  document.getElementById('moneyEyeSlash').style.display = moneyVisible ? 'none' : '';
+}
+function changeMoneyVisibility(visible) {
+  moneyVisible = visible;
+  moneyAccess.visible = visible;
+  saveMoneyAccess(); syncMoneyToggle();
+  applyDateRange();
+  document.dispatchEvent(new Event('moneyvisibilitychange'));
+}
+syncMoneyToggle();
+document.dispatchEvent(new Event('moneyvisibilitychange'));
+// ai coding: 永久密码持久授权每日密码按上海日期加Z的完整三十二位MD5仅授权当天 2026/11/07: 14:16
+const moneyDialog = document.getElementById('moneyDialog');
+const moneyPassword = document.getElementById('moneyPassword');
+moneyToggle.addEventListener('click', () => {
+  if (moneyVisible) { changeMoneyVisibility(false); return; }
+  if (validMoneyAccess()) { changeMoneyVisibility(true); return; }
+  moneyPassword.value = ''; moneyPassword.setCustomValidity('');
+  moneyDialog.showModal(); moneyPassword.focus();
+});
+moneyPassword.addEventListener('input', () => moneyPassword.setCustomValidity(''));
+// ai coding: 取消关闭密码窗口并清空输入不改变金额可见状态 2026/11/07: 14:20
+document.getElementById('moneyCancel').addEventListener('click', () => {
+  moneyDialog.close(); moneyPassword.value = ''; moneyPassword.setCustomValidity(''); moneyToggle.focus();
+});
+// ai coding: 密码窗口使用与URL相同校验规则避免两种入口授权口径不同 2026/11/07: 14:23
+document.getElementById('moneyForm').addEventListener('submit', event => {
+  event.preventDefault();
+  if (typeof CryptoJS === 'undefined') { moneyPassword.setCustomValidity('校验服务未加载，请刷新页面'); moneyPassword.reportValidity(); return; }
+  const access = verifyMoneyKey(moneyPassword.value);
+  if (!access) { moneyPassword.setCustomValidity('密码不正确'); moneyPassword.reportValidity(); return; }
+  moneyAccess = access;
+  moneyDialog.close(); moneyPassword.value = ''; changeMoneyVisibility(true);
+});
+// ai coding: 上海零点定时失效临时授权后台恢复时复核永久授权保持有效 2026/11/07: 14:15
+function expireMoneyAccess() {
+  if (moneyAccess.kind === 'daily' && moneyAccess.date !== moneyDay()) {
+    moneyAccess = {}; changeMoneyVisibility(false);
+  }
+}
+function scheduleMoneyExpiry() {
+  const nextMidnight = Date.parse(moneyDay() + 'T00:00:00+08:00') + 86400000;
+  setTimeout(() => { expireMoneyAccess(); scheduleMoneyExpiry(); }, Math.max(1, nextMidnight - Date.now()));
+}
+scheduleMoneyExpiry();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) expireMoneyAccess(); });
+window.addEventListener('focus', expireMoneyAccess);
 // ai coding: 目录按当前可见模块顺序生成链接支持跳转外部点击和Escape关闭 2026/11/06: 20:05
 const pageTocToggle = document.getElementById('pageTocToggle');
 const pageTocList = document.getElementById('pageTocList');
@@ -855,7 +979,8 @@ const POS_INK = '#374151';
 const POS_MID = '#9ca3af';
 const POS_LT  = '#d1d5db';
 
-const fmtWan = v => v == null ? '—' : (Math.abs(v/10000) >= 1 ? (v/10000).toLocaleString('zh-CN',{maximumFractionDigits:1}) + '万' : v.toLocaleString('zh-CN',{maximumFractionDigits:0}));
+// ai coding: 金额关闭时所有通用金额格式化输出遮罩百分比格式保持可见 2026/11/07: 14:10
+const fmtWan = v => !moneyVisible ? '—' : v == null ? '—' : (Math.abs(v/10000) >= 1 ? (v/10000).toLocaleString('zh-CN',{maximumFractionDigits:1}) + '万' : v.toLocaleString('zh-CN',{maximumFractionDigits:0}));
 const fmtPct = v => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(2) + '%';
 const colorClass = v => v == null ? '' : (v > 0 ? 'up' : v < 0 ? 'down' : '');
 const FONT = "'Inter','Noto Sans SC',sans-serif";
@@ -1078,6 +1203,8 @@ window.addEventListener('resize', () => {
 
 // ai coding: 重绘所选快照并移除不再展示的 meta 信息和开始日期参数 2026/10/09: 16:03
 function renderReport(snapshots, endDate){
+  // ai coding: 重绘前清除旧顶部读数避免关闭金额后残留已解锁金额 2026/11/07: 14:13
+  document.querySelectorAll('.chart-default-reading').forEach(reading => reading.remove());
   // ai coding: 折线图改用 ECharts 后同步销毁其实例，避免日期筛选重绘时泄漏 2026/11/06: 14:48
   document.querySelectorAll('#page .echarts-host').forEach(el => {
     const inst = echarts.getInstanceByDom(el);
@@ -1161,7 +1288,8 @@ const ddOverseas = ddSeries(regCur['境外']);
 // ai coding: 从配置读取三条曲线默认显隐缺失配置时保持仅显示收益率 2026/11/06: 16:38
 const summarySeriesConfig = pageConfig?.summary_series || {};
 const summarySeriesDefaults = { asset: false, pnl: false, roi: true };
-const defaultSeriesVisible = key => typeof summarySeriesConfig[key] === 'boolean'
+// ai coding: 隐藏金额时主图仅显示收益率曲线避免曲线与刻度泄露资产收益金额 2026/11/07: 14:10
+const defaultSeriesVisible = key => !moneyVisible ? key === 'roi' : typeof summarySeriesConfig[key] === 'boolean'
   ? summarySeriesConfig[key] : summarySeriesDefaults[key];
 // ai coding: 主图仅一条曲线可见时生成最大最小值标记多条或零条时清空 2026/11/06: 19:25
 const masterSelection = { '资产': defaultSeriesVisible('asset'), '收益': defaultSeriesVisible('pnl'), '收益率': defaultSeriesVisible('roi') };
@@ -1179,14 +1307,14 @@ masterChart.setOption({
   ...tvBaseOption(dates.length),
   // ai coding: 主图内部左右零留白组件边距仅由外层容器承担避免重复或抵消 2026/11/06: 19:02
   grid: { ...tvBaseOption(dates.length).grid, top: 30, left: 0, right: 0 },
-  legend: { ...tvBaseOption(dates.length).legend, selected: { '资产': defaultSeriesVisible('asset'), '收益': defaultSeriesVisible('pnl'), '收益率': defaultSeriesVisible('roi') } },
+  legend: { ...tvBaseOption(dates.length).legend, data: moneyVisible ? ['资产', '收益', '收益率'] : ['收益率'], selected: { '资产': defaultSeriesVisible('asset'), '收益': defaultSeriesVisible('pnl'), '收益率': defaultSeriesVisible('roi') } },
   tooltip: tvTooltip(p => p.seriesName === '收益率' ? p.value.toFixed(2) + '%' : fmtWan(p.value * 10000)),
   xAxis: { ...tvBaseOption(dates.length).xAxis, data: dates },
   yAxis: [
     { type: 'value', position: 'left',
       axisLine: { show: false }, axisTick: { show: false },
       // ai coding: 主图左轴刻度置于图内避免桌面刻度挤出左侧留白 2026/11/06: 18:49
-      axisLabel: { ...tvAxisLabel, color: INK2, show: !hideYAxisLabel, inside: true, align: 'left', margin: 8 },
+      axisLabel: { ...tvAxisLabel, color: INK2, show: moneyVisible && !hideYAxisLabel, inside: true, align: 'left', margin: 8 },
       splitLine: { lineStyle: { color: TV_SPLIT } } },
     { type: 'value', position: 'right',
       axisLine: { show: false }, axisTick: { show: false },
@@ -1286,6 +1414,8 @@ function bindLatestReading(chart) {
   const host = chart.getDom();
   host.style.position = 'relative';
   const reading = document.createElement('div');
+  // ai coding: 标记顶部默认读数供金额切换重绘时清理 2026/11/07: 14:13
+  reading.className = 'chart-default-reading';
   reading.style.cssText = 'position:absolute;left:2px;right:16px;top:0;pointer-events:none;z-index:2;overflow:hidden;';
   host.appendChild(reading);
   // ai coding: 回撤分析默认选取区间最大跌幅发生点其他折线图仍默认最新日期 2026/11/06: 20:03
@@ -1399,11 +1529,18 @@ allocationGroups.forEach(group => {
   });
 });
 
-// ai coding: 持仓收益排行改为细线圆点名称固定左侧金额固定右侧 2026/11/06: 16:59
-const ranked = holdings.filter(h => h.pnl != null).sort((a, b) => b.pnl - a.pnl);
+// ai coding: 排行按盈亏金额除以当前仓位百分数排序并绘制零仓位或缺失仓位不参与除法 2026/11/07: 13:43
+const ranked = holdings.filter(h => Number.isFinite(h.pnl)).map(h => {
+  const weight = h.pos_curr_pct;
+  const value = Number.isFinite(weight) && weight > 0 ? h.pnl / weight : null;
+  return { ...h, rankValue: Number.isFinite(value) ? value : null };
+}).sort((a, b) => {
+  if (a.rankValue == null || b.rankValue == null) return (a.rankValue == null) - (b.rankValue == null) || b.pnl - a.pnl;
+  return b.rankValue - a.rankValue || b.pnl - a.pnl;
+});
 const rankingHost = document.getElementById('chartRanking');
-rankingHost.parentElement.style.height = `${Math.max(ranked.length, 1) * 44 + 40}px`;
-const rankAbsMaxWan = Math.max(...ranked.map(h => Math.abs(h.pnl)), 1) / 10000;
+rankingHost.parentElement.style.height = `${Math.max(ranked.length, 1) * 44 + 60}px`;
+const rankAbsMaxWan = Math.max(...ranked.map(h => Math.abs(h.rankValue || 0)), 1) / 10000;
 const rankTarget = rankAbsMaxWan * 1.1;
 const rankStepBase = Math.pow(10, Math.floor(Math.log10(rankTarget / 3)));
 const rankStep = [1, 2, 3, 5, 10].reduce((best, n) =>
@@ -1413,11 +1550,14 @@ const rankingChart = echarts.init(rankingHost);
 rankingChart.setOption({
   animation: false,
   textStyle: { fontFamily: FONT },
-  grid: { left: isMobileView ? 126 : 180, right: isMobileView ? 74 : 100, top: 8, bottom: 32, containLabel: false },
+  // ai coding: 为单位仓位盈亏轴名称预留底部空间保持现有细线圆点布局 2026/11/07: 13:43
+  grid: { left: isMobileView ? 126 : 180, right: isMobileView ? 74 : 100, top: 8, bottom: 52, containLabel: false },
   tooltip: { show: false },
   xAxis: {
     type: 'value', min: -rankLim, max: rankLim, interval: rankStep,
-    axisLabel: { color: INK3, fontSize: 10, fontFamily: FONT, margin: 12,
+    name: moneyVisible ? '每1%仓位盈亏（万元）' : '', nameLocation: 'middle', nameGap: 30,
+    nameTextStyle: { color: INK3, fontSize: 10, fontFamily: FONT },
+    axisLabel: { show: moneyVisible, color: INK3, fontSize: 10, fontFamily: FONT, margin: 12,
       formatter: value => value === 0 ? '0' : Math.abs(value) === rankLim ? value + '万' : '' },
     splitLine: { show: false }, axisLine: { show: false }, axisTick: { show: false }
   },
@@ -1427,7 +1567,8 @@ rankingChart.setOption({
   },
   series: [{
     type: 'custom', clip: false, silent: true,
-    data: ranked.map((h, index) => [h.pnl / 10000, index]), encode: { x: 0, y: 1 },
+    // ai coding: 线段长度使用归一化盈亏但右侧金额保留实际盈亏 2026/11/07: 13:43
+    data: ranked.map((h, index) => [(h.rankValue || 0) / 10000, index]), encode: { x: 0, y: 1 },
     renderItem(params, api) {
       const value = api.value(0);
       const index = api.value(1);
@@ -1435,16 +1576,19 @@ rankingChart.setOption({
       const end = api.coord([value, index]);
       const plot = params.coordSys;
       const rowHeight = plot.height / Math.max(ranked.length, 1);
-      // ai coding: 持仓收益排行线段圆点和金额沿用全局盈亏配色 2026/11/06: 18:31
-      const color = value > 0 ? PROFIT : value < 0 ? LOSS : INK3;
+      // ai coding: 归一化线段圆点仍按实际盈亏正负沿用全局深红深绿 2026/11/07: 13:43
+      const color = ranked[index].pnl > 0 ? PROFIT : ranked[index].pnl < 0 ? LOSS : INK3;
       return { type: 'group', children: [
         { type: 'line', shape: { x1: zero[0], y1: zero[1] - rowHeight / 2, x2: zero[0], y2: zero[1] + rowHeight / 2 }, style: { stroke: RULE, lineWidth: 1 } },
-        { type: 'line', shape: { x1: zero[0], y1: zero[1], x2: end[0], y2: end[1] }, style: { stroke: color, lineWidth: 1.5 } },
-        { type: 'circle', shape: { cx: end[0], cy: end[1], r: 3.5 }, style: { fill: color } },
+        // ai coding: 无有效仓位的标的不画归一化线段避免将缺失值误显示为零 2026/11/07: 13:43
+        ...(!moneyVisible || ranked[index].rankValue == null ? [] : [
+          { type: 'line', shape: { x1: zero[0], y1: zero[1], x2: end[0], y2: end[1] }, style: { stroke: color, lineWidth: 1.5 } },
+          { type: 'circle', shape: { cx: end[0], cy: end[1], r: 3.5 }, style: { fill: color } }
+        ]),
         { type: 'text', style: { x: 8, y: zero[1], text: ranked[index].name, fill: INK2,
           font: '12px ' + FONT, width: plot.x - 20, overflow: 'break', lineHeight: 16, verticalAlign: 'middle' } },
         { type: 'text', style: { x: api.getWidth() - 8, y: zero[1],
-          text: (value > 0 ? '+' : '') + value.toFixed(2) + '万', fill: INK,
+          text: moneyVisible ? (ranked[index].pnl > 0 ? '+' : '') + (ranked[index].pnl / 10000).toFixed(2) + '万' : '—', fill: INK,
           font: '12px ' + FONT, align: 'right', verticalAlign: 'middle' } }
       ] };
     }
@@ -1484,9 +1628,11 @@ let holdingsHtml = sortedHoldings.map(h => {
   return `<tr>
     <td>${h.market || '—'}</td>
     <td class="name">${h.name}</td>
-    <td>${isNote ? '—' : (h.cost_price_raw || '—')}</td>
-    <td>${h.current_price_raw || '—'}</td>
-    <td>${h.quantity != null ? h.quantity.toLocaleString() : '—'}</td>
+    <!-- ai coding: 金额关闭时持仓成本价和现价同样隐藏数量与百分比保留 2026/11/07: 14:10 -->
+    <td>${!moneyVisible || isNote ? '—' : (h.cost_price_raw || '—')}</td>
+    <td>${moneyVisible ? (h.current_price_raw || '—') : '—'}</td>
+    <!-- ai coding: 持仓数量随金额开关隐藏解锁后恢复显示 2026/11/07: 14:18 -->
+    <td>${moneyVisible && h.quantity != null ? h.quantity.toLocaleString() : '—'}</td>
     <td>${fmtWan(h.invested)}</td>
     <td>${fmtWan(h.current)}</td>
     <td class="${colorClass(h.pnl)}">${fmtWan(h.pnl)}</td>
@@ -1522,28 +1668,18 @@ tbody.innerHTML = holdingsHtml;
   const calDetail = document.getElementById('calDetail');
   const calendarSection = calGrid.closest('.section');
   let view = 'day';
-  let metric = 'amt';
-  // ai coding: 将周末快照归入前一周五并让日历初始选择对应工作日 2026/11/06: 19:47
-  function calendarBusinessDate(date) {
-    const day = new Date(date + 'T00:00:00Z');
-    const weekday = day.getUTCDay();
-    if (weekday === 6) day.setUTCDate(day.getUTCDate() - 1);
-    if (weekday === 0) day.setUTCDate(day.getUTCDate() - 2);
-    return day.toISOString().slice(0, 10);
-  }
-  const initialDate = calendarBusinessDate(latest.date || endDate);
+  // ai coding: 金额隐藏时日历默认与切换均仅展示收益率 2026/11/07: 14:10
+  let metric = moneyVisible ? 'amt' : 'pct';
+  calendarSection.querySelectorAll('[data-metric="amt"]').forEach(button => { button.hidden = !moneyVisible; });
+  // ai coding: 日历直接使用数据入口归并后的交易日期与其他组件保持一致 2026/11/07: 13:19
+  const initialDate = latest.date || endDate;
   let year = Number(initialDate.slice(0, 4));
   let month = Number(initialDate.slice(5, 7)) - 1;
   let selected = initialDate;
   const key = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}` + (d ? `-${String(d).padStart(2, '0')}` : '');
   const pnlMap = {};
-  // ai coding: 每工作日取最后有效快照周六美股数据合入周五后计算相邻工作日盈亏 2026/11/06: 19:47
-  const calendarSnapshotMap = new Map();
-  [...snapshots].sort((a, b) => (a.snapshot_time || a.date).localeCompare(b.snapshot_time || b.date)).forEach(snapshot => {
-    if (!Number.isFinite(snapshot.summary?.holdings_current)) return;
-    calendarSnapshotMap.set(calendarBusinessDate(snapshot.date), snapshot);
-  });
-  const calendarSnapshots = [...calendarSnapshotMap.entries()].sort(([a], [b]) => a.localeCompare(b));
+  // ai coding: 日历复用统一工作日序列不再二次归并避免日期筛选与月统计口径不一致 2026/11/07: 13:19
+  const calendarSnapshots = snapshots.map(snapshot => [snapshot.date, snapshot]);
   let previousCalendarSnapshot = null;
   calendarSnapshots.forEach(([date, snapshot]) => {
     const currentValue = snapshot.summary?.holdings_current;
@@ -1589,7 +1725,7 @@ tbody.innerHTML = holdingsHtml;
     const value = activeMap()[selected];
     calDetail.replaceChildren(make('span', 'cal-detail-date', selected));
     const values = make('span', 'cal-detail-values');
-    const amount = value ? (value.amt > 0 ? '+' : '') + Math.round(value.amt).toLocaleString('zh-CN') + '元' : '—';
+    const amount = moneyVisible && value ? (value.amt > 0 ? '+' : '') + Math.round(value.amt).toLocaleString('zh-CN') + '元' : '—';
     values.append(make('span', value ? colorClass(value.amt) : '', amount), make('span', value ? colorClass(value.pct) : '', value ? formatRate(value.pct) : '—'));
     calDetail.append(values);
     calGrid.querySelectorAll('[data-date]').forEach(element => element.setAttribute('aria-pressed', String(!element.disabled && element.dataset.date === selected)));
@@ -1620,7 +1756,8 @@ tbody.innerHTML = holdingsHtml;
         cell.append(make('span', 'day-value ' + colorClass(value[metric]), text));
         cell.addEventListener('click', () => { selected = date; renderDetail(); });
       }
-      cell.setAttribute('aria-label', date + (value ? `，盈亏${value.amt}元，收益率${formatRate(value.pct)}` : '，无记录'));
+      // ai coding: 日历无障碍读数在金额关闭时仅报告收益率 2026/11/07: 14:12
+      cell.setAttribute('aria-label', date + (value ? (moneyVisible ? `，盈亏${value.amt}元` : '') + `，收益率${formatRate(value.pct)}` : '，无记录'));
       calGrid.append(cell);
     };
     if (view === 'day') {
@@ -1737,7 +1874,8 @@ if (snapshots.length === 1) {
     data: {
       labels: closed.map(c => c.name),
       datasets: [{
-        data: closed.map(c => c.pnl / 10000),
+        // ai coding: 金额关闭时清仓图改画收益率保留非金额信息 2026/11/07: 14:10
+        data: closed.map(c => moneyVisible ? c.pnl / 10000 : c.roi),
         backgroundColor: closed.map(c => c.pnl > 0 ? PROFIT : c.pnl < 0 ? LOSS : '#9a9a9a'),
         borderRadius: 0,
       }]
@@ -1809,7 +1947,24 @@ async function downloadElementAsPng(element, filename, horizontalPadding = 0, ve
     scale: renderScale,
     useCORS: true,
     backgroundColor: '#ffffff',
-    windowWidth: Math.max(document.documentElement.clientWidth, element.scrollWidth)
+    // ai coding: 截图副本解除祖先横向裁切并展开时间线避免滚动区域外内容丢失 2026/11/07: 14:01
+    windowWidth: Math.max(document.documentElement.clientWidth, element.scrollWidth),
+    onclone(clonedDocument, clonedElement) {
+      if (!element.classList.contains('section-export-mode')) return;
+      for (let ancestor = clonedElement.parentElement; ancestor; ancestor = ancestor.parentElement) {
+        ancestor.style.setProperty('overflow', 'visible', 'important');
+        ancestor.style.setProperty('overflow-x', 'visible', 'important');
+        ancestor.style.setProperty('overflow-y', 'visible', 'important');
+        ancestor.style.setProperty('max-width', 'none', 'important');
+        ancestor.style.setProperty('min-width', element.offsetWidth + 'px', 'important');
+      }
+      clonedElement.querySelectorAll('.ht-scroll,.table-scroll').forEach(scroller => {
+        scroller.style.setProperty('overflow', 'visible', 'important');
+        scroller.scrollLeft = 0;
+        scroller.scrollTop = 0;
+      });
+      clonedElement.querySelectorAll('.ht-name').forEach(name => name.style.setProperty('position', 'static', 'important'));
+    }
   });
   let outputCanvas = canvas;
   if (horizontalPadding > 0 || verticalPadding > 0) {
@@ -1865,8 +2020,63 @@ async function saveAsImage(){
   }
 }
 
-// ai coding: 用单一配置控制全部模块下载按钮关闭时不创建按钮避免首屏闪现 2026/11/06: 19:38
+// ai coding: 复用整容器导出流程展开滚动内容保存后恢复布局滚动位置并阻止重复下载 2026/11/07: 13:57
+const exportingSections = new WeakSet();
+async function downloadSection(section) {
+  if (!section || exportingSections.has(section)) return;
+  exportingSections.add(section);
+  const originalCursor = document.body.style.cursor;
+  const originalWidth = section.style.width;
+  const scrollers = Array.from(section.querySelectorAll('.table-scroll,.ht-scroll'));
+  const scrollPositions = scrollers.map(element => [element, element.scrollLeft, element.scrollTop]);
+  const buttons = Array.from(section.querySelectorAll('.section-download-btn'));
+  const measureWidth = () => Math.ceil(Math.max(1120, section.scrollWidth, ...scrollers.map(element => element.scrollWidth + section.offsetWidth - element.clientWidth)));
+  try {
+    buttons.forEach(button => { button.disabled = true; button.style.visibility = 'hidden'; });
+    document.body.style.cursor = 'wait';
+    const width = measureWidth();
+    section.classList.add('section-export-mode');
+    section.style.width = width + 'px';
+    scrollers.forEach(element => { element.scrollLeft = 0; element.scrollTop = 0; });
+    await waitForExportLayout();
+    section.style.width = measureWidth() + 'px';
+    resizeSectionCharts(section);
+    await waitForExportLayout();
+    // ai coding: 持仓明细与时间线导出图片上下各增加六像素留白 2026/11/07: 14:00
+    const verticalPadding = ['holdings', 'timeline'].includes(section.dataset.section) ? 6 : 0;
+    await downloadElementAsPng(section, 'portfolio_' + section.dataset.section + '_' + (latest.date || 'report') + '.png', 16, verticalPadding);
+  } finally {
+    section.classList.remove('section-export-mode');
+    section.style.width = originalWidth;
+    resizeSectionCharts(section);
+    await waitForExportLayout();
+    scrollPositions.forEach(([element, left, top]) => { element.scrollLeft = left; element.scrollTop = top; });
+    document.body.style.cursor = originalCursor;
+    buttons.forEach(button => { button.style.visibility = ''; button.disabled = false; });
+    exportingSections.delete(section);
+  }
+}
+// ai coding: 仅持仓明细和时间线标题支持桌面双击手机双点及键盘下载不显示下载图标 2026/11/07: 13:57
 document.querySelectorAll('.section-head h2').forEach(title => {
+  const section = title.closest('.section');
+  if (['holdings', 'timeline'].includes(section.dataset.section)) {
+    title.setAttribute('role', 'button');
+    title.tabIndex = 0;
+    title.setAttribute('aria-label', title.textContent.trim() + '，双击下载图片');
+    title.addEventListener('dblclick', event => { event.preventDefault(); downloadSection(section); });
+    title.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); downloadSection(section); }
+    });
+    let lastTap = null;
+    title.addEventListener('touchend', event => {
+      if (event.touches.length || event.changedTouches.length !== 1) { lastTap = null; return; }
+      const touch = event.changedTouches[0], now = Date.now();
+      if (lastTap && now - lastTap.time < 350 && Math.hypot(touch.clientX - lastTap.x, touch.clientY - lastTap.y) < 24) {
+        event.preventDefault(); lastTap = null; downloadSection(section);
+      } else lastTap = { time: now, x: touch.clientX, y: touch.clientY };
+    }, { passive: false });
+    return;
+  }
   if (pageConfig.section_download_buttons === false) return;
   const downloadButton = document.createElement('button');
   downloadButton.type = 'button';
@@ -1875,38 +2085,9 @@ document.querySelectorAll('.section-head h2').forEach(title => {
   downloadButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   title.insertAdjacentElement('afterend', downloadButton);
 
-  downloadButton.addEventListener('click', async event => {
+  downloadButton.addEventListener('click', event => {
     event.preventDefault();
-    const section = title.closest('.section');
-    if (!section || downloadButton.disabled) return;
-
-    const sectionId = section.dataset.section || 'section';
-    const originalCursor = document.body.style.cursor;
-    const originalWidth = section.style.width;
-    const scrollWidths = Array.from(section.querySelectorAll('.table-scroll')).map(el => el.scrollWidth);
-    const exportWidth = Math.max(1120, section.scrollWidth, ...scrollWidths);
-    downloadButton.disabled = true;
-    downloadButton.style.visibility = 'hidden';
-    document.body.style.cursor = 'wait';
-    section.classList.add('section-export-mode');
-    section.style.width = exportWidth + 'px';
-    try {
-      await waitForExportLayout();
-      resizeSectionCharts(section);
-      await waitForExportLayout();
-      await downloadElementAsPng(
-        section,
-        'portfolio_' + sectionId + '_' + (latest.date || 'report') + '.png',
-        16
-      );
-    } finally {
-      section.classList.remove('section-export-mode');
-      section.style.width = originalWidth;
-      resizeSectionCharts(section);
-      document.body.style.cursor = originalCursor;
-      downloadButton.style.visibility = '';
-      downloadButton.disabled = false;
-    }
+    downloadSection(section);
   });
 });
 </script>
