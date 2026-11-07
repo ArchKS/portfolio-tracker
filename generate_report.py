@@ -323,7 +323,7 @@ body:not([data-money-visible="true"]) .money-value{display:none!important;}
 /* ai coding: 固定年度轨道宽度仅时间线内部横向滚动并保持标的名称可见 2026/11/06: 19:51 */
 .ht-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;}
 .ht-canvas{width:calc(var(--ht-time-width) + 126px);}
-.ht-scroll .ht-name{position:sticky;left:0;margin-bottom: 5px;z-index:2;background:#fcfbf8;}
+.ht-scroll .ht-name{position:sticky;left:0;margin-bottom: 5px;z-index:2;background:var(--paper);}
 .ht-scroll .ht-row[aria-pressed="true"] .ht-name{background:#f5f5f3 !important;}
 @media(max-width:480px){.ht-canvas{width:calc(var(--ht-time-width) + 110px);}}
 .ht-profit{--ht-tone:var(--ht-profit);}
@@ -487,9 +487,9 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .section[data-section="drawdown"] .chart-card,
   .section[data-section="position"] .chart-card{margin-left:0;margin-right:0;width:100%;padding:8px 0 0;}
   /* ai coding: 持仓明细表公司名称列在移动端横向滚动时吸附固定，覆盖左侧市场列 2026/11/06: 15:17 */
-  .table-scroll thead th:nth-child(2){position:sticky;left:0;z-index:2;}
-  .table-scroll tbody td.name{position:sticky;left:0;z-index:1;}
-  .table-scroll tbody tr:hover td.name,.table-scroll tbody tr.summary-row td.name{background:#fafafa;}
+  .table-scroll thead th:nth-child(2){position:sticky;left:0;z-index:2;background:var(--paper);}
+  .table-scroll tbody td.name{position:sticky;left:0;z-index:1;background:#fcfbf8}
+  .table-scroll tbody tr:hover td.name,.table-scroll tbody tr.summary-row td.name{background:var(--paper);}
   .notice{font-size:11px;padding:10px 12px;}
 }
 /* ai coding: 三个折线图统一标题读数和绘图区间距各保留十二像素 2026/11/06: 16:40 */
