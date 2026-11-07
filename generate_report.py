@@ -162,7 +162,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 :root{
-  --paper:#ffffff;
+  --paper:#fcfbf8;
   --ink:#111111;
   --ink-2:#5b5b5b;
   --ink-3:#9a9a9a;
@@ -277,7 +277,7 @@ body{
 /* ai coding: 固定年度轨道宽度仅时间线内部横向滚动并保持标的名称可见 2026/11/06: 19:51 */
 .ht-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;}
 .ht-canvas{width:calc(var(--ht-time-width) + 126px);}
-.ht-scroll .ht-name{position:sticky;left:0;margin-bottom: 5px;z-index:2;background:var(--module-fill,var(--paper));}
+.ht-scroll .ht-name{position:sticky;left:0;margin-bottom: 5px;z-index:2;}
 .ht-scroll .ht-row[aria-pressed="true"] .ht-name{background:#f5f5f3 !important;}
 @media(max-width:480px){.ht-canvas{width:calc(var(--ht-time-width) + 110px);}}
 .ht-profit{--ht-tone:var(--ht-profit);}
@@ -306,7 +306,7 @@ body{
 .ht-metric strong{display:block;font-weight:500;font-size:20px;margin-top:5px;color:var(--ink);font-variant-numeric:tabular-nums;}
 .ht-metric strong.ht-profit,.ht-metric strong.ht-loss{color:var(--ht-tone);}
 .ht-status{grid-column:2/-1;align-self:center;font-size:13px;color:var(--ink-2);}
-@media(max-width:480px){.ht-row{grid-template-columns:62px minmax(0,1fr);gap:8px;}.ht-axis{margin-left:90px;}.ht-name,.ht-annual{font-size:12px;}.ht-metric strong{font-size:18px;}.ht-detail-head{font-size:11px;}}
+@media(max-width:480px){.ht-row{grid-template-columns:62px minmax(0,1fr);gap:8px;padding: 0 10px;}.ht-axis{margin-left:90px;}.ht-name,.ht-annual{font-size:12px;}.ht-metric strong{font-size:18px;}.ht-detail-head{font-size:11px;}}
 .timeline-empty{padding:32px;color:var(--ink-3);font-size:13px;}
 
 /* ── Stats grid ── */
@@ -441,8 +441,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   .section[data-section="drawdown"] .chart-card,
   .section[data-section="position"] .chart-card{margin-left:0;margin-right:0;width:100%;padding:8px 0 0;}
   /* ai coding: 持仓明细表公司名称列在移动端横向滚动时吸附固定，覆盖左侧市场列 2026/11/06: 15:17 */
-  .table-scroll thead th:nth-child(2){position:sticky;left:0;background:#fff;z-index:2;}
-  .table-scroll tbody td.name{position:sticky;left:0;background:#fff;z-index:1;}
+  .table-scroll thead th:nth-child(2){position:sticky;left:0;z-index:2;}
+  .table-scroll tbody td.name{position:sticky;left:0;z-index:1;}
   .table-scroll tbody tr:hover td.name,.table-scroll tbody tr.summary-row td.name{background:#fafafa;}
   .notice{font-size:11px;padding:10px 12px;}
 }
