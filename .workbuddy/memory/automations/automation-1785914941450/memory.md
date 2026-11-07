@@ -511,3 +511,15 @@
 - 临时文件已清理（.tmp_raw.json / .tmp_csv.csv / .tmp_prices.json / .tmp_benchmarks.json / .tmp_tdoc_err.txt）
 - 备注1：`snapshot_live.py` 自检通过（regions.整体.current 2222858.43 = 持仓当前 2229858.43 + cash_diff -7000 ≠ 文档值 2207460 → 实时自算生效）
 - 备注2：⚠️ 新增窝轮 14237.HK（康方中银六乙购A.C）：`data_quote` 不覆盖窝轮，须用 `data_minute` 取 qt[3]；文档"收益"行为 -395542（与自算 -380141.57 差距约 1.5万，文档滞后属常态）
+
+### 2026-11-07 14:36（当日第二次，周六复核档）
+- 数据源：腾讯文档 fGemVXqsvRGM（tdoc_call 一次成功，30KB），CSV header idx=2 / end idx=20；9 行持仓（7 只 + SMMT Call + 14237.HK 窝轮）无变动；汇率 US 6.6725 / HK 0.851；基数 260.30万
+- ✅ westock-mcp MCP 工具本会话正常注册；`data_quote` 批量 9 码返回 9 码、缺 hk14237（窝轮不在快照接口），`data_minute` 兜底取 qt[3]=0.030（2026-11-06 收盘，-23.08%）
+- 行情 time 全部 = 2026-11-06（周五收盘，周六无新交易），与 06:00 档取值完全一致：康方 85.25、SMMT 16.33、海螺 17.88、亚盛 29.28、传奇 23.40、新氧 2.05、汇贤 0.325
+- 基准：沪深300 YTD -12.43% / 纳斯达克 YTD +5.75%（同 06:00 档）
+- 快照：portfolio_snapshots/2026-11-07.json（覆盖 06:00 档，仍为第 98 份）；report.html → public/index.html
+- 部署：workbuddy_sites_deploy 成功，固定域名与 sharecode 不变，verified=true；curl 验证 HTTP 200 + `2026-11-07 14:36:41` + total_pnl `-380141.57` + 持仓当前 `2229858` 全部命中
+- 关键数据：持仓投入 231.24万（2312357.00）、持仓当前 222.99万（2229858.43）、持仓收益 -8.25万（-3.57%）、总收益 -38.01万（-380141.57）、总收益率 -14.60%（与 06:00 档完全一致，属正常——周六无新行情）
+- Git：commit 362dc0c；push 成功（49e455b..362dc0c，直连一次成功），本地 main ahead 0
+- 临时文件已清理
+- 备注：`snapshot_live.py` 自检通过（regions.整体.current 2222858.43 = 持仓当前 2229858.43 + cash_diff -7000 ≠ 文档值 → 实时自算生效）
