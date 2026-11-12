@@ -1,5 +1,30 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-11-11 20:16 执行记录 — ❌ 失败（westock-mcp 授权与本地凭据均不可用）
+- 腾讯文档读取成功：CSV 11283 字符，header=2/end=20，8 个行情代码（对应9只持仓），与当日早前一致。
+- 原生 westock MCP 工具未注册，连接请求返回 skipped；本地凭据文件存在但 mcpOAuth 中没有 westock-mcp 条目，方案C也无法使用。
+- 按规范在行情步骤停止，未生成快照、未部署、未提交 Git；本次临时文件已清理。
+- 需在连接器菜单完成 westock-mcp 授权后重跑；当前公网报告仍为最近一次成功部署内容。
+
+## 2026-11-11 19:42 执行记录 — ❌ 失败（westock-mcp 仍不可用，与 19:25 档同因）
+- **westock-mcp MCP 工具整场会话未注册**：ToolSearch 命中只有 `workbuddy_request_mcp_connection`，没有 `mcp__westock-mcp__*`。
+- `workbuddy_request_mcp_connection` 请求返回 `skipped`（用户未授权）。
+- **方案C 兜底仍不可用**：`/Users/zendu/.workbuddy/connectors/1f52f295-e569-47ae-b5b2-fe998165c5a0/` 下**没有 `.master.key` 和 `.credentials.v3.json` 的 `mcpOAuth` 段**——`connector-states.v3.json` 只有 `headerOverrides`（含 tencent-docs/github/kdocs/notion/ima-mcp），westock-mcp 的 OAuth token 不在本地。
+- 因 westock-mcp 三条路径（A：原生 MCP / B：HTTP+token / C：本地凭据解密）全部不可用，按 SKILL.md 规范在步骤 4 停止，未生成快照、未部署、未提交 git。临时文件已清理。
+- **待用户处理**：
+  1. 在 WorkBuddy 连接器菜单完成 westock-mcp 重新授权；或
+  2. 检查 OAuth 凭据文件是否被清理（`.master.key` / `.credentials.v3.json` 的 `mcpOAuth` 段缺失）。
+- 与 19:25 档为同一根因，未推进。
+
+## 2026-11-11 19:25 执行记录 — ❌ 失败（westock-mcp 不可用）
+- 方案A 腾讯文档读取成功（11283 字符 CSV，header=2/end=20，8 只持仓代码：09926.HK/14237.HK/06855.HK/00914.HK/SMMT.US/LEGN.US/SY.US/87001.HK，与 11-10 同）。
+- **westock-mcp connector-status=auth-required**，ToolSearch 未注册 `mcp__westock-mcp__*`。`workbuddy_request_mcp_connection` 请求用户授权返回 `skipped`。
+- **方案C（4c 兜底）不可用**：`/Users/zendu/.workbuddy/connectors/1f52f295-e569-47ae-b5b2-fe998165c5a0/` 下**没有 `.master.key` 和 `.credentials.v3.json`**，只有 `connector-states.json` / `connector-states.v3.json`，无法解密 OAuth token 直连上游。
+- 因无法获取实时行情，按规范在步骤 4 停止，未生成快照、未部署、未提交 git。临时文件已清理。
+- 待办：用户需在连接器菜单完成 westock-mcp 重新授权；或检查 OAuth 凭据文件是否被清走。
+
+
+
 ## 2026-11-10 16:42 执行记录 — ✅ 完成（SMMT 隔夜上涨，持仓收益回升至 -0.56%）
 - 腾讯文档方案A读取成功；9只持仓，投入 2,300,492.65，当前 2,287,720.10，持仓收益 -12,772.55（-0.56%）；总收益 -303,579.90，总收益率 -11.66%，基数 2,603,000。现金差额 11,700，实时整体当前 2,299,420.10。
 - westock MCP 未注册且连接请求被跳过，使用既有授权直连上游行情；窝轮 hk14237 用分时接口取价 0.037（-9.76%）。沪深300 YTD -12.33 / CAGR -3.85%，纳指 YTD +8.65 / CAGR +10.25%。
@@ -717,3 +742,10 @@
 - 部署成功，固定域名/sharecode 不变；curl HTTP 200 含 2026-11-07 16:31:56 / total_pnl -380141.57。✅ 固定域名稳定性第十一次验证。
 - git：commit d8e7887（3 files），push 一次成功（9d82d30..d8e7887）。
 - 遗留：无。与 14:26 档数值完全一致（收盘价口径）。
+
+## 2026-11-11 16:33 执行记录 — ✅ 全流程成功
+- 腾讯文档方案A一次成功；9只持仓，基数 2,603,000；实时个股与双指数行情取全，hk14237 涡轮以 data_minute 兜底取价 0.035。
+- 结果：持仓投入 2,300,492.65；当前市值 2,257,437.09；持仓收益 -43,055.56（-1.87%）；总收益 -333,862.91；总收益率 -12.83%。基准：沪深300 YTD -11.97% / CAGR -3.88%；纳斯达克 YTD +7.85% / CAGR +10.39%。
+- 部署 public/ 成功，固定域名/sharecode 不变；curl HTTP 200，含 2026-11-11 16:32:42 与 total_pnl -333862.91。
+- 临时文件已清理；git commit eadd726，push 一次成功。
+- 文档静态收益 -310,955 与实时自算总收益差约 2.29 万，属旧值滞后，未改文档。

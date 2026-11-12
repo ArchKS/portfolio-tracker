@@ -2,6 +2,20 @@
 
 ## 执行记录
 
+### 2026-11-12 06:00（当日首次）— ❌ 失败（westock-mcp 连接器未就绪）
+- **失败步骤**：步骤 4「提取代码并获取行情」
+- **根因**：`westock-mcp` 连接器状态为 `connecting`（`list_installed_plugins` 返回 `status:"connecting"`），宿主未把 `mcp__westock-mcp__*` 工具注册到本会话；`ToolSearch` 查不到 westock 工具
+- **尝试路径**：
+  1. `workbuddy_request_mcp_connection(["westock-mcp"])` → outcome=`skipped`（自动化环境无人值守，用户未响应授权卡）
+  2. SKILL.md「4c-兜底」本地凭据解密 → `.credentials.v3.json` 的 `mcpOAuth` 中**没有 westock-mcp 条目**（只有 `agentkey|ee52da99ae4b4733` 和 `neodata|0f45efd570102ed5`），无法取到 access token。`mcpClientInfo` 中只有 `client_id` 没有 token
+  3. connector-proxy 内部 token 端点 `/mcp/internal/westock-mcp/tokens`、`/internal/westock-mcp/tokens` 全部 404（端口 51530 / 53996 / 51529 / 50764 / 18488 全试，最相关的 51530 是 connector-proxy 主端口，但 westock-mcp 子代理 hash 路由未挂载——`tools/list` 不含 `data_quote`）
+  4. `reconnect_plugin("westock-mcp@workbuddy-connector-plugins-official")` → `User refused`（自动化后台运行，用户在系统弹窗中点击拒绝/超时）
+- **connector-health 数据**：`westock-mcp` 健康检查显示 `status:"OK"`、`expiresAtLocal:"2026-11-11 18:24:59"`、`hasRefreshToken:true`、`accessTokenRecoverable:false`——健康状态是 11-11 08:44 的旧数据，本次实际 token 已不可恢复（本地无副本，provider 又 404）
+- **影响**：无法获取实时行情，快照未生成，报告未更新，公网链接 https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH 仍是 11-11 的内容
+- **临时文件**：已清理（.tmp_raw.json/.tmp_csv.csv/.tmp_prices.json/.tmp_benchmarks.json/.tmp_quote_raw.json 全部删除）
+- **建议**：用户需在桌面端 WorkBuddy 手动打开「+ → 连接器 → 腾讯自选股」重新授权（OAuth 流程走完后 `mcp__westock-mcp__data_quote` 会自动注册到会话）。授权后下一次 6:00 自动化即可正常跑通
+- **部署/提交**：本次未产生新内容，无需部署或 git 提交
+
 ### 2026-09-28 06:01（当日首次）
 - 数据源：腾讯文档 fGemVXqsvRGM（tencent-docs CLI `tdoc_call tencent-docs get_content` 落 .tmp_raw.json，成功）。7 只持仓 + SMMT Call 共 8 行，无变动；汇率 US 6.6958 / HK 0.8531；文档整体基数 258.30万（年初 250.50万 + 工资结余 7.80万/2）
 - 行情：westock-mcp data_quote **一次批量取全 9 码**（7 持仓 + 沪深300 + usIXIC），无限频无漏码。行情 time：港股/美股=2026-09-25 收盘（A 股 09-25 中秋休市），沪深300 time=2026-09-24。康方 93.55 -0.37%、SMMT 15.61 -4.70%、海螺 15.69 -1.38%、亚盛 28.90 -0.69%、传奇 19.11 +0.26%、新氧 2.70 持平、汇贤 0.325 +1.56%
