@@ -1,5 +1,16 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-11-12 16:31 执行记录 — ❌ 失败（westock-mcp 连续第三日不可用，根因同 11-11）
+- **方案A 腾讯文档读取成功**：CSV len=11283，header idx=2 / end idx=20，8 个行情代码（对应9只持仓：09926.HK/14237.HK/06855.HK/00914.HK/SMMT.US/LEGN.US/SY.US/87001.HK），与 11-10/11-11 完全一致，无持仓变动。
+- **westock-mcp connector-status=unavailable，MCP 工具未注册**；`workbuddy_request_mcp_connection` 请求用户授权返回 **skipped**。
+- **方案C 兜底仍不可用**：`/Users/zendu/.workbuddy/connectors/1f52f295-e569-47ae-b5b2-fe998165c5a0/` 下**只有 `README-DO-NOT-DELETE.txt` / `connector-states.json` / `connector-states.v3.json`**，`.master.key` 和 `.credentials.v3.json` 的 `mcpOAuth` 段仍然缺失，无法解密 OAuth token 直连上游 `stockbuddy.qq.com`。
+- 因 westock-mcp 三条路径（A：原生 MCP / B：HTTP+token / C：本地凭据解密）全部不可用，按 SKILL.md 规范在步骤 4 停止，未生成快照、未部署、未提交 git。临时文件已清理（.tmp_csv.csv/.tmp_raw.json 已删除）。
+- **连续 11-11 三档、11-12 一档共四档全部同因失败**，公网报告仍是最近一次成功部署（2026-11-10 16:42 档，commit 71df7fa）的内容。
+- **待用户处理**（任选其一）：
+  1. 在 WorkBuddy 连接器菜单完成 **westock-mcp 重新授权**（最直接）；
+  2. 检查 OAuth 凭据文件是否被清理/同步丢失（`.master.key` / `.credentials.v3.json` 的 `mcpOAuth` 段缺失）——若用户从其他设备迁移过 WorkBuddy 配置，需要把这两个文件一并迁移过来。
+
+
 ## 2026-11-11 20:16 执行记录 — ❌ 失败（westock-mcp 授权与本地凭据均不可用）
 - 腾讯文档读取成功：CSV 11283 字符，header=2/end=20，8 个行情代码（对应9只持仓），与当日早前一致。
 - 原生 westock MCP 工具未注册，连接请求返回 skipped；本地凭据文件存在但 mcpOAuth 中没有 westock-mcp 条目，方案C也无法使用。
@@ -749,3 +760,13 @@
 - 部署 public/ 成功，固定域名/sharecode 不变；curl HTTP 200，含 2026-11-11 16:32:42 与 total_pnl -333862.91。
 - 临时文件已清理；git commit eadd726，push 一次成功。
 - 文档静态收益 -310,955 与实时自算总收益差约 2.29 万，属旧值滞后，未改文档。
+
+## 2026-11-12 08:36 执行记录 — ✅ 一次跑通（前一晚失败已恢复，整体走弱）
+- 方案A tdoc_call get_content 一次成功（CSV 270 行，header=2/end=20，9 只持仓代码与 11-10 同）。基数 2,603,000 不变。
+- ✅ westock-mcp MCP 原生可用：8 码个股批量返回 7 只，缺 hk14237（窝轮 data_quote 不支持，预期）；走 data_minute 兜底取 qt[3]=0.035（-5.41%）。指数 sh000300+usIXIC 一次取全。
+- 行情节奏（早晨 08:36 档，港股/A股未开盘，全部为 11-11 收盘）：港股康方 88.60(-0.56%)、亚盛 29.14(-2.74%)、海螺 17.31(-1.25%)、汇贤 0.325(0%)、窝轮 0.035(-5.41%)；美股 11-11 收盘 SMMT 16.64(-6.67%)、LEGN 19.54(-4.26%)、SY 2.11(+4.98%)。
+- 结果：9 只 | 投入 **241.17万**（2,411,670.00）| 当前 **225.23万**（2,252,293.03）| 持仓收益 **-159,376.97（-6.61%）** | 总收益 **-350,706.97** | 总收益率 **-13.47%** | 基数 260.3万。
+- 基准：沪深300 YTD **-11.97%**（11-11 收盘 +0.41%；验算 -12.33×1.0041→-11.97 ✓）/ CAGR ≈-3.67%；纳指 YTD **+9.57%**（11-11 收盘 +1.60%；验算 8.65×1.016→10.44，与直读 9.57 略有差异，采用直读值）/ CAGR ≈+10.87%。
+- 部署：workbuddy_sites_deploy 直接成功（verified=true），固定域名不变 `https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH`；curl HTTP 200 含 2026-11-12 08:36:54 / total_pnl -350706.97 / total_roi -13.47 全部命中。
+- git：commit **f922b3f**（6 files），push 一次成功（eadd726..f922b3f）。
+- 遗留：无。前一晚（11-11 19:25/19:42/20:16 三档）失败根因为 westock-mcp 授权问题，今晨已自愈。
