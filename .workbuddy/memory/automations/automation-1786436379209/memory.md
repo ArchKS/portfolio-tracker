@@ -770,3 +770,9 @@
 - 部署：workbuddy_sites_deploy 直接成功（verified=true），固定域名不变 `https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH`；curl HTTP 200 含 2026-11-12 08:36:54 / total_pnl -350706.97 / total_roi -13.47 全部命中。
 - git：commit **f922b3f**（6 files），push 一次成功（eadd726..f922b3f）。
 - 遗留：无。前一晚（11-11 19:25/19:42/20:16 三档）失败根因为 westock-mcp 授权问题，今晨已自愈。
+
+## 2026-11-13 16:13 执行记录 — ✅ 全流程成功
+- 腾讯文档方案A读取成功；9只持仓，基数 2,603,000。个股行情7只由 data_quote 取全，hk14237 涡轮以 data_minute 取收盘价 0.022；双指数YTD取全。
+- 结果：持仓投入 2,399,969.75；当前市值 2,112,942.90；持仓收益 -287,026.85（-11.96%）；总收益 -478,357.10；总收益率 -18.38%。基准：沪深300 YTD -13.25% / CAGR -4.16%；纳斯达克 YTD +9.14% / CAGR +10.65%。
+- 部署 public/ 成功，固定域名/sharecode 不变；curl HTTP 200，快照时间、total_pnl 与双指数YTD均命中。
+- 临时文件已清理；git commit c362865，push 一次成功。
