@@ -1,5 +1,15 @@
 # Automation memory: automation-1786436379209（每日持仓快照 16:10 档）
 
+## 2026-11-13 16:31 执行记录 — ✅ 一次跑通（港股医药双杀 + SMMT 隔夜 -9.41%，总收益率跌至 -18.38%）
+- **方案A 一次成功**（tdoc_call get_content → structuredContent.content，CSV len=11283，header=2/end=20）。8 个行情代码 / 9 只持仓（康方/窝轮14237/亚盛/海螺/汇贤 + SMMT/SMMT Call/LEGN/SY），基数 2,603,000 不变。
+- ✅ **westock-mcp MCP 原生已注册**：7 只个股 `data_quote` 一次取全（hk14237 窝轮按经验走 `data_minute`，qt[3]=0.022，-18.52%）；指数 2 码一次取全。零限频零漏码。
+- **行情节奏**：港股 11-13 收盘 **康方 82.30(-3.91%)、亚盛 28.10(-3.70%)**、海螺 17.02(-0.53%)、汇贤 0.33(0%)、窝轮 0.022(-18.52%)；美股 11-12 收盘 **SMMT 15.08(-9.41%，最大拖累)**、LEGN 18.54(-5.12%)、SY 1.94(-8.06%)。医药板块全线大跌。
+- 结果：9 只 | 投入 **240.00万**（2,399,969.75）| 当前 **212.46万**（2,124,642.90）| 持仓收益 **-275,326.85（-11.47%）** | 整体投入 2,411,670 / 整体当前 2,124,642.90 / 整体pnl -287,027.10 | **总收益 -478,357.10 / 总收益率 -18.38%** | 基数 260.3万。
+- 基准：沪深300 YTD **-13.25%**（11-13 收盘 -0.68%）/ CAGR ≈-3.97%；纳指 YTD **+9.14%**（11-12 收盘 -0.39%）/ CAGR ≈+10.54%。
+- 部署：workbuddy_sites_deploy 直接成功（verified=true），固定域名不变 `https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH`；curl HTTP 200 含 2026-11-13 16:31:44 / total_pnl -478357.1 / total_roi -18.38。
+- git：commit **225bec2**（4 files），push 一次成功（c362865..225bec2）。
+- 遗留：无。
+
 ## 2026-11-12 16:31 执行记录 — ❌ 失败（westock-mcp 连续第三日不可用，根因同 11-11）
 - **方案A 腾讯文档读取成功**：CSV len=11283，header idx=2 / end idx=20，8 个行情代码（对应9只持仓：09926.HK/14237.HK/06855.HK/00914.HK/SMMT.US/LEGN.US/SY.US/87001.HK），与 11-10/11-11 完全一致，无持仓变动。
 - **westock-mcp connector-status=unavailable，MCP 工具未注册**；`workbuddy_request_mcp_connection` 请求用户授权返回 **skipped**。
