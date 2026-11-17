@@ -617,3 +617,16 @@
 - 部署：成功，固定域名与 sharecode 不变，verified=true；curl HTTP 200，2026-11-16 06:02:01 +08:00、total_pnl -491081.08 与双基准 YTD 全部命中。
 - Git：commit 660b202；push 成功（6d7b156..660b202，直连一次成功）。包含另一自动化任务已有的 memory 修改。
 - 临时文件已清理，未改动 .genie 文件或部署目录。
+
+### 2026-11-17 06:03 — ✅ 成功
+- 数据源：腾讯文档 fGemVXqsvRGM（tdoc_call 一次成功）。CSV header idx=2 / end idx=19；**持仓变更：8 只**（新增康方窝轮 14237.HK「康方中银六乙购A.C」，500000 份，成本 0.021，文档价 0.01）。汇率 US 6.6703 / HK 0.8499；基数 260.30 万（年初 250.50 万 + 工资结余 9.80 万）
+- westock-mcp MCP 工具仍未注册到会话（连接器 auth-required），按 skill 步骤 4c-兜底：解密 `~/.workbuddy/connectors/<userId>/.credentials.v3.json` 的 `westock-mcp|76c1bcce7ee2e7f6` accessToken（64 字节），直连 `https://stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`，**一次批量取全 9 码成功**（8 持仓 + 沪深300 + usIXIC）
+- ⚠️ **hk14237 单独补取仍返回空 `data:{}`**——窝轮/牛熊证 westock 未覆盖。snapshot_live.py 对该持仓 fallback `cur=inv=8923.95`、`roi=None`。**长期建议**：在 skill 步骤 4a 加 fallback——若 westock 返回空，从 CSV 当前价列读取文档价作为兜底
+- 行情 time=2026-11-16（周一）。康方生物 64.10 **-22.11%**（单日暴跌，疑 IV 期数据/配股）、亚盛 26.12 -7.05%、SMMT 11.82 **-16.47%**、传奇 15.99 -8.63%、海螺 17.20 +1.06%、新氧 1.97 -2.48%、汇贤 0.33 持平
+- 基准：沪深300 YTD **-14.04%**（11-16 收 3979.80，前期 4,600 高点已回落约 13.5%）；纳斯达克 YTD +5.45%
+- 快照 portfolio_snapshots/2026-11-17.json（第 92 份）；报告 → public/index.html
+- 部署 workbuddy_sites_deploy **成功**（sandboxId 7b943eac6839457fa3ffc85b65107de4，固定域名+sharecode 不变）。curl 验证 HTTP 200、含 2026-11-17 06:03:20 与 -771743.7
+- 关键数据：持仓投入 **238.16 万**、当前 **183.13 万**、持仓收益 **-55.03 万（-23.11%）**、总收益 **-77.17 万**、总收益率 **-29.65%**（较 11-16 大幅恶化，主因康方 -22% + SMMT -16%）
+- 基准 CAGR：沪深300 -3.85%、纳斯达克 +5.45%（generate_report 自算）
+- Git：commit **2a87a36**；push 成功（053c44c..2a87a36，一次成功）
+- 临时文件已清理（.tmp_* 与 /tmp/westock_*.txt、.westock_tok、pf_check.html）
