@@ -630,3 +630,14 @@
 - 基准 CAGR：沪深300 -3.85%、纳斯达克 +5.45%（generate_report 自算）
 - Git：commit **2a87a36**；push 成功（053c44c..2a87a36，一次成功）
 - 临时文件已清理（.tmp_* 与 /tmp/westock_*.txt、.westock_tok、pf_check.html）
+
+### 2026-11-18 06:02 — ✅ 成功
+- 数据源：腾讯文档 fGemVXqsvRGM（tdoc_call 一次成功），CSV header idx=2 / end idx=19；8 只有代码证券，无 SMMT Call 行；汇率 US 6.6659 / HK 0.8493；基数 260.30 万。
+- westock-mcp 为 auth-required，MCP 工具未注册；连接请求 skipped，按技能 4c 备用链路直连上游成功。data_quote 一次取 9 码，窝轮 hk14237 经 data_minute 补取，qt[3]=0.010（2026-11-17 16:08:20）。
+- 行情 time 全部 2026-11-17。康方 61.90、亚盛 25.62、海螺 17.19、汇贤 0.325；SMMT 10.67、传奇 16.11、新氧 1.94；沪深300 3976.46、纳指 24328.38。
+- 快照 portfolio_snapshots/2026-11-18.json（06:02:52）；report.html 同步 public/index.html。
+- 持仓投入 2375182.85、当前 1773243.59、持仓收益 -601939.26（-25.34%）；总收益 -832756.41、总收益率 -31.99%。现金调整 -3000，整体当前 1770243.59，实时自算校验通过。
+- 基准：沪深300 YTD -14.11% / CAGR -4.35%；纳斯达克 YTD +4.67% / CAGR +9.68%。
+- 部署成功，固定域名与 sharecode 不变，verified=true；curl HTTP 200，快照时间、total_pnl、持仓当前及双基准 YTD 全部精确命中。
+- Git：commit 0bb3c52；push 成功（b2c4027..0bb3c52，一次成功），包含另一自动化任务已有的 memory 修改。
+- 临时文件已清理，未改动 .genie 文件或部署目录。
