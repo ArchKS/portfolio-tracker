@@ -641,3 +641,20 @@
 - 部署成功，固定域名与 sharecode 不变，verified=true；curl HTTP 200，快照时间、total_pnl、持仓当前及双基准 YTD 全部精确命中。
 - Git：commit 0bb3c52；push 成功（b2c4027..0bb3c52，一次成功），包含另一自动化任务已有的 memory 修改。
 - 临时文件已清理，未改动 .genie 文件或部署目录。
+
+### 2026-11-19 06:01 — ✅ 成功（方案C 兜底：本地凭据直连上游）
+- **连接器状态**：westock-mcp = auth-required（MCP 工具未注册到会话，与 11-12 失败同因）；本次直接走 SKILL.md「4c-兜底」解密 `.credentials.v3.json` 中 `westock-mcp|76c1bcce7ee2e7f6` 的 accessToken，curl 直连 `https://stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`。**一次批量取全 9 码**（7 持仓 + sh000300 + usIXIC），零限频零漏码。
+- **数据源**：腾讯文档 fGemVXqsvRGM（tencent-docs CLI `tdoc_call tencent-docs get_content` 落 .tmp_raw.json，一次成功）；header idx=2 / end idx=18（19 行段）；**持仓数从 8 只减为 7 只**——海螺水泥(600585.SH) 已清仓退出文档
+- **行情 time 全部 = 2026-11-18（周三）**：海螺已移除，7 只持仓 = 00914.HK(17.43)、06855.HK(24.82)、09926.HK(59.00)、87001.HK(0.33)、LEGN.US(16.25)、SMMT.US(10.50)、SY.US(1.83)
+- **基准**：沪深300 YTD **-13.96%**（较前期大幅回落，CSI300 年内转负）；纳斯达克 YTD **+5.11%**（同样大幅回落）
+- **快照**：portfolio_snapshots/2026-11-19.json（第 94 份）
+- **关键数据**：
+  - 持仓投入 ¥2,366,009.70 / 持仓当前 ¥1,717,978.28 / 持仓收益 **-¥648,031.42 (-27.39%)**
+  - 基数 ¥2,603,000（年初 + 工资结余/2）
+  - 整体当前 ¥1,714,978.28（含固定现金差额 -3000）
+  - **总收益 -¥888,021.72 / 总收益率 -34.12%**（历史最大回撤）
+- **报告**：report.html → public/index.html（generate_report.py 自动同步）
+- **部署**：workbuddy_sites_deploy 返回 `verified:true`，固定域名 `https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH` 不变；curl 验证 HTTP 200 + 当日 06:01:35 + total_pnl -888021.72 + 整体当前 1714978.28 全部命中
+- **Git**：commit `7199d45`；push 一次成功（7530f93..7199d45）
+- **临时文件**：.tmp_csv.csv/.tmp_prices.json/.tmp_raw.json/.tmp_benchmarks.json 全部清理
+- **备注**：本次组合出现历史最大回撤，主因 A股/港股创新药板块 11 月持续走弱（康方从 9 月 108.70 跌至 59.00，跌幅约 -46%；SMMT 从 16.91 跌至 10.50，跌幅约 -38%）；沪深300 YTD -13.96% 也是年内首次转负。用户需关注持仓调整策略。
