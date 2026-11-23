@@ -320,12 +320,25 @@ body:not([data-money-visible="true"]) .money-value{display:none!important;}
 /* ai coding: 时间线与全局盈亏颜色共享变量保留单行端点数字和底部信息 2026/11/06: 18:31 */
 .timeline-card{background:var(--paper);overflow:visible;}
 .holding-timeline{--ht-profit:var(--profit);--ht-loss:var(--loss);--ht-neutral:#656565;}
-/* ai coding: 固定年度轨道宽度仅时间线内部横向滚动并保持标的名称可见 2026/11/06: 19:51 */
-.ht-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;}
-.ht-canvas{width:calc(var(--ht-time-width) + 126px);}
+/* ai coding: 按桌面和移动端设置同屏年数并保留时间线内部横向滚动 2026/11/23: 17:11 */
+.holding-timeline{
+  --ht-axis-inset:126px;
+  --ht-years-per-view:var(--ht-desktop-years);
+  --ht-time-width:calc(max(0px, 100% - var(--ht-axis-inset)) * var(--ht-year-count) / var(--ht-years-per-view));
+}
+.ht-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.ht-scroll::-webkit-scrollbar{display:none;}
+.ht-canvas{width:calc(var(--ht-export-time-width, var(--ht-time-width)) + var(--ht-axis-inset));}
 .ht-scroll .ht-name{position:sticky;left:0;margin-bottom: 5px;z-index:2;background:var(--paper);}
 .ht-scroll .ht-row[aria-pressed="true"] .ht-name{background:#f5f5f3 !important;}
-@media(max-width:480px){.ht-canvas{width:calc(var(--ht-time-width) + 110px);}}
+@media(max-width:480px){.holding-timeline{--ht-axis-inset:110px;--ht-years-per-view:var(--ht-mobile-years);}}
+/* ai coding: 在时间线底部绘制可拖动的细滚动条并在章节导出时隐藏 2026/11/23: 17:08 */
+.ht-scrollbar{display:block;width:100%;height:20px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;}
+.ht-scrollbar[hidden],.section-export-mode .ht-scrollbar{display:none;}
+.ht-scrollbar::-webkit-slider-runnable-track{height:4px;border-radius:999px;background:var(--rule);}
+.ht-scrollbar::-moz-range-track{height:4px;border-radius:999px;background:var(--rule);}
+.ht-scrollbar::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:var(--ht-scroll-thumb);height:4px;border:0;border-radius:999px;background:var(--ink-3);}
+.ht-scrollbar::-moz-range-thumb{width:var(--ht-scroll-thumb);height:4px;border:0;border-radius:999px;background:var(--ink-3);}
 .ht-profit{--ht-tone:var(--ht-profit);}
 .ht-loss{--ht-tone:var(--ht-loss);}
 .ht-neutral{--ht-tone:var(--ht-neutral);}
@@ -352,7 +365,8 @@ body:not([data-money-visible="true"]) .money-value{display:none!important;}
 .ht-metric strong{display:block;font-weight:500;font-size:20px;margin-top:5px;color:var(--ink);font-variant-numeric:tabular-nums;}
 .ht-metric strong.ht-profit,.ht-metric strong.ht-loss{color:var(--ht-tone);}
 .ht-status{grid-column:2/-1;align-self:center;font-size:13px;color:var(--ink-2);}
-@media(max-width:480px){.ht-row{grid-template-columns:62px minmax(0,1fr);gap:8px;padding: 0 10px;}.ht-axis{margin-left:90px;}.ht-name,.ht-annual{font-size:12px;}.ht-metric strong{font-size:18px;}.ht-detail-head{font-size:11px;}}
+/* ai coding: 手机端抵消标的行内边距让线段对齐年份刻度 2026/11/23: 17:04 */
+@media(max-width:480px){.ht-row{grid-template-columns:62px minmax(0,1fr);gap:8px;padding: 0 10px;}.ht-axis{margin-left:90px;}.ht-track{margin-inline:10px;}.ht-name,.ht-annual{font-size:12px;}.ht-metric strong{font-size:18px;}.ht-detail-head{font-size:11px;}}
 .timeline-empty{padding:32px;color:var(--ink-3);font-size:13px;}
 
 /* ── Stats grid ── */
@@ -2034,6 +2048,9 @@ async function downloadSection(section) {
   try {
     buttons.forEach(button => { button.disabled = true; button.style.visibility = 'hidden'; });
     document.body.style.cursor = 'wait';
+    // ai coding: 展开时间线导出前固定当前绘图区宽度避免轨道随章节反复拉长 2026/11/23: 17:03
+    const track = section.querySelector('.ht-track');
+    if (track) section.style.setProperty('--ht-export-time-width', track.getBoundingClientRect().width + 'px');
     const width = measureWidth();
     section.classList.add('section-export-mode');
     section.style.width = width + 'px';
@@ -2047,6 +2064,8 @@ async function downloadSection(section) {
     await downloadElementAsPng(section, 'portfolio_' + section.dataset.section + '_' + (latest.date || 'report') + '.png', 16, verticalPadding);
   } finally {
     section.classList.remove('section-export-mode');
+    // ai coding: 导出结束恢复时间线按容器比例缩放 2026/11/23: 17:03
+    section.style.removeProperty('--ht-export-time-width');
     section.style.width = originalWidth;
     resizeSectionCharts(section);
     await waitForExportLayout();

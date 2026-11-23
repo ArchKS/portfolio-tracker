@@ -34,7 +34,8 @@ python generate_report.py
 
 - `trades`：标的名称、买入/清仓日期、本金、利润和年化收益率。
 - `show_amount`：是否显示具体利润与仓位。
-- `layout`：时间线尺寸。
+- `years_per_view.desktop` 和 `years_per_view.mobile` 分别设置桌面网页和移动网页的同屏自然年数。页面宽度为 480px 或更窄时使用 `mobile`。例如 `{"desktop": 3, "mobile": 2}` 表示桌面每年占绘图区的 1/3，移动端占 1/2。缺少移动端设置时沿用桌面值，旧的单个数字适用于两端。修改后重新运行 `python3 generate_report.py`。
+- `layout` 用于独立 SVG 的尺寸。
 
 页面模块可通过 `sections.timeline` 显示或隐藏。
 

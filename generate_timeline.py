@@ -264,22 +264,43 @@ def generate_timeline_html(config):
     computed = [compute_row(trade, settings, as_of) for trade in trades]
     min_year = min(row["buy"].year for row in computed)
     max_year = max((row["sell"] or as_of).year for row in computed) + 1
-    start, end = date(min_year, 1, 1), date(max_year, 1, 1)
-    span = (end - start).days
-    # ai coding: 每个自然年固定配置像素宽度时间轨道超出容器时横向滚动 2026/11/06: 19:51
-    year_width = settings.get("year_width", 180)
-    if not isinstance(year_width, (int, float)) or isinstance(year_width, bool) or not math.isfinite(year_width) or year_width <= 0:
-        year_width = 180
+    # ai coding: 分别读取桌面和移动端同屏年数并保留旧的共用年数和像素设置 2026/11/23: 17:11
     year_count = max_year - min_year
+    years_per_view = settings.get("years_per_view")
+    if isinstance(years_per_view, dict):
+        desktop_years = years_per_view.get("desktop")
+        mobile_years = years_per_view.get("mobile")
+    else:
+        desktop_years = mobile_years = years_per_view
+    if type(desktop_years) is not int or desktop_years < 1:
+        desktop_years = 4
+    if type(mobile_years) is not int or mobile_years < 1:
+        mobile_years = desktop_years
+    width_style = (
+        f"--ht-year-count:{year_count};"
+        f"--ht-desktop-years:{desktop_years};--ht-mobile-years:{mobile_years}"
+    )
+    year_width = settings.get("year_width")
+    if (
+        "years_per_view" not in settings
+        and isinstance(year_width, (int, float))
+        and not isinstance(year_width, bool)
+        and year_width > 0
+        and math.isfinite(year_width)
+    ):
+        width_style = f"--ht-time-width:{year_count * year_width:g}px"
+
+    rows, html = [], [
+        f'<div id="holdingTimeline" class="holding-timeline" style="{width_style}">',
+        '<div class="ht-scroll"><div class="ht-canvas">',
+        '<div class="ht-axis">',
+    ]
+
     def year_position(value):
         year_start = date(value.year, 1, 1)
         year_end = date(value.year + 1, 1, 1)
         return value.year - min_year + (value - year_start).days / (year_end - year_start).days
-    rows, html = [], [
-        f'<div id="holdingTimeline" class="holding-timeline" style="--ht-time-width:{year_count * year_width:g}px">',
-        '<div class="ht-scroll"><div class="ht-canvas">',
-        '<div class="ht-axis">',
-    ]
+
     for year in range(min_year, max_year + 1):
         left = (year - min_year) / year_count * 100
         html.append(f'<span style="left:{left:.4f}%">{year}</span>')
@@ -319,8 +340,12 @@ def generate_timeline_html(config):
             f'<i class="ht-line {"ht-open" if row["open"] else ""}"></i>'
             f'<span class="ht-annual">{numeric_html}</span></span></button>'
         )
-    # ai coding: 仅时间轴和线段进入滚动区域底部标的详情保持容器内显示 2026/11/06: 19:51
-    html.append('</div></div></div><div class="ht-detail" aria-live="polite"></div></div>')
+    # ai coding: 在滚动区域和标的详情之间加入默认隐藏的横向滚动条 2026/11/23: 17:08
+    html.append(
+        '</div></div></div>'
+        '<input class="ht-scrollbar" type="range" min="0" step="any" value="0" aria-label="时间线横向滚动" hidden>'
+        '<div class="ht-detail" aria-live="polite"></div></div>'
+    )
     payload = json.dumps(rows, ensure_ascii=False).replace("<", "\\u003c")
     html.append(f'<script type="application/json" id="holdingTimelineData">{payload}</script>')
     html.append(r'''<script>
@@ -384,8 +409,14 @@ def generate_timeline_html(config):
     const current = root.querySelector('.ht-row[aria-pressed="true"]');
     select(current ? Number(current.dataset.holding) : 0);
   });
-  // ai coding: 长收益标记按实际宽度收进图内防止手机端超出左右边界 2026/11/06: 18:54
-  new ResizeObserver(() => {
+  // ai coding: 双向同步时间线横向滚动和底部可拖动的滑块 2026/11/23: 17:08
+  const scroller = root.querySelector('.ht-scroll');
+  const scrollbar = root.querySelector('.ht-scrollbar');
+  scrollbar.addEventListener('input', () => { scroller.scrollLeft = scrollbar.valueAsNumber; });
+  scroller.addEventListener('scroll', () => { scrollbar.valueAsNumber = scroller.scrollLeft; }, { passive: true });
+
+  // ai coding: 随时间线尺寸更新端点文字位置和滚动条的可见性与滑块宽度 2026/11/23: 17:08
+  const resizeObserver = new ResizeObserver(() => {
     root.querySelectorAll('.ht-row').forEach(button => {
       const track = button.querySelector('.ht-track');
       const label = button.querySelector('.ht-annual');
@@ -393,7 +424,18 @@ def generate_timeline_html(config):
       label.style.transform = 'none';
       label.style.left = Math.max(0, Math.min(endpoint - label.offsetWidth, track.clientWidth - label.offsetWidth)) + 'px';
     });
-  }).observe(root);
+    const viewportWidth = scroller.clientWidth;
+    const contentWidth = scroller.scrollWidth;
+    scrollbar.hidden = contentWidth <= viewportWidth;
+    scrollbar.max = contentWidth - viewportWidth;
+    scrollbar.valueAsNumber = scroller.scrollLeft;
+    if (!scrollbar.hidden) {
+      const thumbWidth = Math.max(24, viewportWidth * viewportWidth / contentWidth);
+      scrollbar.style.setProperty('--ht-scroll-thumb', thumbWidth + 'px');
+    }
+  });
+  resizeObserver.observe(scroller);
+  resizeObserver.observe(scroller.querySelector('.ht-canvas'));
 })();
 </script>''')
     return "\n".join(html)

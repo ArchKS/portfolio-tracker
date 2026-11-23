@@ -76,7 +76,10 @@
   "section_download_buttons": false,
   "_section_download_buttons_comment": "统一控制所有模块下载按钮：true显示，false隐藏；不影响整页保存图片按钮",
   "timeline": {
-    "year_width": 100,
+    "years_per_view": {
+      "desktop": 3,
+      "mobile": 2
+    },
     "show_amount": true,
     "output_file": "timeline.svg",
     "output_format": "svg",
