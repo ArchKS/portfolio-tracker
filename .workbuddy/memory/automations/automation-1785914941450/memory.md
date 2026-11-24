@@ -2,6 +2,18 @@
 
 ## 执行记录
 
+### 2026-11-24 06:00（当日首次）— ✅ 成功
+- 数据源：腾讯文档 fGemVXqsvRGM（`tdoc_call` 一次成功），CSV header idx=2 / end idx=17。**持仓结构变化**：从以往 7+SMMT Call 8 行缩减至 **6 只正股**（康方 09926.HK / 亚盛 06855.HK / 海螺 00914.HK / SMMT / 新氧 SY / 汇贤 87001.HK），传奇（LEGN）、SMMT Call、PDD 均已不在文档中。汇率 US 6.6717 / HK 0.8507；年初 250.50万 + 工资结余 9.80万/2 → **基数 260.30万**（较上次记录的 258.30万上调 2万，工资结余从 7.80万→9.80万）
+- westock-mcp MCP 工具**仍未在本会话注册**（ToolSearch 查不到 `mcp__westock-mcp__*`），按 SKILL.md「4c-兜底」走本地凭据解密（`westock-mcp|76c1bcce7ee2e7f6` slot 仍在）+ 直连上游 `https://stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`。**一次批量取全 8 码**（6 持仓 + sh000300 + usIXIC），零限频零漏码
+- 行情 time 全部 = 2026-11-23（周一）。康方 56.65 -0.09%、亚盛 **24.92 +6.68%**（创新药反弹）、海螺 16.84 -2.60%、SMMT 10.32 +3.72%、新氧 1.73 +4.85%、汇贤 0.325 持平；沪深300 3958.29；纳斯达克 24089.56
+- 基准：沪深300 YTD **-14.51%**（2026 年 A 股全年走弱）；纳斯达克 YTD **+3.65%**
+- 快照：portfolio_snapshots/2026-11-24.json（第 97 份）；report.html → public/index.html（generate_report.py 已自动同步）
+- 部署：workbuddy_sites_deploy 成功，返回 shareLink = 固定域名 `https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH`；curl 验证 HTTP 200、含 `2026-11-24 06:02:24` 与 total_pnl `-926076.4`（双校验命中）
+- 关键数据：持仓 6 只、投入 **235.11万**、当前 **167.69万**、持仓收益 **-67.42万（-28.68%）**、总收益 **-92.61万（-926076.40）**、总收益率 **-35.58%**（base 260.30万）
+- Git：commit **1a82f81**；push **一次成功**（4e3f826..1a82f81）
+- 临时文件已清理（.tmp_*、/tmp/westock_tok.txt、/tmp/quote_resp.txt、/tmp/pf_check.html）
+- 备注：**持仓结构变化显著**（7+SMMT Call → 6 只正股，传奇/PDD/SMMT Call 全部清零），投入从 228.21万 → 235.11万（+6.90万），但当前市值仅 167.69万（较早期大幅缩水），总收益率 -35.58% 为近期较深回撤。基数上调 2万（工资结余增加）对总收益率有 -0.3pt 左右摊薄影响。今日亚盛 +6.68%、新氧 +4.85%、SMMT +3.72% 带动反弹，但被海螺 -2.60%、康方 -0.09% 部分对冲
+
 ### 2026-11-12 06:00（当日首次）— ❌ 失败（westock-mcp 连接器未就绪）
 - **失败步骤**：步骤 4「提取代码并获取行情」
 - **根因**：`westock-mcp` 连接器状态为 `connecting`（`list_installed_plugins` 返回 `status:"connecting"`），宿主未把 `mcp__westock-mcp__*` 工具注册到本会话；`ToolSearch` 查不到 westock 工具
