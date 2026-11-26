@@ -280,11 +280,9 @@ body:not([data-money-visible="true"]) .money-value{display:none!important;}
 .section.section-export-mode tbody td{padding:11px 16px;}
 .section.section-export-mode .chart-grid-2{grid-template-columns:1fr 1fr;}
 .section.section-export-mode .chart-card{padding:24px;}
-/* ai coding: 顶部保留更新时间和无边框起止日期输入并隐藏空提示 2026/10/09: 16:03 */
-/* ai coding: 更新时间放在页面内容之外顶部居中平时折叠仅下拉时展开 2026/11/06: 18:46 */
-.report-timestamp{position:relative;top:calc(-1 * var(--pad));height:0;overflow:hidden;opacity:0;text-align:center;color:var(--ink-3);font-size:11px;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;transition:height .18s ease,opacity .18s ease;}
-.report-timestamp.is-pulling{transition:none;}
-@media(prefers-reduced-motion:reduce){.report-timestamp{transition:none;}}
+/* ai coding: 将概览标题旁的更新日期设为浅灰小字 2026/11/26: 21:28 */
+.report-timestamp{font-size:11px;color:#737373;white-space:nowrap;}
+/* ai coding: 保留无边框起止日期输入并隐藏空提示 2026/10/09: 16:03 */
 .date-filter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;font-size:12px;color:var(--ink-2);}
 .date-filter label{display:flex;align-items:center;gap:6px;}
 .date-filter input{font:inherit;border:0;border-radius:4px;padding:7px 10px;background:#f5f5f5;color:var(--ink);min-width:0;}
@@ -577,8 +575,6 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
 <!-- ai coding: 金额解锁密码窗口右下角提供取消与确定按钮 2026/11/07: 14:20 -->
 <dialog class="money-dialog" id="moneyDialog"><form id="moneyForm"><label for="moneyPassword">密码</label><input id="moneyPassword" type="password" autocomplete="current-password" required><div class="money-dialog-actions"><button type="button" id="moneyCancel">取消</button><button type="submit">确定</button></div></form></dialog>
 
-<!-- ai coding: 更新时间移出报告主体作为顶部下拉区域 2026/11/06: 18:46 -->
-<div class="report-timestamp">最近更新时间：__GENERATED_AT__（北京时间）</div>
 <!-- ai coding: 生成时写入主题避免首屏样式切换闪动 2026/11/06: 19:16 -->
 <div id="page" data-theme="__PAGE_THEME__">
 <!-- ai coding: 日期栏关闭时同时隐藏空页眉防止二十八像素下边距产生顶部留白 2026/11/06: 19:04 -->
@@ -600,6 +596,8 @@ tbody tr.summary-row td{border-top:2px solid var(--rule-strong);}
   <div class="section-head">
     <span class="idx">01</span>
     <h2>概览</h2>
+    <!-- ai coding: 在概览标题右侧常显更新日期和时分 2026/11/26: 21:29 -->
+    <time class="report-timestamp" datetime="__GENERATED_AT_ISO__">更新于 __GENERATED_AT__</time>
     <!-- ai coding: 概览标题右侧目录图标点击展开当前可见章节 2026/11/06: 20:05 -->
     <div class="page-toc">
       <!-- ai coding: 目录旁金额眼睛开关默认关闭打开需密码验证 2026/11/07: 14:10 -->
@@ -933,42 +931,12 @@ new MutationObserver(records => {
     if (node.nodeType === 1 && node.matches('.section[data-section]')) applyComponentMargin(node);
   }));
 }).observe(document.getElementById('page'), { childList: true });
-[['date_filter', '.date-filter'], ['report_timestamp', '.report-timestamp']].forEach(([name, selector]) => {
-  const element = document.querySelector(selector);
-  if (!element) return;
-  const margin = componentMargin(name);
-  element.style.marginInline = margin + 'px';
-  element.style.width = 'calc(100% - ' + margin * 2 + 'px)';
-});
-// ai coding: 仅在页面顶部单指下拉时展示更新时间松手收起并避开图表及表单手势 2026/11/06: 18:46
-const reportTimestamp = document.querySelector('.report-timestamp');
-let timestampPull = null;
-const closeTimestamp = () => {
-  timestampPull = null;
-  reportTimestamp.classList.remove('is-pulling');
-  reportTimestamp.style.height = '0px';
-  reportTimestamp.style.opacity = '0';
-};
-document.addEventListener('touchstart', event => {
-  if (event.touches.length !== 1 || window.scrollY > 0 || event.target.closest('.chart-card,.table-scroll,input,button')) return;
-  timestampPull = { x: event.touches[0].clientX, y: event.touches[0].clientY };
-}, { passive: true });
-document.addEventListener('touchmove', event => {
-  if (!timestampPull) return;
-  if (event.touches.length !== 1 || window.scrollY > 0) { closeTimestamp(); return; }
-  const dx = Math.abs(event.touches[0].clientX - timestampPull.x);
-  const dy = event.touches[0].clientY - timestampPull.y;
-  if (dy <= 0 || dx > dy) { closeTimestamp(); return; }
-  const height = Math.min(52, dy * 0.4);
-  reportTimestamp.classList.add('is-pulling');
-  reportTimestamp.style.height = height + 'px';
-  reportTimestamp.style.opacity = String(Math.min(1, height / 26));
-}, { passive: true });
-document.addEventListener('touchend', closeTimestamp, { passive: true });
-document.addEventListener('touchcancel', closeTimestamp, { passive: true });
-// ai coding: 日期栏与页眉同步按配置隐藏避免空容器边距残留默认保持显示 2026/11/06: 19:04
+// ai coding: 移除更新时间的下拉手势，仅为日期筛选栏应用独立边距和显示配置 2026/11/26: 21:28
 const dateFilterElement = document.querySelector('.date-filter');
 if (dateFilterElement) {
+  const margin = componentMargin('date_filter');
+  dateFilterElement.style.marginInline = margin + 'px';
+  dateFilterElement.style.width = 'calc(100% - ' + margin * 2 + 'px)';
   const display = pageConfig.date_filter === false ? 'none' : '';
   dateFilterElement.style.display = display;
   const masthead = dateFilterElement.closest('.masthead');
@@ -2325,7 +2293,8 @@ def generate_report(snapshots, stats):
 
     stats_json = json.dumps(stats, ensure_ascii=False)
 
-    generated_at = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
+    # ai coding: 按北京时间生成精确到分钟的更新时间 2026/11/26: 21:29
+    generated_at = datetime.now(timezone(timedelta(hours=8)))
     html = (HTML_TEMPLATE
             .replace("__DATA__", data_json)
             .replace("__STATS__", stats_json)
@@ -2336,7 +2305,9 @@ def generate_report(snapshots, stats):
             .replace("__DATE_FILTER_VISIBILITY__", 'style="display:none"' if config.get("date_filter") is False else '')
             # ai coding: 将原生时间线内容写入报告模板 2026/11/06: 18:24
             .replace("__TIMELINE_HTML__", timeline_html)
-            .replace("__GENERATED_AT__", generated_at))
+            # ai coding: 写入可读的更新时间及带时区的标准时间 2026/11/26: 21:29
+            .replace("__GENERATED_AT__", generated_at.strftime("%Y-%m-%d %H:%M"))
+            .replace("__GENERATED_AT_ISO__", generated_at.isoformat(timespec="minutes")))
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     output_file = os.path.join(script_dir, "report.html")

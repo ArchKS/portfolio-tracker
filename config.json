@@ -34,8 +34,7 @@
     "holdings": 20,
     "timeline": 20,
     "annual_returns": 20,
-    "date_filter": 20,
-    "report_timestamp": 20
+    "date_filter": 20
   },
   "summary_series": {
     "asset": false,
