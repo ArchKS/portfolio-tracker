@@ -711,3 +711,16 @@
 - 部署成功，固定域名与 sharecode 不变，verified=true；curl HTTP 200，当日快照时间、total_pnl 与双基准 YTD 均精确命中。
 - Git：commit 7ced714，push 成功（a0acb5d..7ced714，一次成功）；包含另一自动化任务已有的 memory 修改。
 - 临时文件已清理，未改动 .genie 文件或部署目录。
+
+### 2026-11-26 06:00（当日首次）— ✅ 成功
+- 数据源：腾讯文档 fGemVXqsvRGM（tdoc_call 一次成功），CSV header idx=2 / end idx=17；6 只正股无变动；汇率 US 6.6716 / HK 0.8506；基数 260.30 万
+- 行情：westock-mcp MCP 工具仍未注册（ToolSearch 查不到），按 4c-兜底解密本地凭据（westock-mcp|76c1bcce7ee2e7f6）+ 直连上游 MCP，一次批量取全 8 码（6 持仓 + sh000300 + usIXIC），零限频零漏码
+- 行情 time 全部 = 2026-11-25（周三）。康方 54.85 -0.63%、亚盛 24.20 -1.94%、海螺 17.08 +1.55%、SMMT 10.59 +0.86%、新氧 1.72 +0.58%、汇贤 0.325 持平；沪深300 3898.24 -1.65%；纳斯达克 23585.80 -0.62%
+- 基准：沪深300 YTD -15.80%（较 11-25 的 -14.39% 继续回落）；纳斯达克 YTD +1.48%（较 11-25 的 +2.11% 回落）
+- 快照：portfolio_snapshots/2026-11-26.json（第 99 份）；report.html → public/index.html（generate_report.py 已自动同步）
+- 部署：workbuddy_sites_deploy 成功，shareLink = 固定域名；curl 验证 HTTP 200，双校验命中快照时间 2026-11-26 06:01:42 与 total_pnl -957023.78
+- 关键数据：持仓 6 只、投入 235.09 万、当前 164.60 万、持仓收益 -70.49 万（-29.99%）；总收益 -95.70 万（-957023.78）、总收益率 -36.77%（base 260.30 万）
+- 基准 CAGR：沪深300 -4.72%；纳斯达克 +8.93%
+- Git：commit 04c01c2；push 一次成功（ca06a75..04c01c2）
+- 临时文件已清理（.tmp_*、/tmp/westock_tok.txt、/tmp/quote_resp.txt、/tmp/pf_check.html）
+- 备注：A 股继续走弱（沪深300 当日 -1.65%、YTD -15.80%），组合随之下滑；持仓收益 -29.99% 逼近年内最深，总收益率 -36.77% 再创新低。美股纳斯达克 YTD 从 +2.11% 跌至 +1.48%，全年涨幅已基本回吐
