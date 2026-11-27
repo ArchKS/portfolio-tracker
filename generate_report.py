@@ -72,13 +72,19 @@ def calculate_drawdown(values):
     return drawdowns, round(max_dd, 2)
 
 
+# ai coding: 持仓展示与统计统一剔除数量为零的标的 2026/11/27: 15:11
+def holdings_for_report(snapshot):
+    return [holding for holding in snapshot.get("holdings", []) if holding.get("quantity") != 0]
+
+
 def calculate_stats(snapshots):
     """计算统计指标"""
     if not snapshots:
         return {}
 
     latest = snapshots[-1]
-    holdings = latest.get("holdings", [])
+    # ai coding: 按可展示持仓计算标的数量与收益极值 2026/11/27: 15:11
+    holdings = holdings_for_report(latest)
     summary = latest.get("summary", {})
 
     # 持仓级统计
@@ -1605,7 +1611,8 @@ const totalCurrent = holdings.reduce((s, h) => s + (h.current || 0), 0);
 const tbody = document.getElementById('holdingsBody');
 const sortedHoldings = [...holdings].sort((a, b) => (b.current || 0) - (a.current || 0));
 let holdingsHtml = sortedHoldings.map(h => {
-  const isNote = h.current_price_raw == null && (h.quantity == null || h.quantity === 0);
+  // ai coding: 仅对数量与现价均缺失的持仓沿用备注行格式 2026/11/27: 15:11
+  const isNote = h.current_price_raw == null && h.quantity == null;
   const pct = totalCurrent > 0 && h.current ? (h.current / totalCurrent * 100).toFixed(1) + '%' : '—';
   return `<tr>
     <td>${h.market || '—'}</td>
@@ -1623,10 +1630,9 @@ let holdingsHtml = sortedHoldings.map(h => {
   </tr>`;
 }).join('');
 
-// Cash row: 现金 = 整体 - 持仓
+// ai coding: 现金行使用筛选前算出的余额避免将隐藏标的市值计入现金 2026/11/27: 15:11
 const overallCur = (summary.regions && summary.regions['\u6574\u4f53'] && summary.regions['\u6574\u4f53'].current) || 0;
-const overallInv = (summary.regions && summary.regions['\u6574\u4f53'] && summary.regions['\u6574\u4f53'].invested) || 0;
-const cashCurrent = overallCur - totalCurrent;
+const cashCurrent = latest.cash_current;
 const cashInvested = cashCurrent;  // 现金不随行情变，投入=当前（与当前一致，避免用文档旧"整体投入"算出1.5万）
 holdingsHtml += `<tr class="summary-row">
   <td>—</td>
@@ -2194,9 +2200,33 @@ if (pageConfig && !pageConfig.save_button) {
 """
 
 
+# ai coding: 导出各日期的非零持仓并按原始持仓市值计算现金余额 2026/11/27: 15:11
+def snapshot_for_report(snapshot):
+    overall_current = snapshot.get("summary", {}).get("regions", {}).get("整体", {}).get("current") or 0
+    total_current = sum(holding.get("current") or 0 for holding in snapshot.get("holdings", []))
+    return dict(snapshot, holdings=holdings_for_report(snapshot), cash_current=overall_current - total_current)
+
+
+# ai coding: 时间线隐藏最近已归零且尚未记录清仓日期的交易 2026/11/27: 15:11
+def filter_timeline_trades(trades, snapshots):
+    last_positions = {}
+    for snapshot in snapshots:
+        for holding in snapshot.get("holdings", []):
+            quantity = holding.get("quantity")
+            if quantity is not None:
+                last_positions[holding["name"]] = (snapshot["date"], quantity)
+
+    zero_dates = {name: date for name, (date, quantity) in last_positions.items() if quantity == 0}
+    return [
+        trade for trade in trades
+        if trade.get("sell_date") or zero_dates.get(trade["name"], "") < trade["buy_date"]
+    ]
+
+
 def generate_report(snapshots, stats):
     """生成 HTML 报告"""
-    data_json = json.dumps({"snapshots": snapshots}, ensure_ascii=False)
+    # ai coding: 将筛选后的各日期持仓用于整个网页 2026/11/27: 15:11
+    data_json = json.dumps({"snapshots": [snapshot_for_report(snapshot) for snapshot in snapshots]}, ensure_ascii=False)
     stats_json = json.dumps(stats, ensure_ascii=False)
 
     # Load config
@@ -2207,8 +2237,11 @@ def generate_report(snapshots, stats):
             config = json.load(f)
     except:
         pass
+    # ai coding: 将零持仓过滤应用到网页配置与 HTML 时间线 2026/11/27: 15:11
+    timeline = config.get("timeline", {})
+    if timeline.get("trades"):
+        timeline["trades"] = filter_timeline_trades(timeline["trades"], snapshots)
     config_json = json.dumps(config, ensure_ascii=False)
-    # ai coding: 按配置生成 HTML 时间线没有交易时隐藏空内容 2026/11/06: 18:24
     timeline_html = generate_timeline_html(config)
 
     # Calculate annual returns: historical (from config) + current year YTD (no annualization) + overall CAGR
