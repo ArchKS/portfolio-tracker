@@ -2,6 +2,22 @@
 
 ## 执行记录
 
+### 2026-11-28 06:00（当日首次）— ✅ 成功
+- 数据源：腾讯文档 fGemVXqsvRGM（`tdoc_call` 一次成功），CSV header idx=2 / end idx=17。6 只持仓无变动（康方 09926.HK / 亚盛 06855.HK / 海螺 00914.HK / SMMT / 新氧 SY / 汇贤 87001.HK）；汇率 US 6.6541 / HK 0.8494；基数 260.30万
+- **腾讯文档响应结构变化**：本次返回没有 `structuredContent` 字段，只在 `result.content[0].text`（JSON 字符串）内层有 `content`——已加三层回退解析（structuredContent → result.content[0].text → content[0].text），下次遇到同样格式可直接走第二支
+- westock-mcp MCP 工具仍未在本会话注册，按 SKILL.md「4c-兜底」走本地凭据解密（slot `westock-mcp|76c1bcce7ee2e7f6` 仍在）+ 直连上游 `https://stockbuddy.qq.com/cgi/cgi-bin/openai/mcp/mcp`，**一次批量取全 8 码**（6 持仓 + sh000300 + usIXIC），零限频零漏码
+- 行情 time 全部 = 2026-11-27（周五）。康方 **57.40 +4.05**、亚盛 **26.64 +2.74**、海螺 17.29 +0.08、SMMT 10.63 +0.04、新氧 1.74 +0.02、汇贤 0.32 持平；沪深300 4063.06；纳斯达克 24129.50
+- 基准：沪深300 YTD **-12.24%**；纳斯达克 YTD **+3.82%**
+- 快照：portfolio_snapshots/2026-11-28.json（第 100 份，整数里程碑）；report.html → public/index.html
+- 部署：workbuddy_sites_deploy 成功，返回 shareLink = 固定域名 `https://portfolio-snapshot-31273.app.workbuddy.host/?sharecode=VN543KH6HH`；curl 验证 HTTP 200、含 `2026-11-28 06:02` 与 total_pnl `-863377.24`（双校验命中）
+- 关键数据：持仓 6 只、投入 **226.63万**、当前 **169.86万**、持仓收益 **-56.77万（-25.05%）**、总收益 **-86.34万（-863377.24）**、总收益率 **-33.17%**（base 260.30万）。较 11-25 的 -94.66万/-36.37% 回升 8.32万 / +3.20pt，主因港股创新药连续走强（康方 +4.05、亚盛 +2.74）
+- 基准 CAGR：沪深300 YTD -12.24% / CAGR -2.24%（前档 -14.39 → -12.24）；纳斯达克 YTD +3.82% / CAGR +9.09%
+- Git：commit **80ce42d**；push **一次成功**（e1f546f..80ce42d）
+- 临时文件已清理（.tmp_*、/tmp/westock_tok.txt、/tmp/quote_resp.txt、/tmp/pf_check.html）
+- 备注：本档是第 **100 份**快照存档；11-26/27 未触发自动化的原因待查（memory 中最近一条成功记录是 11-25），但本次补跑已让数据接上
+
+
+
 ### 2026-11-25 06:03（当日首次）— ✅ 成功
 - 腾讯文档等待 60 秒后重新读取成功；6 只持仓、US 6.673 / HK 0.851、基数 260.30 万。westock-mcp 授权请求 skipped，按既定备用行情通道一次取全 6 持仓 + 2 指数；行情时间均为 2026-11-24。
 - 快照 `portfolio_snapshots/2026-11-25.json`（第 98 份）；报告生成并部署到 public/。固定链接 HTTP 200，双校验命中快照时间 `2026-11-25 06:03:49` 与 total_pnl `-946622.46`。
